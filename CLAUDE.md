@@ -177,7 +177,30 @@ Future additions:
 
 ### Supabase
 
-*Populated at Phase 1 step 1 once the Supabase project exists. Will include: how to run migrations (`supabase migration up`) and how to connect the local app to either the hosted Supabase project or a local Supabase via the Supabase CLI.*
+CLI installed via Scoop: `scoop bucket add supabase https://github.com/supabase/scoop-bucket.git && scoop install supabase`.
+
+One-time setup (per machine):
+
+```powershell
+supabase login              # browser-based auth, opens verification page
+supabase link --project-ref jquturibslqzkldngzvf   # links repo to kekki-prod
+```
+
+Apply migrations:
+
+```bash
+supabase db push            # applies any new files in supabase/migrations/
+```
+
+### Seeding
+
+Seed the concepts table from `kekki_concepts_v1.json`:
+
+```bash
+node --env-file=.env.local scripts/seed_ontology.mjs
+```
+
+Idempotent — safe to re-run. Requires `SUPABASE_URL` (or `NEXT_PUBLIC_SUPABASE_URL`) and `SUPABASE_SERVICE_ROLE_KEY` in `.env.local`.
 
 ### Verification (also the DoD baseline)
 

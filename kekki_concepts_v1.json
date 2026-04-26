@@ -1,0 +1,3832 @@
+{
+  "meta": {
+    "name": "Kekki Medical Concepts",
+    "version": "1.0.0",
+    "drafted": "2026-04-26",
+    "basis": "Transformed from kekki_ontology_v0.json. snake_case -> kebab-case slugs; scalar parent_id -> polyhierarchy-capable parents[]. Concept granularity is the v0 starting point; refine through actual card-writing.",
+    "framework": "Medical_Knowledge_Ontology.md",
+    "decision": "DECISIONS.md D17"
+  },
+  "concepts": [
+    {
+      "id": "cardio",
+      "title": "Cardiovascular Disease",
+      "synonyms": [],
+      "weight": null,
+      "parents": []
+    },
+    {
+      "id": "cardio-hf",
+      "title": "Heart Failure",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "cardio",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "cardio-hf-hfref-dx",
+      "title": "HFrEF — Diagnosis",
+      "synonyms": [
+        "reduced EF",
+        "systolic dysfunction"
+      ],
+      "weight": null,
+      "parents": [
+        {
+          "id": "cardio-hf",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "cardio-hf-hfref-gdmt",
+      "title": "HFrEF — GDMT",
+      "synonyms": [
+        "quadruple therapy",
+        "ARNI BB MRA SGLT2"
+      ],
+      "weight": null,
+      "parents": [
+        {
+          "id": "cardio-hf",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "cardio-hf-hfpef-dx",
+      "title": "HFpEF — Diagnosis",
+      "synonyms": [
+        "preserved EF",
+        "diastolic HF"
+      ],
+      "weight": null,
+      "parents": [
+        {
+          "id": "cardio-hf",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "cardio-hf-hfpef-mgmt",
+      "title": "HFpEF — Management",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "cardio-hf",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "cardio-hf-adhf",
+      "title": "Acute Decompensated HF",
+      "synonyms": [
+        "ADHF",
+        "cardiogenic pulmonary edema"
+      ],
+      "weight": null,
+      "parents": [
+        {
+          "id": "cardio-hf",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "cardio-hf-shock",
+      "title": "Cardiogenic Shock",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "cardio-hf",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "cardio-cad",
+      "title": "Coronary Artery Disease",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "cardio",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "cardio-cad-sihd",
+      "title": "Stable Ischemic Heart Disease",
+      "synonyms": [
+        "stable angina",
+        "SIHD"
+      ],
+      "weight": null,
+      "parents": [
+        {
+          "id": "cardio-cad",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "cardio-cad-nstemi",
+      "title": "NSTEMI / Unstable Angina",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "cardio-cad",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "cardio-cad-stemi",
+      "title": "STEMI",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "cardio-cad",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "cardio-cad-postmi",
+      "title": "Post-MI Care & Secondary Prevention",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "cardio-cad",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "cardio-cad-preop",
+      "title": "Perioperative Cardiac Risk",
+      "synonyms": [
+        "RCRI",
+        "pre-op eval"
+      ],
+      "weight": null,
+      "parents": [
+        {
+          "id": "cardio-cad",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "cardio-arr",
+      "title": "Arrhythmias",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "cardio",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "cardio-arr-afib-rr",
+      "title": "Atrial Fibrillation — Rate & Rhythm Control",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "cardio-arr",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "cardio-arr-afib-stroke",
+      "title": "Atrial Fibrillation — Stroke Prevention",
+      "synonyms": [
+        "CHA2DS2-VASc",
+        "anticoagulation in AFib"
+      ],
+      "weight": null,
+      "parents": [
+        {
+          "id": "cardio-arr",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "cardio-arr-svt",
+      "title": "Supraventricular Tachycardias",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "cardio-arr",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "cardio-arr-vt",
+      "title": "Ventricular Arrhythmias",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "cardio-arr",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "cardio-arr-brady",
+      "title": "Bradyarrhythmias & Conduction Disease",
+      "synonyms": [
+        "AV block",
+        "sick sinus"
+      ],
+      "weight": null,
+      "parents": [
+        {
+          "id": "cardio-arr",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "cardio-arr-syncope",
+      "title": "Syncope Workup",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "cardio-arr",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "cardio-valve",
+      "title": "Valvular Heart Disease",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "cardio",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "cardio-valve-as",
+      "title": "Aortic Stenosis",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "cardio-valve",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "cardio-valve-ar",
+      "title": "Aortic Regurgitation",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "cardio-valve",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "cardio-valve-mr",
+      "title": "Mitral Regurgitation",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "cardio-valve",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "cardio-valve-ms",
+      "title": "Mitral Stenosis",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "cardio-valve",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "cardio-valve-ie",
+      "title": "Infective Endocarditis",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "cardio-valve",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "cardio-peri",
+      "title": "Pericardial & Myocardial Disease",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "cardio",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "cardio-peri-acute",
+      "title": "Acute Pericarditis",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "cardio-peri",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "cardio-peri-tamponade",
+      "title": "Cardiac Tamponade",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "cardio-peri",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "cardio-peri-constrict",
+      "title": "Constrictive Pericarditis",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "cardio-peri",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "cardio-peri-cm",
+      "title": "Cardiomyopathies (HCM, DCM, Restrictive)",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "cardio-peri",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "cardio-peri-myo",
+      "title": "Myocarditis",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "cardio-peri",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "cardio-vasc",
+      "title": "Vascular & Hypertension",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "cardio",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "cardio-vasc-htn-primary",
+      "title": "Primary Hypertension",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "cardio-vasc",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "cardio-vasc-htn-secondary",
+      "title": "Secondary Hypertension",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "cardio-vasc",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "cardio-vasc-htn-emergency",
+      "title": "Hypertensive Urgency & Emergency",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "cardio-vasc",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "cardio-vasc-pad",
+      "title": "Peripheral Arterial Disease",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "cardio-vasc",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "cardio-vasc-aorta",
+      "title": "Aortic Aneurysm & Dissection",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "cardio-vasc",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "cardio-prev",
+      "title": "Preventive Cardiology",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "cardio",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "cardio-prev-ascvd",
+      "title": "ASCVD Risk Assessment",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "cardio-prev",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "cardio-prev-lipids",
+      "title": "Lipid Management",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "cardio-prev",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "pulm",
+      "title": "Pulmonary Disease",
+      "synonyms": [],
+      "weight": null,
+      "parents": []
+    },
+    {
+      "id": "pulm-obs",
+      "title": "Obstructive Lung Disease",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "pulm",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "pulm-obs-copd-stable",
+      "title": "COPD — Stable Management",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "pulm-obs",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "pulm-obs-copd-exac",
+      "title": "COPD Exacerbation",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "pulm-obs",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "pulm-obs-asthma",
+      "title": "Asthma — Stable & Exacerbation",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "pulm-obs",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "pulm-obs-bronchiectasis",
+      "title": "Bronchiectasis",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "pulm-obs",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "pulm-ild",
+      "title": "Interstitial & Restrictive Lung Disease",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "pulm",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "pulm-ild-ipf",
+      "title": "Idiopathic Pulmonary Fibrosis",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "pulm-ild",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "pulm-ild-hp",
+      "title": "Hypersensitivity Pneumonitis",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "pulm-ild",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "pulm-ild-sarcoid",
+      "title": "Sarcoidosis",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "pulm-ild",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "pulm-ild-ctd",
+      "title": "CTD-Associated ILD",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "pulm-ild",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "pulm-infect",
+      "title": "Pulmonary Infection (see also ID)",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "pulm",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "pulm-infect-cap",
+      "title": "Community-Acquired Pneumonia",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "pulm-infect",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "pulm-infect-hap",
+      "title": "HAP / VAP",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "pulm-infect",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "pulm-infect-tb",
+      "title": "Tuberculosis — Active & Latent",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "pulm-infect",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "pulm-vasc",
+      "title": "Pulmonary Vascular Disease",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "pulm",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "pulm-vasc-pe",
+      "title": "Pulmonary Embolism",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "pulm-vasc",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "pulm-vasc-pah",
+      "title": "Pulmonary Arterial Hypertension",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "pulm-vasc",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "pulm-pleura",
+      "title": "Pleural & Mediastinal Disease",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "pulm",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "pulm-pleura-effusion",
+      "title": "Pleural Effusion — Dx & Mgmt",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "pulm-pleura",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "pulm-pleura-ptx",
+      "title": "Pneumothorax",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "pulm-pleura",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "pulm-pleura-soldar",
+      "title": "Solitary Pulmonary Nodule",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "pulm-pleura",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "pulm-sleep",
+      "title": "Sleep-Disordered Breathing",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "pulm",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "pulm-sleep-osa",
+      "title": "Obstructive Sleep Apnea",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "pulm-sleep",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "gi",
+      "title": "Gastroenterology & Hepatology",
+      "synonyms": [],
+      "weight": null,
+      "parents": []
+    },
+    {
+      "id": "gi-upper",
+      "title": "Upper GI",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "gi",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "gi-upper-gerd",
+      "title": "GERD & Barrett's",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "gi-upper",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "gi-upper-pud",
+      "title": "Peptic Ulcer Disease",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "gi-upper",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "gi-upper-ugib",
+      "title": "Upper GI Bleed",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "gi-upper",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "gi-upper-dys",
+      "title": "Dyspepsia / H. pylori",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "gi-upper",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "gi-lower",
+      "title": "Lower GI",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "gi",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "gi-lower-ibd",
+      "title": "IBD — Crohn & UC",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "gi-lower",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "gi-lower-ibs",
+      "title": "IBS & Functional GI",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "gi-lower",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "gi-lower-lgib",
+      "title": "Lower GI Bleed",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "gi-lower",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "gi-lower-diarrhea",
+      "title": "Acute & Chronic Diarrhea",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "gi-lower",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "gi-lower-celiac",
+      "title": "Celiac & Malabsorption",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "gi-lower",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "gi-lower-cancer-screen",
+      "title": "Colorectal Cancer Screening",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "gi-lower",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "gi-panc-bil",
+      "title": "Pancreatic & Biliary",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "gi",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "gi-panc-acute",
+      "title": "Acute Pancreatitis",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "gi-panc-bil",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "gi-panc-chronic",
+      "title": "Chronic Pancreatitis",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "gi-panc-bil",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "gi-bil-gallstone",
+      "title": "Gallstone Disease & Cholangitis",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "gi-panc-bil",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "gi-liver",
+      "title": "Hepatology",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "gi",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "gi-liver-lfts",
+      "title": "Abnormal LFTs — Workup",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "gi-liver",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "gi-liver-viral",
+      "title": "Viral Hepatitis (A/B/C)",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "gi-liver",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "gi-liver-nafld",
+      "title": "MASLD / MASH",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "gi-liver",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "gi-liver-alcoholic",
+      "title": "Alcohol-Associated Liver Disease",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "gi-liver",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "gi-liver-cirr",
+      "title": "Cirrhosis & Complications",
+      "synonyms": [
+        "ascites",
+        "SBP",
+        "HE",
+        "varices"
+      ],
+      "weight": null,
+      "parents": [
+        {
+          "id": "gi-liver",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "gi-liver-autoimmune",
+      "title": "Autoimmune / Cholestatic Liver (AIH, PBC, PSC)",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "gi-liver",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "id",
+      "title": "Infectious Disease",
+      "synonyms": [],
+      "weight": null,
+      "parents": []
+    },
+    {
+      "id": "id-bact",
+      "title": "Bacterial Syndromes",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "id",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "id-bact-sepsis",
+      "title": "Sepsis & Septic Shock",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "id-bact",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "id-bact-uti",
+      "title": "UTI & Pyelonephritis",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "id-bact",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "id-bact-skin",
+      "title": "Cellulitis & SSTI",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "id-bact",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "id-bact-bone",
+      "title": "Osteomyelitis & Septic Arthritis",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "id-bact",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "id-bact-cdiff",
+      "title": "C. difficile Infection",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "id-bact",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "id-bact-cns",
+      "title": "Meningitis & Encephalitis",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "id-bact",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "id-viral",
+      "title": "Viral Syndromes",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "id",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "id-viral-hiv",
+      "title": "HIV — Dx, ART, OIs",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "id-viral",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "id-viral-influenza",
+      "title": "Influenza & Respiratory Viruses",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "id-viral",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "id-viral-covid",
+      "title": "COVID-19",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "id-viral",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "id-fungal-para",
+      "title": "Fungal & Parasitic",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "id",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "id-fungal-endemic",
+      "title": "Endemic Mycoses",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "id-fungal-para",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "id-fungal-candida",
+      "title": "Candidiasis & Aspergillosis",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "id-fungal-para",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "id-para-travel",
+      "title": "Travel & Tropical Infection",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "id-fungal-para",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "id-steward",
+      "title": "Stewardship & Prevention",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "id",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "id-steward-empiric",
+      "title": "Empiric Antibiotic Selection",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "id-steward",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "id-steward-vaccines",
+      "title": "Adult Vaccination",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "id-steward",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "id-steward-ppx",
+      "title": "Pre/Post-Exposure Prophylaxis",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "id-steward",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "rheum",
+      "title": "Rheumatology & Orthopedics",
+      "synonyms": [],
+      "weight": null,
+      "parents": []
+    },
+    {
+      "id": "rheum-inflam",
+      "title": "Inflammatory Arthritis",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "rheum",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "rheum-inflam-ra",
+      "title": "Rheumatoid Arthritis",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "rheum-inflam",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "rheum-inflam-spa",
+      "title": "Spondyloarthritis (AS, PsA, Reactive, IBD-assoc)",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "rheum-inflam",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "rheum-inflam-crystal",
+      "title": "Gout & CPPD",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "rheum-inflam",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "rheum-ctd",
+      "title": "Connective Tissue Disease",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "rheum",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "rheum-ctd-sle",
+      "title": "SLE",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "rheum-ctd",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "rheum-ctd-ssc",
+      "title": "Systemic Sclerosis",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "rheum-ctd",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "rheum-ctd-sjogren",
+      "title": "Sjögren",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "rheum-ctd",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "rheum-ctd-myositis",
+      "title": "Inflammatory Myopathies",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "rheum-ctd",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "rheum-vasc",
+      "title": "Vasculitis",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "rheum",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "rheum-vasc-large",
+      "title": "Large-Vessel (GCA, Takayasu)",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "rheum-vasc",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "rheum-vasc-medium",
+      "title": "Medium-Vessel (PAN, Kawasaki)",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "rheum-vasc",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "rheum-vasc-small",
+      "title": "Small-Vessel (ANCA, IgA, cryo)",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "rheum-vasc",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "rheum-msk",
+      "title": "Musculoskeletal",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "rheum",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "rheum-msk-oa",
+      "title": "Osteoarthritis",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "rheum-msk",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "rheum-msk-fibromyalgia",
+      "title": "Fibromyalgia & Chronic Pain",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "rheum-msk",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "rheum-msk-regional",
+      "title": "Common Regional Problems (shoulder, back, knee)",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "rheum-msk",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "endo",
+      "title": "Endocrinology & Metabolism",
+      "synonyms": [],
+      "weight": null,
+      "parents": []
+    },
+    {
+      "id": "endo-dm",
+      "title": "Diabetes",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "endo",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "endo-dm-t2-mgmt",
+      "title": "T2DM — Pharmacotherapy",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "endo-dm",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "endo-dm-t1",
+      "title": "T1DM & Insulin Strategies",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "endo-dm",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "endo-dm-dka-hhs",
+      "title": "DKA & HHS",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "endo-dm",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "endo-dm-complications",
+      "title": "Diabetes Complications & Screening",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "endo-dm",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "endo-thy",
+      "title": "Thyroid",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "endo",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "endo-thy-hypo",
+      "title": "Hypothyroidism",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "endo-thy",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "endo-thy-hyper",
+      "title": "Hyperthyroidism",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "endo-thy",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "endo-thy-nodule",
+      "title": "Thyroid Nodule & Cancer",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "endo-thy",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "endo-adr",
+      "title": "Adrenal & Pituitary",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "endo",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "endo-adr-cushing",
+      "title": "Cushing",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "endo-adr",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "endo-adr-insuff",
+      "title": "Adrenal Insufficiency",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "endo-adr",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "endo-adr-pheo",
+      "title": "Pheochromocytoma & Hyperaldosteronism",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "endo-adr",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "endo-pit-pituitary",
+      "title": "Pituitary Disorders",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "endo-adr",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "endo-bone",
+      "title": "Bone & Mineral",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "endo",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "endo-bone-osteoporosis",
+      "title": "Osteoporosis",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "endo-bone",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "endo-bone-calcium",
+      "title": "Calcium & PTH Disorders",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "endo-bone",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "endo-bone-vitd",
+      "title": "Vitamin D & Mineral Metabolism",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "endo-bone",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "endo-repro",
+      "title": "Reproductive & Metabolic",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "endo",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "endo-repro-pcos",
+      "title": "PCOS & Hirsutism",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "endo-repro",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "endo-repro-hypogonadism",
+      "title": "Male Hypogonadism",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "endo-repro",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "endo-repro-obesity",
+      "title": "Obesity & Metabolic Syndrome",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "endo-repro",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "nephro",
+      "title": "Nephrology",
+      "synonyms": [],
+      "weight": null,
+      "parents": []
+    },
+    {
+      "id": "nephro-aki",
+      "title": "AKI",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "nephro",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "nephro-aki-prerenal",
+      "title": "Prerenal AKI",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "nephro-aki",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "nephro-aki-atn",
+      "title": "ATN & Intrinsic AKI",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "nephro-aki",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "nephro-aki-post",
+      "title": "Postrenal / Obstructive AKI",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "nephro-aki",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "nephro-aki-contrast",
+      "title": "Contrast-Associated AKI",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "nephro-aki",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "nephro-ckd",
+      "title": "CKD & ESRD",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "nephro",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "nephro-ckd-staging",
+      "title": "CKD Staging & Progression",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "nephro-ckd",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "nephro-ckd-complications",
+      "title": "CKD Complications (anemia, bone, acidosis)",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "nephro-ckd",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "nephro-ckd-rrt",
+      "title": "RRT Initiation & Modalities",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "nephro-ckd",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "nephro-glom",
+      "title": "Glomerular & Tubular Disease",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "nephro",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "nephro-glom-nephritic",
+      "title": "Nephritic Syndromes",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "nephro-glom",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "nephro-glom-nephrotic",
+      "title": "Nephrotic Syndromes",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "nephro-glom",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "nephro-tubular-rta",
+      "title": "RTA & Tubulopathies",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "nephro-glom",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "nephro-electrolyte",
+      "title": "Fluid, Electrolytes & Acid-Base",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "nephro",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "nephro-lyt-hypona",
+      "title": "Hyponatremia (SIADH, CSW, hypovolemic, hypervolemic)",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "nephro-electrolyte",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "nephro-lyt-hyperna",
+      "title": "Hypernatremia",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "nephro-electrolyte",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "nephro-lyt-k",
+      "title": "Potassium Disorders",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "nephro-electrolyte",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "nephro-lyt-camg",
+      "title": "Calcium, Magnesium, Phosphate Disorders",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "nephro-electrolyte",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "nephro-ab",
+      "title": "Acid-Base Disorders",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "nephro-electrolyte",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "nephro-stone",
+      "title": "Stone Disease & Cysts",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "nephro",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "nephro-stone-kidneystone",
+      "title": "Nephrolithiasis",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "nephro-stone",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "nephro-stone-pkd",
+      "title": "Cystic Kidney Disease",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "nephro-stone",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "heme",
+      "title": "Hematology",
+      "synonyms": [],
+      "weight": null,
+      "parents": []
+    },
+    {
+      "id": "heme-anemia",
+      "title": "Anemia",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "heme",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "heme-anemia-iron",
+      "title": "Iron Deficiency & ACD",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "heme-anemia",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "heme-anemia-macro",
+      "title": "Macrocytic Anemias (B12, folate)",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "heme-anemia",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "heme-anemia-hemolytic",
+      "title": "Hemolytic Anemias",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "heme-anemia",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "heme-anemia-aplastic",
+      "title": "Aplastic & BM Failure",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "heme-anemia",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "heme-clot",
+      "title": "Coagulation",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "heme",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "heme-clot-vte",
+      "title": "VTE — Dx, Tx, Duration",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "heme-clot",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "heme-clot-thrombophilia",
+      "title": "Inherited & Acquired Thrombophilia",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "heme-clot",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "heme-clot-doac",
+      "title": "Anticoagulant Selection & Reversal",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "heme-clot",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "heme-clot-bleeding",
+      "title": "Bleeding Disorders (vWD, hemophilia)",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "heme-clot",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "heme-plt",
+      "title": "Platelet & WBC Disorders",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "heme",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "heme-plt-itp",
+      "title": "ITP & Thrombocytopenia Workup",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "heme-plt",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "heme-plt-ttp-hit",
+      "title": "TTP, HUS, HIT, DIC",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "heme-plt",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "heme-plt-leukocytosis",
+      "title": "Leukocytosis & Leukopenia Workup",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "heme-plt",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "heme-mal",
+      "title": "Hematologic Malignancy",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "heme",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "heme-mal-mgus",
+      "title": "MGUS & Plasma Cell Dyscrasias",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "heme-mal",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "heme-mal-mm",
+      "title": "Multiple Myeloma",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "heme-mal",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "heme-mal-leukemia",
+      "title": "Acute & Chronic Leukemias",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "heme-mal",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "heme-mal-lymphoma",
+      "title": "Hodgkin & Non-Hodgkin Lymphoma",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "heme-mal",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "heme-mal-mds-mpn",
+      "title": "MDS & MPNs",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "heme-mal",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "onc",
+      "title": "Oncology",
+      "synonyms": [],
+      "weight": null,
+      "parents": []
+    },
+    {
+      "id": "onc-solid",
+      "title": "Solid Tumors (IM-relevant)",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "onc",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "onc-solid-breast",
+      "title": "Breast Cancer — Screening & Principles",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "onc-solid",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "onc-solid-lung",
+      "title": "Lung Cancer — Screening & Principles",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "onc-solid",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "onc-solid-colon",
+      "title": "Colorectal Cancer Principles",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "onc-solid",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "onc-solid-prostate",
+      "title": "Prostate Cancer — Screening & Principles",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "onc-solid",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "onc-solid-other",
+      "title": "Cancer of Unknown Primary & Other",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "onc-solid",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "onc-emerg",
+      "title": "Oncologic Emergencies",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "onc",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "onc-emerg-cord",
+      "title": "Spinal Cord Compression",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "onc-emerg",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "onc-emerg-svc",
+      "title": "SVC Syndrome",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "onc-emerg",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "onc-emerg-tls",
+      "title": "Tumor Lysis Syndrome",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "onc-emerg",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "onc-emerg-hyperca",
+      "title": "Hypercalcemia of Malignancy",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "onc-emerg",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "onc-emerg-neutropenic-fever",
+      "title": "Febrile Neutropenia",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "onc-emerg",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "onc-tox",
+      "title": "Treatment Toxicity",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "onc",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "onc-tox-chemo",
+      "title": "Cytotoxic Chemotherapy Side Effects",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "onc-tox",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "onc-tox-io",
+      "title": "Immunotherapy irAEs",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "onc-tox",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "onc-tox-rt",
+      "title": "Radiation Toxicity",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "onc-tox",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "onc-surv",
+      "title": "Survivorship & Supportive",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "onc",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "onc-surv-late",
+      "title": "Late Effects & Second Malignancies",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "onc-surv",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "onc-surv-supp",
+      "title": "Pain, Nausea, Anorexia in Cancer",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "onc-surv",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "neuro",
+      "title": "Neurology",
+      "synonyms": [],
+      "weight": null,
+      "parents": []
+    },
+    {
+      "id": "neuro-cerebrovasc",
+      "title": "Cerebrovascular",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "neuro",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "neuro-cerebrovasc-ais",
+      "title": "Acute Ischemic Stroke",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "neuro-cerebrovasc",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "neuro-cerebrovasc-tia",
+      "title": "TIA & Secondary Prevention",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "neuro-cerebrovasc",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "neuro-cerebrovasc-ich",
+      "title": "Intracerebral Hemorrhage",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "neuro-cerebrovasc",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "neuro-cerebrovasc-sah",
+      "title": "Subarachnoid Hemorrhage",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "neuro-cerebrovasc",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "neuro-headache",
+      "title": "Headache & Facial Pain",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "neuro",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "neuro-headache-migraine",
+      "title": "Migraine & Primary Headaches",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "neuro-headache",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "neuro-headache-secondary",
+      "title": "Secondary Headache Red Flags",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "neuro-headache",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "neuro-seizure",
+      "title": "Seizure & Epilepsy",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "neuro",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "neuro-seizure-new",
+      "title": "First Seizure — Workup",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "neuro-seizure",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "neuro-seizure-se",
+      "title": "Status Epilepticus",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "neuro-seizure",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "neuro-demy-neuromuscular",
+      "title": "Demyelinating & Neuromuscular",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "neuro",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "neuro-ms",
+      "title": "Multiple Sclerosis",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "neuro-demy-neuromuscular",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "neuro-gbs-mg",
+      "title": "GBS & Myasthenia Gravis",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "neuro-demy-neuromuscular",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "neuro-neuropathy",
+      "title": "Peripheral Neuropathies",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "neuro-demy-neuromuscular",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "neuro-cog",
+      "title": "Cognitive & Movement",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "neuro",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "neuro-cog-dementia",
+      "title": "Dementia Syndromes",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "neuro-cog",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "neuro-cog-delirium",
+      "title": "Delirium",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "neuro-cog",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "neuro-cog-pd",
+      "title": "Parkinson & Movement Disorders",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "neuro-cog",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "psych",
+      "title": "Psychiatry & Behavioral Health",
+      "synonyms": [],
+      "weight": null,
+      "parents": []
+    },
+    {
+      "id": "psych-mood",
+      "title": "Mood & Anxiety",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "psych",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "psych-mood-mdd",
+      "title": "Major Depression",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "psych-mood",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "psych-mood-bipolar",
+      "title": "Bipolar Disorder",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "psych-mood",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "psych-mood-anxiety",
+      "title": "Anxiety Disorders",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "psych-mood",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "psych-mood-suicide",
+      "title": "Suicide Risk Assessment",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "psych-mood",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "psych-sud",
+      "title": "Substance Use",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "psych",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "psych-sud-aud",
+      "title": "Alcohol Use Disorder & Withdrawal",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "psych-sud",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "psych-sud-oud",
+      "title": "Opioid Use Disorder & Withdrawal",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "psych-sud",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "psych-sud-tobacco",
+      "title": "Tobacco Cessation",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "psych-sud",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "psych-psych",
+      "title": "Psychotic & Somatic",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "psych",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "psych-psych-schizo",
+      "title": "Schizophrenia Spectrum",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "psych-psych",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "psych-psych-somatic",
+      "title": "Somatic Symptom & Functional Disorders",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "psych-psych",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "derm",
+      "title": "Dermatology",
+      "synonyms": [],
+      "weight": null,
+      "parents": []
+    },
+    {
+      "id": "derm-inflam",
+      "title": "Inflammatory Dermatoses",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "derm",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "derm-inflam-eczema-psoriasis",
+      "title": "Eczema & Psoriasis",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "derm-inflam",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "derm-inflam-acne-rosacea",
+      "title": "Acne & Rosacea",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "derm-inflam",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "derm-inflam-drug",
+      "title": "Drug Eruptions (incl. SJS/TEN)",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "derm-inflam",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "derm-infect",
+      "title": "Skin Infections",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "derm",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "derm-infect-bact",
+      "title": "Bacterial Skin Infections",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "derm-infect",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "derm-infect-viral",
+      "title": "Viral Skin Infections (HSV, VZV, warts)",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "derm-infect",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "derm-infect-fungal",
+      "title": "Fungal Skin Infections",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "derm-infect",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "derm-onc",
+      "title": "Skin Neoplasms",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "derm",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "derm-onc-melanoma",
+      "title": "Melanoma",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "derm-onc",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "derm-onc-nmsc",
+      "title": "BCC & SCC",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "derm-onc",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "allergy",
+      "title": "Allergy & Immunology",
+      "synonyms": [],
+      "weight": null,
+      "parents": []
+    },
+    {
+      "id": "allergy-anaphylaxis",
+      "title": "Anaphylaxis & Urticaria",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "allergy",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "allergy-anaphylaxis-acute",
+      "title": "Anaphylaxis",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "allergy-anaphylaxis",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "allergy-anaphylaxis-urticaria",
+      "title": "Chronic Urticaria & Angioedema",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "allergy-anaphylaxis",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "allergy-drug",
+      "title": "Drug & Food Allergy",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "allergy",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "allergy-drug-penicillin",
+      "title": "Penicillin & Antibiotic Allergy",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "allergy-drug",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "allergy-drug-food",
+      "title": "Food Allergy",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "allergy-drug",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "allergy-immunodef",
+      "title": "Primary Immunodeficiency",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "allergy",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "allergy-immunodef-cvid",
+      "title": "CVID & Antibody Deficiencies",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "allergy-immunodef",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "obgyn",
+      "title": "Obstetrics, Gynecology & Women's Health (IM-relevant)",
+      "synonyms": [],
+      "weight": null,
+      "parents": []
+    },
+    {
+      "id": "obgyn-preventive",
+      "title": "Preventive & Screening",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "obgyn",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "obgyn-cervical-screen",
+      "title": "Cervical Cancer Screening",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "obgyn-preventive",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "obgyn-breast-screen",
+      "title": "Breast Cancer Screening",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "obgyn-preventive",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "obgyn-contraception",
+      "title": "Contraception in IM",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "obgyn-preventive",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "obgyn-menst-meno",
+      "title": "Menstrual & Menopausal",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "obgyn",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "obgyn-menst-aub",
+      "title": "Abnormal Uterine Bleeding",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "obgyn-menst-meno",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "obgyn-menst-meno-mgmt",
+      "title": "Menopause Management",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "obgyn-menst-meno",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "obgyn-preg",
+      "title": "Pregnancy-Related IM",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "obgyn",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "obgyn-preg-htn",
+      "title": "Hypertension in Pregnancy",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "obgyn-preg",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "obgyn-preg-dm",
+      "title": "Diabetes in Pregnancy",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "obgyn-preg",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "obgyn-preg-thyroid",
+      "title": "Thyroid in Pregnancy",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "obgyn-preg",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "obgyn-preg-vte",
+      "title": "VTE in Pregnancy & Postpartum",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "obgyn-preg",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "geri-pall",
+      "title": "Geriatrics & Palliative Care",
+      "synonyms": [],
+      "weight": null,
+      "parents": []
+    },
+    {
+      "id": "geri-syndromes",
+      "title": "Geriatric Syndromes",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "geri-pall",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "geri-syndromes-falls",
+      "title": "Falls & Gait",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "geri-syndromes",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "geri-syndromes-incontinence",
+      "title": "Urinary Incontinence",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "geri-syndromes",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "geri-syndromes-frailty",
+      "title": "Frailty & Sarcopenia",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "geri-syndromes",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "geri-syndromes-polypharm",
+      "title": "Polypharmacy & Deprescribing",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "geri-syndromes",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "pall-symptom",
+      "title": "Symptom Management",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "geri-pall",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "pall-symptom-pain",
+      "title": "Pain Management Principles",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "pall-symptom",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "pall-symptom-dyspnea-nausea",
+      "title": "Dyspnea & Nausea in Serious Illness",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "pall-symptom",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "pall-eol",
+      "title": "Goals of Care & End of Life",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "geri-pall",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "pall-eol-goc",
+      "title": "Goals of Care & Advance Care Planning",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "pall-eol",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "pall-eol-hospice",
+      "title": "Hospice Eligibility & Transitions",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "pall-eol",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "genim",
+      "title": "General Internal Medicine / Ambulatory",
+      "synonyms": [],
+      "weight": null,
+      "parents": []
+    },
+    {
+      "id": "genim-prev",
+      "title": "Preventive Medicine",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "genim",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "genim-prev-screening",
+      "title": "USPSTF Screening (non-CA)",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "genim-prev",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "genim-prev-cancer-screen",
+      "title": "Cancer Screening (all-site)",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "genim-prev",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "genim-prev-counseling",
+      "title": "Behavioral Counseling (diet, exercise, sexual)",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "genim-prev",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "genim-symptoms",
+      "title": "Common Outpatient Symptoms",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "genim",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "genim-sym-fatigue",
+      "title": "Fatigue Workup",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "genim-symptoms",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "genim-sym-weightloss",
+      "title": "Unintentional Weight Loss",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "genim-symptoms",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "genim-sym-lymphadenopathy",
+      "title": "Lymphadenopathy Workup",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "genim-symptoms",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "genim-sym-dizziness",
+      "title": "Dizziness & Vertigo",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "genim-symptoms",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "genim-sym-chestpain-out",
+      "title": "Chest Pain (Outpatient)",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "genim-symptoms",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "genim-preop",
+      "title": "Perioperative Medicine",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "genim",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "genim-preop-eval",
+      "title": "General Preoperative Evaluation",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "genim-preop",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "genim-preop-anticoag",
+      "title": "Perioperative Anticoagulation",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "genim-preop",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "genim-addiction-sexual",
+      "title": "Behavioral / Addiction / Sexual Health",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "genim",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "genim-sti",
+      "title": "STIs — Screening & Treatment",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "genim-addiction-sexual",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "genim-sexdys",
+      "title": "Sexual Dysfunction",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "genim-addiction-sexual",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "critcare",
+      "title": "Critical Care / Hospital Medicine",
+      "synonyms": [],
+      "weight": null,
+      "parents": []
+    },
+    {
+      "id": "critcare-shock",
+      "title": "Shock & Resuscitation",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "critcare",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "critcare-shock-types",
+      "title": "Shock Classification & Approach",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "critcare-shock",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "critcare-shock-fluids",
+      "title": "Fluid Resuscitation & Vasopressors",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "critcare-shock",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "critcare-resp",
+      "title": "Respiratory Failure",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "critcare",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "critcare-resp-ards",
+      "title": "ARDS",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "critcare-resp",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "critcare-resp-vent",
+      "title": "Mechanical Ventilation Basics",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "critcare-resp",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "critcare-resp-niv",
+      "title": "NIV & HFNC",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "critcare-resp",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "critcare-hospmed",
+      "title": "Hospital Medicine",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "critcare",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "critcare-hospmed-vte-ppx",
+      "title": "Inpatient VTE Prophylaxis",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "critcare-hospmed",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "critcare-hospmed-transitions",
+      "title": "Transitions of Care & Readmission",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "critcare-hospmed",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "critcare-hospmed-nutrition",
+      "title": "Inpatient Nutrition & Refeeding",
+      "synonyms": [],
+      "weight": null,
+      "parents": [
+        {
+          "id": "critcare-hospmed",
+          "is_primary": true
+        }
+      ]
+    }
+  ]
+}
