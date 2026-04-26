@@ -1,0 +1,416 @@
+{
+  "meta": {
+    "name": "Kekki Internal Medicine Ontology",
+    "version": "0.1.0",
+    "drafted": "2026-04-23",
+    "basis": "ABIM MOC blueprint categories (structural scaffold) + reconstructed CDIM-SGIM/AAIM core training problems (topic grain). AAIM 2021 curriculum (Part 1: diseases/conditions/presentations) should be used to verify and extend.",
+    "use": "Controlled vocabulary for LLM intake parser and plan generator. Every structured_analytics row must map to an id in this file. LLM is prompted to select the closest id and return null rather than invent a new one.",
+    "depth_levels": {
+      "1": "Domain (system)",
+      "2": "Subdomain (disease family / problem cluster)",
+      "3": "Topic (specific clinical problem or presentation)"
+    },
+    "open_questions": [
+      "Verify domain weights vs current ABIM blueprint percentages.",
+      "Verify topic grain against AAIM 2021 Part 1 training problems.",
+      "Decide whether cross-cutting themes (e.g., preventive care, geriatrics) get their own domain or live as tags across systems.",
+      "Add synonyms for every topic before production use; current synonyms are illustrative only."
+    ]
+  },
+  "nodes": [
+
+    { "id": "cardio", "parent_id": null, "depth": 1, "title": "Cardiovascular Disease" },
+    { "id": "cardio_hf", "parent_id": "cardio", "depth": 2, "title": "Heart Failure" },
+    { "id": "cardio_hf_hfref_dx", "parent_id": "cardio_hf", "depth": 3, "title": "HFrEF — Diagnosis", "synonyms": ["reduced EF", "systolic dysfunction"] },
+    { "id": "cardio_hf_hfref_gdmt", "parent_id": "cardio_hf", "depth": 3, "title": "HFrEF — GDMT", "synonyms": ["quadruple therapy", "ARNI BB MRA SGLT2"] },
+    { "id": "cardio_hf_hfpef_dx", "parent_id": "cardio_hf", "depth": 3, "title": "HFpEF — Diagnosis", "synonyms": ["preserved EF", "diastolic HF"] },
+    { "id": "cardio_hf_hfpef_mgmt", "parent_id": "cardio_hf", "depth": 3, "title": "HFpEF — Management" },
+    { "id": "cardio_hf_adhf", "parent_id": "cardio_hf", "depth": 3, "title": "Acute Decompensated HF", "synonyms": ["ADHF", "cardiogenic pulmonary edema"] },
+    { "id": "cardio_hf_shock", "parent_id": "cardio_hf", "depth": 3, "title": "Cardiogenic Shock" },
+
+    { "id": "cardio_cad", "parent_id": "cardio", "depth": 2, "title": "Coronary Artery Disease" },
+    { "id": "cardio_cad_sihd", "parent_id": "cardio_cad", "depth": 3, "title": "Stable Ischemic Heart Disease", "synonyms": ["stable angina", "SIHD"] },
+    { "id": "cardio_cad_nstemi", "parent_id": "cardio_cad", "depth": 3, "title": "NSTEMI / Unstable Angina" },
+    { "id": "cardio_cad_stemi", "parent_id": "cardio_cad", "depth": 3, "title": "STEMI" },
+    { "id": "cardio_cad_postmi", "parent_id": "cardio_cad", "depth": 3, "title": "Post-MI Care & Secondary Prevention" },
+    { "id": "cardio_cad_preop", "parent_id": "cardio_cad", "depth": 3, "title": "Perioperative Cardiac Risk", "synonyms": ["RCRI", "pre-op eval"] },
+
+    { "id": "cardio_arr", "parent_id": "cardio", "depth": 2, "title": "Arrhythmias" },
+    { "id": "cardio_arr_afib_rr", "parent_id": "cardio_arr", "depth": 3, "title": "Atrial Fibrillation — Rate & Rhythm Control" },
+    { "id": "cardio_arr_afib_stroke", "parent_id": "cardio_arr", "depth": 3, "title": "Atrial Fibrillation — Stroke Prevention", "synonyms": ["CHA2DS2-VASc", "anticoagulation in AFib"] },
+    { "id": "cardio_arr_svt", "parent_id": "cardio_arr", "depth": 3, "title": "Supraventricular Tachycardias" },
+    { "id": "cardio_arr_vt", "parent_id": "cardio_arr", "depth": 3, "title": "Ventricular Arrhythmias" },
+    { "id": "cardio_arr_brady", "parent_id": "cardio_arr", "depth": 3, "title": "Bradyarrhythmias & Conduction Disease", "synonyms": ["AV block", "sick sinus"] },
+    { "id": "cardio_arr_syncope", "parent_id": "cardio_arr", "depth": 3, "title": "Syncope Workup" },
+
+    { "id": "cardio_valve", "parent_id": "cardio", "depth": 2, "title": "Valvular Heart Disease" },
+    { "id": "cardio_valve_as", "parent_id": "cardio_valve", "depth": 3, "title": "Aortic Stenosis" },
+    { "id": "cardio_valve_ar", "parent_id": "cardio_valve", "depth": 3, "title": "Aortic Regurgitation" },
+    { "id": "cardio_valve_mr", "parent_id": "cardio_valve", "depth": 3, "title": "Mitral Regurgitation" },
+    { "id": "cardio_valve_ms", "parent_id": "cardio_valve", "depth": 3, "title": "Mitral Stenosis" },
+    { "id": "cardio_valve_ie", "parent_id": "cardio_valve", "depth": 3, "title": "Infective Endocarditis" },
+
+    { "id": "cardio_peri", "parent_id": "cardio", "depth": 2, "title": "Pericardial & Myocardial Disease" },
+    { "id": "cardio_peri_acute", "parent_id": "cardio_peri", "depth": 3, "title": "Acute Pericarditis" },
+    { "id": "cardio_peri_tamponade", "parent_id": "cardio_peri", "depth": 3, "title": "Cardiac Tamponade" },
+    { "id": "cardio_peri_constrict", "parent_id": "cardio_peri", "depth": 3, "title": "Constrictive Pericarditis" },
+    { "id": "cardio_peri_cm", "parent_id": "cardio_peri", "depth": 3, "title": "Cardiomyopathies (HCM, DCM, Restrictive)" },
+    { "id": "cardio_peri_myo", "parent_id": "cardio_peri", "depth": 3, "title": "Myocarditis" },
+
+    { "id": "cardio_vasc", "parent_id": "cardio", "depth": 2, "title": "Vascular & Hypertension" },
+    { "id": "cardio_vasc_htn_primary", "parent_id": "cardio_vasc", "depth": 3, "title": "Primary Hypertension" },
+    { "id": "cardio_vasc_htn_secondary", "parent_id": "cardio_vasc", "depth": 3, "title": "Secondary Hypertension" },
+    { "id": "cardio_vasc_htn_emergency", "parent_id": "cardio_vasc", "depth": 3, "title": "Hypertensive Urgency & Emergency" },
+    { "id": "cardio_vasc_pad", "parent_id": "cardio_vasc", "depth": 3, "title": "Peripheral Arterial Disease" },
+    { "id": "cardio_vasc_aorta", "parent_id": "cardio_vasc", "depth": 3, "title": "Aortic Aneurysm & Dissection" },
+
+    { "id": "cardio_prev", "parent_id": "cardio", "depth": 2, "title": "Preventive Cardiology" },
+    { "id": "cardio_prev_ascvd", "parent_id": "cardio_prev", "depth": 3, "title": "ASCVD Risk Assessment" },
+    { "id": "cardio_prev_lipids", "parent_id": "cardio_prev", "depth": 3, "title": "Lipid Management" },
+
+    { "id": "pulm", "parent_id": null, "depth": 1, "title": "Pulmonary Disease" },
+    { "id": "pulm_obs", "parent_id": "pulm", "depth": 2, "title": "Obstructive Lung Disease" },
+    { "id": "pulm_obs_copd_stable", "parent_id": "pulm_obs", "depth": 3, "title": "COPD — Stable Management" },
+    { "id": "pulm_obs_copd_exac", "parent_id": "pulm_obs", "depth": 3, "title": "COPD Exacerbation" },
+    { "id": "pulm_obs_asthma", "parent_id": "pulm_obs", "depth": 3, "title": "Asthma — Stable & Exacerbation" },
+    { "id": "pulm_obs_bronchiectasis", "parent_id": "pulm_obs", "depth": 3, "title": "Bronchiectasis" },
+
+    { "id": "pulm_ild", "parent_id": "pulm", "depth": 2, "title": "Interstitial & Restrictive Lung Disease" },
+    { "id": "pulm_ild_ipf", "parent_id": "pulm_ild", "depth": 3, "title": "Idiopathic Pulmonary Fibrosis" },
+    { "id": "pulm_ild_hp", "parent_id": "pulm_ild", "depth": 3, "title": "Hypersensitivity Pneumonitis" },
+    { "id": "pulm_ild_sarcoid", "parent_id": "pulm_ild", "depth": 3, "title": "Sarcoidosis" },
+    { "id": "pulm_ild_ctd", "parent_id": "pulm_ild", "depth": 3, "title": "CTD-Associated ILD" },
+
+    { "id": "pulm_infect", "parent_id": "pulm", "depth": 2, "title": "Pulmonary Infection (see also ID)" },
+    { "id": "pulm_infect_cap", "parent_id": "pulm_infect", "depth": 3, "title": "Community-Acquired Pneumonia" },
+    { "id": "pulm_infect_hap", "parent_id": "pulm_infect", "depth": 3, "title": "HAP / VAP" },
+    { "id": "pulm_infect_tb", "parent_id": "pulm_infect", "depth": 3, "title": "Tuberculosis — Active & Latent" },
+
+    { "id": "pulm_vasc", "parent_id": "pulm", "depth": 2, "title": "Pulmonary Vascular Disease" },
+    { "id": "pulm_vasc_pe", "parent_id": "pulm_vasc", "depth": 3, "title": "Pulmonary Embolism" },
+    { "id": "pulm_vasc_pah", "parent_id": "pulm_vasc", "depth": 3, "title": "Pulmonary Arterial Hypertension" },
+
+    { "id": "pulm_pleura", "parent_id": "pulm", "depth": 2, "title": "Pleural & Mediastinal Disease" },
+    { "id": "pulm_pleura_effusion", "parent_id": "pulm_pleura", "depth": 3, "title": "Pleural Effusion — Dx & Mgmt" },
+    { "id": "pulm_pleura_ptx", "parent_id": "pulm_pleura", "depth": 3, "title": "Pneumothorax" },
+    { "id": "pulm_pleura_soldar", "parent_id": "pulm_pleura", "depth": 3, "title": "Solitary Pulmonary Nodule" },
+
+    { "id": "pulm_sleep", "parent_id": "pulm", "depth": 2, "title": "Sleep-Disordered Breathing" },
+    { "id": "pulm_sleep_osa", "parent_id": "pulm_sleep", "depth": 3, "title": "Obstructive Sleep Apnea" },
+
+    { "id": "gi", "parent_id": null, "depth": 1, "title": "Gastroenterology & Hepatology" },
+    { "id": "gi_upper", "parent_id": "gi", "depth": 2, "title": "Upper GI" },
+    { "id": "gi_upper_gerd", "parent_id": "gi_upper", "depth": 3, "title": "GERD & Barrett's" },
+    { "id": "gi_upper_pud", "parent_id": "gi_upper", "depth": 3, "title": "Peptic Ulcer Disease" },
+    { "id": "gi_upper_ugib", "parent_id": "gi_upper", "depth": 3, "title": "Upper GI Bleed" },
+    { "id": "gi_upper_dys", "parent_id": "gi_upper", "depth": 3, "title": "Dyspepsia / H. pylori" },
+
+    { "id": "gi_lower", "parent_id": "gi", "depth": 2, "title": "Lower GI" },
+    { "id": "gi_lower_ibd", "parent_id": "gi_lower", "depth": 3, "title": "IBD — Crohn & UC" },
+    { "id": "gi_lower_ibs", "parent_id": "gi_lower", "depth": 3, "title": "IBS & Functional GI" },
+    { "id": "gi_lower_lgib", "parent_id": "gi_lower", "depth": 3, "title": "Lower GI Bleed" },
+    { "id": "gi_lower_diarrhea", "parent_id": "gi_lower", "depth": 3, "title": "Acute & Chronic Diarrhea" },
+    { "id": "gi_lower_celiac", "parent_id": "gi_lower", "depth": 3, "title": "Celiac & Malabsorption" },
+    { "id": "gi_lower_cancer_screen", "parent_id": "gi_lower", "depth": 3, "title": "Colorectal Cancer Screening" },
+
+    { "id": "gi_panc_bil", "parent_id": "gi", "depth": 2, "title": "Pancreatic & Biliary" },
+    { "id": "gi_panc_acute", "parent_id": "gi_panc_bil", "depth": 3, "title": "Acute Pancreatitis" },
+    { "id": "gi_panc_chronic", "parent_id": "gi_panc_bil", "depth": 3, "title": "Chronic Pancreatitis" },
+    { "id": "gi_bil_gallstone", "parent_id": "gi_panc_bil", "depth": 3, "title": "Gallstone Disease & Cholangitis" },
+
+    { "id": "gi_liver", "parent_id": "gi", "depth": 2, "title": "Hepatology" },
+    { "id": "gi_liver_lfts", "parent_id": "gi_liver", "depth": 3, "title": "Abnormal LFTs — Workup" },
+    { "id": "gi_liver_viral", "parent_id": "gi_liver", "depth": 3, "title": "Viral Hepatitis (A/B/C)" },
+    { "id": "gi_liver_nafld", "parent_id": "gi_liver", "depth": 3, "title": "MASLD / MASH" },
+    { "id": "gi_liver_alcoholic", "parent_id": "gi_liver", "depth": 3, "title": "Alcohol-Associated Liver Disease" },
+    { "id": "gi_liver_cirr", "parent_id": "gi_liver", "depth": 3, "title": "Cirrhosis & Complications", "synonyms": ["ascites", "SBP", "HE", "varices"] },
+    { "id": "gi_liver_autoimmune", "parent_id": "gi_liver", "depth": 3, "title": "Autoimmune / Cholestatic Liver (AIH, PBC, PSC)" },
+
+    { "id": "id", "parent_id": null, "depth": 1, "title": "Infectious Disease" },
+    { "id": "id_bact", "parent_id": "id", "depth": 2, "title": "Bacterial Syndromes" },
+    { "id": "id_bact_sepsis", "parent_id": "id_bact", "depth": 3, "title": "Sepsis & Septic Shock" },
+    { "id": "id_bact_uti", "parent_id": "id_bact", "depth": 3, "title": "UTI & Pyelonephritis" },
+    { "id": "id_bact_skin", "parent_id": "id_bact", "depth": 3, "title": "Cellulitis & SSTI" },
+    { "id": "id_bact_bone", "parent_id": "id_bact", "depth": 3, "title": "Osteomyelitis & Septic Arthritis" },
+    { "id": "id_bact_cdiff", "parent_id": "id_bact", "depth": 3, "title": "C. difficile Infection" },
+    { "id": "id_bact_cns", "parent_id": "id_bact", "depth": 3, "title": "Meningitis & Encephalitis" },
+
+    { "id": "id_viral", "parent_id": "id", "depth": 2, "title": "Viral Syndromes" },
+    { "id": "id_viral_hiv", "parent_id": "id_viral", "depth": 3, "title": "HIV — Dx, ART, OIs" },
+    { "id": "id_viral_influenza", "parent_id": "id_viral", "depth": 3, "title": "Influenza & Respiratory Viruses" },
+    { "id": "id_viral_covid", "parent_id": "id_viral", "depth": 3, "title": "COVID-19" },
+
+    { "id": "id_fungal_para", "parent_id": "id", "depth": 2, "title": "Fungal & Parasitic" },
+    { "id": "id_fungal_endemic", "parent_id": "id_fungal_para", "depth": 3, "title": "Endemic Mycoses" },
+    { "id": "id_fungal_candida", "parent_id": "id_fungal_para", "depth": 3, "title": "Candidiasis & Aspergillosis" },
+    { "id": "id_para_travel", "parent_id": "id_fungal_para", "depth": 3, "title": "Travel & Tropical Infection" },
+
+    { "id": "id_steward", "parent_id": "id", "depth": 2, "title": "Stewardship & Prevention" },
+    { "id": "id_steward_empiric", "parent_id": "id_steward", "depth": 3, "title": "Empiric Antibiotic Selection" },
+    { "id": "id_steward_vaccines", "parent_id": "id_steward", "depth": 3, "title": "Adult Vaccination" },
+    { "id": "id_steward_ppx", "parent_id": "id_steward", "depth": 3, "title": "Pre/Post-Exposure Prophylaxis" },
+
+    { "id": "rheum", "parent_id": null, "depth": 1, "title": "Rheumatology & Orthopedics" },
+    { "id": "rheum_inflam", "parent_id": "rheum", "depth": 2, "title": "Inflammatory Arthritis" },
+    { "id": "rheum_inflam_ra", "parent_id": "rheum_inflam", "depth": 3, "title": "Rheumatoid Arthritis" },
+    { "id": "rheum_inflam_spa", "parent_id": "rheum_inflam", "depth": 3, "title": "Spondyloarthritis (AS, PsA, Reactive, IBD-assoc)" },
+    { "id": "rheum_inflam_crystal", "parent_id": "rheum_inflam", "depth": 3, "title": "Gout & CPPD" },
+
+    { "id": "rheum_ctd", "parent_id": "rheum", "depth": 2, "title": "Connective Tissue Disease" },
+    { "id": "rheum_ctd_sle", "parent_id": "rheum_ctd", "depth": 3, "title": "SLE" },
+    { "id": "rheum_ctd_ssc", "parent_id": "rheum_ctd", "depth": 3, "title": "Systemic Sclerosis" },
+    { "id": "rheum_ctd_sjogren", "parent_id": "rheum_ctd", "depth": 3, "title": "Sjögren" },
+    { "id": "rheum_ctd_myositis", "parent_id": "rheum_ctd", "depth": 3, "title": "Inflammatory Myopathies" },
+
+    { "id": "rheum_vasc", "parent_id": "rheum", "depth": 2, "title": "Vasculitis" },
+    { "id": "rheum_vasc_large", "parent_id": "rheum_vasc", "depth": 3, "title": "Large-Vessel (GCA, Takayasu)" },
+    { "id": "rheum_vasc_medium", "parent_id": "rheum_vasc", "depth": 3, "title": "Medium-Vessel (PAN, Kawasaki)" },
+    { "id": "rheum_vasc_small", "parent_id": "rheum_vasc", "depth": 3, "title": "Small-Vessel (ANCA, IgA, cryo)" },
+
+    { "id": "rheum_msk", "parent_id": "rheum", "depth": 2, "title": "Musculoskeletal" },
+    { "id": "rheum_msk_oa", "parent_id": "rheum_msk", "depth": 3, "title": "Osteoarthritis" },
+    { "id": "rheum_msk_fibromyalgia", "parent_id": "rheum_msk", "depth": 3, "title": "Fibromyalgia & Chronic Pain" },
+    { "id": "rheum_msk_regional", "parent_id": "rheum_msk", "depth": 3, "title": "Common Regional Problems (shoulder, back, knee)" },
+
+    { "id": "endo", "parent_id": null, "depth": 1, "title": "Endocrinology & Metabolism" },
+    { "id": "endo_dm", "parent_id": "endo", "depth": 2, "title": "Diabetes" },
+    { "id": "endo_dm_t2_mgmt", "parent_id": "endo_dm", "depth": 3, "title": "T2DM — Pharmacotherapy" },
+    { "id": "endo_dm_t1", "parent_id": "endo_dm", "depth": 3, "title": "T1DM & Insulin Strategies" },
+    { "id": "endo_dm_dka_hhs", "parent_id": "endo_dm", "depth": 3, "title": "DKA & HHS" },
+    { "id": "endo_dm_complications", "parent_id": "endo_dm", "depth": 3, "title": "Diabetes Complications & Screening" },
+
+    { "id": "endo_thy", "parent_id": "endo", "depth": 2, "title": "Thyroid" },
+    { "id": "endo_thy_hypo", "parent_id": "endo_thy", "depth": 3, "title": "Hypothyroidism" },
+    { "id": "endo_thy_hyper", "parent_id": "endo_thy", "depth": 3, "title": "Hyperthyroidism" },
+    { "id": "endo_thy_nodule", "parent_id": "endo_thy", "depth": 3, "title": "Thyroid Nodule & Cancer" },
+
+    { "id": "endo_adr", "parent_id": "endo", "depth": 2, "title": "Adrenal & Pituitary" },
+    { "id": "endo_adr_cushing", "parent_id": "endo_adr", "depth": 3, "title": "Cushing" },
+    { "id": "endo_adr_insuff", "parent_id": "endo_adr", "depth": 3, "title": "Adrenal Insufficiency" },
+    { "id": "endo_adr_pheo", "parent_id": "endo_adr", "depth": 3, "title": "Pheochromocytoma & Hyperaldosteronism" },
+    { "id": "endo_pit_pituitary", "parent_id": "endo_adr", "depth": 3, "title": "Pituitary Disorders" },
+
+    { "id": "endo_bone", "parent_id": "endo", "depth": 2, "title": "Bone & Mineral" },
+    { "id": "endo_bone_osteoporosis", "parent_id": "endo_bone", "depth": 3, "title": "Osteoporosis" },
+    { "id": "endo_bone_calcium", "parent_id": "endo_bone", "depth": 3, "title": "Calcium & PTH Disorders" },
+    { "id": "endo_bone_vitd", "parent_id": "endo_bone", "depth": 3, "title": "Vitamin D & Mineral Metabolism" },
+
+    { "id": "endo_repro", "parent_id": "endo", "depth": 2, "title": "Reproductive & Metabolic" },
+    { "id": "endo_repro_pcos", "parent_id": "endo_repro", "depth": 3, "title": "PCOS & Hirsutism" },
+    { "id": "endo_repro_hypogonadism", "parent_id": "endo_repro", "depth": 3, "title": "Male Hypogonadism" },
+    { "id": "endo_repro_obesity", "parent_id": "endo_repro", "depth": 3, "title": "Obesity & Metabolic Syndrome" },
+
+    { "id": "nephro", "parent_id": null, "depth": 1, "title": "Nephrology" },
+    { "id": "nephro_aki", "parent_id": "nephro", "depth": 2, "title": "AKI" },
+    { "id": "nephro_aki_prerenal", "parent_id": "nephro_aki", "depth": 3, "title": "Prerenal AKI" },
+    { "id": "nephro_aki_atn", "parent_id": "nephro_aki", "depth": 3, "title": "ATN & Intrinsic AKI" },
+    { "id": "nephro_aki_post", "parent_id": "nephro_aki", "depth": 3, "title": "Postrenal / Obstructive AKI" },
+    { "id": "nephro_aki_contrast", "parent_id": "nephro_aki", "depth": 3, "title": "Contrast-Associated AKI" },
+
+    { "id": "nephro_ckd", "parent_id": "nephro", "depth": 2, "title": "CKD & ESRD" },
+    { "id": "nephro_ckd_staging", "parent_id": "nephro_ckd", "depth": 3, "title": "CKD Staging & Progression" },
+    { "id": "nephro_ckd_complications", "parent_id": "nephro_ckd", "depth": 3, "title": "CKD Complications (anemia, bone, acidosis)" },
+    { "id": "nephro_ckd_rrt", "parent_id": "nephro_ckd", "depth": 3, "title": "RRT Initiation & Modalities" },
+
+    { "id": "nephro_glom", "parent_id": "nephro", "depth": 2, "title": "Glomerular & Tubular Disease" },
+    { "id": "nephro_glom_nephritic", "parent_id": "nephro_glom", "depth": 3, "title": "Nephritic Syndromes" },
+    { "id": "nephro_glom_nephrotic", "parent_id": "nephro_glom", "depth": 3, "title": "Nephrotic Syndromes" },
+    { "id": "nephro_tubular_rta", "parent_id": "nephro_glom", "depth": 3, "title": "RTA & Tubulopathies" },
+
+    { "id": "nephro_electrolyte", "parent_id": "nephro", "depth": 2, "title": "Fluid, Electrolytes & Acid-Base" },
+    { "id": "nephro_lyt_hypona", "parent_id": "nephro_electrolyte", "depth": 3, "title": "Hyponatremia (SIADH, CSW, hypovolemic, hypervolemic)" },
+    { "id": "nephro_lyt_hyperna", "parent_id": "nephro_electrolyte", "depth": 3, "title": "Hypernatremia" },
+    { "id": "nephro_lyt_k", "parent_id": "nephro_electrolyte", "depth": 3, "title": "Potassium Disorders" },
+    { "id": "nephro_lyt_camg", "parent_id": "nephro_electrolyte", "depth": 3, "title": "Calcium, Magnesium, Phosphate Disorders" },
+    { "id": "nephro_ab", "parent_id": "nephro_electrolyte", "depth": 3, "title": "Acid-Base Disorders" },
+
+    { "id": "nephro_stone", "parent_id": "nephro", "depth": 2, "title": "Stone Disease & Cysts" },
+    { "id": "nephro_stone_kidneystone", "parent_id": "nephro_stone", "depth": 3, "title": "Nephrolithiasis" },
+    { "id": "nephro_stone_pkd", "parent_id": "nephro_stone", "depth": 3, "title": "Cystic Kidney Disease" },
+
+    { "id": "heme", "parent_id": null, "depth": 1, "title": "Hematology" },
+    { "id": "heme_anemia", "parent_id": "heme", "depth": 2, "title": "Anemia" },
+    { "id": "heme_anemia_iron", "parent_id": "heme_anemia", "depth": 3, "title": "Iron Deficiency & ACD" },
+    { "id": "heme_anemia_macro", "parent_id": "heme_anemia", "depth": 3, "title": "Macrocytic Anemias (B12, folate)" },
+    { "id": "heme_anemia_hemolytic", "parent_id": "heme_anemia", "depth": 3, "title": "Hemolytic Anemias" },
+    { "id": "heme_anemia_aplastic", "parent_id": "heme_anemia", "depth": 3, "title": "Aplastic & BM Failure" },
+
+    { "id": "heme_clot", "parent_id": "heme", "depth": 2, "title": "Coagulation" },
+    { "id": "heme_clot_vte", "parent_id": "heme_clot", "depth": 3, "title": "VTE — Dx, Tx, Duration" },
+    { "id": "heme_clot_thrombophilia", "parent_id": "heme_clot", "depth": 3, "title": "Inherited & Acquired Thrombophilia" },
+    { "id": "heme_clot_doac", "parent_id": "heme_clot", "depth": 3, "title": "Anticoagulant Selection & Reversal" },
+    { "id": "heme_clot_bleeding", "parent_id": "heme_clot", "depth": 3, "title": "Bleeding Disorders (vWD, hemophilia)" },
+
+    { "id": "heme_plt", "parent_id": "heme", "depth": 2, "title": "Platelet & WBC Disorders" },
+    { "id": "heme_plt_itp", "parent_id": "heme_plt", "depth": 3, "title": "ITP & Thrombocytopenia Workup" },
+    { "id": "heme_plt_ttp_hit", "parent_id": "heme_plt", "depth": 3, "title": "TTP, HUS, HIT, DIC" },
+    { "id": "heme_plt_leukocytosis", "parent_id": "heme_plt", "depth": 3, "title": "Leukocytosis & Leukopenia Workup" },
+
+    { "id": "heme_mal", "parent_id": "heme", "depth": 2, "title": "Hematologic Malignancy" },
+    { "id": "heme_mal_mgus", "parent_id": "heme_mal", "depth": 3, "title": "MGUS & Plasma Cell Dyscrasias" },
+    { "id": "heme_mal_mm", "parent_id": "heme_mal", "depth": 3, "title": "Multiple Myeloma" },
+    { "id": "heme_mal_leukemia", "parent_id": "heme_mal", "depth": 3, "title": "Acute & Chronic Leukemias" },
+    { "id": "heme_mal_lymphoma", "parent_id": "heme_mal", "depth": 3, "title": "Hodgkin & Non-Hodgkin Lymphoma" },
+    { "id": "heme_mal_mds_mpn", "parent_id": "heme_mal", "depth": 3, "title": "MDS & MPNs" },
+
+    { "id": "onc", "parent_id": null, "depth": 1, "title": "Oncology" },
+    { "id": "onc_solid", "parent_id": "onc", "depth": 2, "title": "Solid Tumors (IM-relevant)" },
+    { "id": "onc_solid_breast", "parent_id": "onc_solid", "depth": 3, "title": "Breast Cancer — Screening & Principles" },
+    { "id": "onc_solid_lung", "parent_id": "onc_solid", "depth": 3, "title": "Lung Cancer — Screening & Principles" },
+    { "id": "onc_solid_colon", "parent_id": "onc_solid", "depth": 3, "title": "Colorectal Cancer Principles" },
+    { "id": "onc_solid_prostate", "parent_id": "onc_solid", "depth": 3, "title": "Prostate Cancer — Screening & Principles" },
+    { "id": "onc_solid_other", "parent_id": "onc_solid", "depth": 3, "title": "Cancer of Unknown Primary & Other" },
+
+    { "id": "onc_emerg", "parent_id": "onc", "depth": 2, "title": "Oncologic Emergencies" },
+    { "id": "onc_emerg_cord", "parent_id": "onc_emerg", "depth": 3, "title": "Spinal Cord Compression" },
+    { "id": "onc_emerg_svc", "parent_id": "onc_emerg", "depth": 3, "title": "SVC Syndrome" },
+    { "id": "onc_emerg_tls", "parent_id": "onc_emerg", "depth": 3, "title": "Tumor Lysis Syndrome" },
+    { "id": "onc_emerg_hyperca", "parent_id": "onc_emerg", "depth": 3, "title": "Hypercalcemia of Malignancy" },
+    { "id": "onc_emerg_neutropenic_fever", "parent_id": "onc_emerg", "depth": 3, "title": "Febrile Neutropenia" },
+
+    { "id": "onc_tox", "parent_id": "onc", "depth": 2, "title": "Treatment Toxicity" },
+    { "id": "onc_tox_chemo", "parent_id": "onc_tox", "depth": 3, "title": "Cytotoxic Chemotherapy Side Effects" },
+    { "id": "onc_tox_io", "parent_id": "onc_tox", "depth": 3, "title": "Immunotherapy irAEs" },
+    { "id": "onc_tox_rt", "parent_id": "onc_tox", "depth": 3, "title": "Radiation Toxicity" },
+
+    { "id": "onc_surv", "parent_id": "onc", "depth": 2, "title": "Survivorship & Supportive" },
+    { "id": "onc_surv_late", "parent_id": "onc_surv", "depth": 3, "title": "Late Effects & Second Malignancies" },
+    { "id": "onc_surv_supp", "parent_id": "onc_surv", "depth": 3, "title": "Pain, Nausea, Anorexia in Cancer" },
+
+    { "id": "neuro", "parent_id": null, "depth": 1, "title": "Neurology" },
+    { "id": "neuro_cerebrovasc", "parent_id": "neuro", "depth": 2, "title": "Cerebrovascular" },
+    { "id": "neuro_cerebrovasc_ais", "parent_id": "neuro_cerebrovasc", "depth": 3, "title": "Acute Ischemic Stroke" },
+    { "id": "neuro_cerebrovasc_tia", "parent_id": "neuro_cerebrovasc", "depth": 3, "title": "TIA & Secondary Prevention" },
+    { "id": "neuro_cerebrovasc_ich", "parent_id": "neuro_cerebrovasc", "depth": 3, "title": "Intracerebral Hemorrhage" },
+    { "id": "neuro_cerebrovasc_sah", "parent_id": "neuro_cerebrovasc", "depth": 3, "title": "Subarachnoid Hemorrhage" },
+
+    { "id": "neuro_headache", "parent_id": "neuro", "depth": 2, "title": "Headache & Facial Pain" },
+    { "id": "neuro_headache_migraine", "parent_id": "neuro_headache", "depth": 3, "title": "Migraine & Primary Headaches" },
+    { "id": "neuro_headache_secondary", "parent_id": "neuro_headache", "depth": 3, "title": "Secondary Headache Red Flags" },
+
+    { "id": "neuro_seizure", "parent_id": "neuro", "depth": 2, "title": "Seizure & Epilepsy" },
+    { "id": "neuro_seizure_new", "parent_id": "neuro_seizure", "depth": 3, "title": "First Seizure — Workup" },
+    { "id": "neuro_seizure_se", "parent_id": "neuro_seizure", "depth": 3, "title": "Status Epilepticus" },
+
+    { "id": "neuro_demy_neuromuscular", "parent_id": "neuro", "depth": 2, "title": "Demyelinating & Neuromuscular" },
+    { "id": "neuro_ms", "parent_id": "neuro_demy_neuromuscular", "depth": 3, "title": "Multiple Sclerosis" },
+    { "id": "neuro_gbs_mg", "parent_id": "neuro_demy_neuromuscular", "depth": 3, "title": "GBS & Myasthenia Gravis" },
+    { "id": "neuro_neuropathy", "parent_id": "neuro_demy_neuromuscular", "depth": 3, "title": "Peripheral Neuropathies" },
+
+    { "id": "neuro_cog", "parent_id": "neuro", "depth": 2, "title": "Cognitive & Movement" },
+    { "id": "neuro_cog_dementia", "parent_id": "neuro_cog", "depth": 3, "title": "Dementia Syndromes" },
+    { "id": "neuro_cog_delirium", "parent_id": "neuro_cog", "depth": 3, "title": "Delirium" },
+    { "id": "neuro_cog_pd", "parent_id": "neuro_cog", "depth": 3, "title": "Parkinson & Movement Disorders" },
+
+    { "id": "psych", "parent_id": null, "depth": 1, "title": "Psychiatry & Behavioral Health" },
+    { "id": "psych_mood", "parent_id": "psych", "depth": 2, "title": "Mood & Anxiety" },
+    { "id": "psych_mood_mdd", "parent_id": "psych_mood", "depth": 3, "title": "Major Depression" },
+    { "id": "psych_mood_bipolar", "parent_id": "psych_mood", "depth": 3, "title": "Bipolar Disorder" },
+    { "id": "psych_mood_anxiety", "parent_id": "psych_mood", "depth": 3, "title": "Anxiety Disorders" },
+    { "id": "psych_mood_suicide", "parent_id": "psych_mood", "depth": 3, "title": "Suicide Risk Assessment" },
+
+    { "id": "psych_sud", "parent_id": "psych", "depth": 2, "title": "Substance Use" },
+    { "id": "psych_sud_aud", "parent_id": "psych_sud", "depth": 3, "title": "Alcohol Use Disorder & Withdrawal" },
+    { "id": "psych_sud_oud", "parent_id": "psych_sud", "depth": 3, "title": "Opioid Use Disorder & Withdrawal" },
+    { "id": "psych_sud_tobacco", "parent_id": "psych_sud", "depth": 3, "title": "Tobacco Cessation" },
+
+    { "id": "psych_psych", "parent_id": "psych", "depth": 2, "title": "Psychotic & Somatic" },
+    { "id": "psych_psych_schizo", "parent_id": "psych_psych", "depth": 3, "title": "Schizophrenia Spectrum" },
+    { "id": "psych_psych_somatic", "parent_id": "psych_psych", "depth": 3, "title": "Somatic Symptom & Functional Disorders" },
+
+    { "id": "derm", "parent_id": null, "depth": 1, "title": "Dermatology" },
+    { "id": "derm_inflam", "parent_id": "derm", "depth": 2, "title": "Inflammatory Dermatoses" },
+    { "id": "derm_inflam_eczema_psoriasis", "parent_id": "derm_inflam", "depth": 3, "title": "Eczema & Psoriasis" },
+    { "id": "derm_inflam_acne_rosacea", "parent_id": "derm_inflam", "depth": 3, "title": "Acne & Rosacea" },
+    { "id": "derm_inflam_drug", "parent_id": "derm_inflam", "depth": 3, "title": "Drug Eruptions (incl. SJS/TEN)" },
+
+    { "id": "derm_infect", "parent_id": "derm", "depth": 2, "title": "Skin Infections" },
+    { "id": "derm_infect_bact", "parent_id": "derm_infect", "depth": 3, "title": "Bacterial Skin Infections" },
+    { "id": "derm_infect_viral", "parent_id": "derm_infect", "depth": 3, "title": "Viral Skin Infections (HSV, VZV, warts)" },
+    { "id": "derm_infect_fungal", "parent_id": "derm_infect", "depth": 3, "title": "Fungal Skin Infections" },
+
+    { "id": "derm_onc", "parent_id": "derm", "depth": 2, "title": "Skin Neoplasms" },
+    { "id": "derm_onc_melanoma", "parent_id": "derm_onc", "depth": 3, "title": "Melanoma" },
+    { "id": "derm_onc_nmsc", "parent_id": "derm_onc", "depth": 3, "title": "BCC & SCC" },
+
+    { "id": "allergy", "parent_id": null, "depth": 1, "title": "Allergy & Immunology" },
+    { "id": "allergy_anaphylaxis", "parent_id": "allergy", "depth": 2, "title": "Anaphylaxis & Urticaria" },
+    { "id": "allergy_anaphylaxis_acute", "parent_id": "allergy_anaphylaxis", "depth": 3, "title": "Anaphylaxis" },
+    { "id": "allergy_anaphylaxis_urticaria", "parent_id": "allergy_anaphylaxis", "depth": 3, "title": "Chronic Urticaria & Angioedema" },
+
+    { "id": "allergy_drug", "parent_id": "allergy", "depth": 2, "title": "Drug & Food Allergy" },
+    { "id": "allergy_drug_penicillin", "parent_id": "allergy_drug", "depth": 3, "title": "Penicillin & Antibiotic Allergy" },
+    { "id": "allergy_drug_food", "parent_id": "allergy_drug", "depth": 3, "title": "Food Allergy" },
+
+    { "id": "allergy_immunodef", "parent_id": "allergy", "depth": 2, "title": "Primary Immunodeficiency" },
+    { "id": "allergy_immunodef_cvid", "parent_id": "allergy_immunodef", "depth": 3, "title": "CVID & Antibody Deficiencies" },
+
+    { "id": "obgyn", "parent_id": null, "depth": 1, "title": "Obstetrics, Gynecology & Women's Health (IM-relevant)" },
+    { "id": "obgyn_preventive", "parent_id": "obgyn", "depth": 2, "title": "Preventive & Screening" },
+    { "id": "obgyn_cervical_screen", "parent_id": "obgyn_preventive", "depth": 3, "title": "Cervical Cancer Screening" },
+    { "id": "obgyn_breast_screen", "parent_id": "obgyn_preventive", "depth": 3, "title": "Breast Cancer Screening" },
+    { "id": "obgyn_contraception", "parent_id": "obgyn_preventive", "depth": 3, "title": "Contraception in IM" },
+
+    { "id": "obgyn_menst_meno", "parent_id": "obgyn", "depth": 2, "title": "Menstrual & Menopausal" },
+    { "id": "obgyn_menst_aub", "parent_id": "obgyn_menst_meno", "depth": 3, "title": "Abnormal Uterine Bleeding" },
+    { "id": "obgyn_menst_meno_mgmt", "parent_id": "obgyn_menst_meno", "depth": 3, "title": "Menopause Management" },
+
+    { "id": "obgyn_preg", "parent_id": "obgyn", "depth": 2, "title": "Pregnancy-Related IM" },
+    { "id": "obgyn_preg_htn", "parent_id": "obgyn_preg", "depth": 3, "title": "Hypertension in Pregnancy" },
+    { "id": "obgyn_preg_dm", "parent_id": "obgyn_preg", "depth": 3, "title": "Diabetes in Pregnancy" },
+    { "id": "obgyn_preg_thyroid", "parent_id": "obgyn_preg", "depth": 3, "title": "Thyroid in Pregnancy" },
+    { "id": "obgyn_preg_vte", "parent_id": "obgyn_preg", "depth": 3, "title": "VTE in Pregnancy & Postpartum" },
+
+    { "id": "geri_pall", "parent_id": null, "depth": 1, "title": "Geriatrics & Palliative Care" },
+    { "id": "geri_syndromes", "parent_id": "geri_pall", "depth": 2, "title": "Geriatric Syndromes" },
+    { "id": "geri_syndromes_falls", "parent_id": "geri_syndromes", "depth": 3, "title": "Falls & Gait" },
+    { "id": "geri_syndromes_incontinence", "parent_id": "geri_syndromes", "depth": 3, "title": "Urinary Incontinence" },
+    { "id": "geri_syndromes_frailty", "parent_id": "geri_syndromes", "depth": 3, "title": "Frailty & Sarcopenia" },
+    { "id": "geri_syndromes_polypharm", "parent_id": "geri_syndromes", "depth": 3, "title": "Polypharmacy & Deprescribing" },
+
+    { "id": "pall_symptom", "parent_id": "geri_pall", "depth": 2, "title": "Symptom Management" },
+    { "id": "pall_symptom_pain", "parent_id": "pall_symptom", "depth": 3, "title": "Pain Management Principles" },
+    { "id": "pall_symptom_dyspnea_nausea", "parent_id": "pall_symptom", "depth": 3, "title": "Dyspnea & Nausea in Serious Illness" },
+
+    { "id": "pall_eol", "parent_id": "geri_pall", "depth": 2, "title": "Goals of Care & End of Life" },
+    { "id": "pall_eol_goc", "parent_id": "pall_eol", "depth": 3, "title": "Goals of Care & Advance Care Planning" },
+    { "id": "pall_eol_hospice", "parent_id": "pall_eol", "depth": 3, "title": "Hospice Eligibility & Transitions" },
+
+    { "id": "genim", "parent_id": null, "depth": 1, "title": "General Internal Medicine / Ambulatory" },
+    { "id": "genim_prev", "parent_id": "genim", "depth": 2, "title": "Preventive Medicine" },
+    { "id": "genim_prev_screening", "parent_id": "genim_prev", "depth": 3, "title": "USPSTF Screening (non-CA)" },
+    { "id": "genim_prev_cancer_screen", "parent_id": "genim_prev", "depth": 3, "title": "Cancer Screening (all-site)" },
+    { "id": "genim_prev_counseling", "parent_id": "genim_prev", "depth": 3, "title": "Behavioral Counseling (diet, exercise, sexual)" },
+
+    { "id": "genim_symptoms", "parent_id": "genim", "depth": 2, "title": "Common Outpatient Symptoms" },
+    { "id": "genim_sym_fatigue", "parent_id": "genim_symptoms", "depth": 3, "title": "Fatigue Workup" },
+    { "id": "genim_sym_weightloss", "parent_id": "genim_symptoms", "depth": 3, "title": "Unintentional Weight Loss" },
+    { "id": "genim_sym_lymphadenopathy", "parent_id": "genim_symptoms", "depth": 3, "title": "Lymphadenopathy Workup" },
+    { "id": "genim_sym_dizziness", "parent_id": "genim_symptoms", "depth": 3, "title": "Dizziness & Vertigo" },
+    { "id": "genim_sym_chestpain_out", "parent_id": "genim_symptoms", "depth": 3, "title": "Chest Pain (Outpatient)" },
+
+    { "id": "genim_preop", "parent_id": "genim", "depth": 2, "title": "Perioperative Medicine" },
+    { "id": "genim_preop_eval", "parent_id": "genim_preop", "depth": 3, "title": "General Preoperative Evaluation" },
+    { "id": "genim_preop_anticoag", "parent_id": "genim_preop", "depth": 3, "title": "Perioperative Anticoagulation" },
+
+    { "id": "genim_addiction_sexual", "parent_id": "genim", "depth": 2, "title": "Behavioral / Addiction / Sexual Health" },
+    { "id": "genim_sti", "parent_id": "genim_addiction_sexual", "depth": 3, "title": "STIs — Screening & Treatment" },
+    { "id": "genim_sexdys", "parent_id": "genim_addiction_sexual", "depth": 3, "title": "Sexual Dysfunction" },
+
+    { "id": "critcare", "parent_id": null, "depth": 1, "title": "Critical Care / Hospital Medicine" },
+    { "id": "critcare_shock", "parent_id": "critcare", "depth": 2, "title": "Shock & Resuscitation" },
+    { "id": "critcare_shock_types", "parent_id": "critcare_shock", "depth": 3, "title": "Shock Classification & Approach" },
+    { "id": "critcare_shock_fluids", "parent_id": "critcare_shock", "depth": 3, "title": "Fluid Resuscitation & Vasopressors" },
+
+    { "id": "critcare_resp", "parent_id": "critcare", "depth": 2, "title": "Respiratory Failure" },
+    { "id": "critcare_resp_ards", "parent_id": "critcare_resp", "depth": 3, "title": "ARDS" },
+    { "id": "critcare_resp_vent", "parent_id": "critcare_resp", "depth": 3, "title": "Mechanical Ventilation Basics" },
+    { "id": "critcare_resp_niv", "parent_id": "critcare_resp", "depth": 3, "title": "NIV & HFNC" },
+
+    { "id": "critcare_hospmed", "parent_id": "critcare", "depth": 2, "title": "Hospital Medicine" },
+    { "id": "critcare_hospmed_vte_ppx", "parent_id": "critcare_hospmed", "depth": 3, "title": "Inpatient VTE Prophylaxis" },
+    { "id": "critcare_hospmed_transitions", "parent_id": "critcare_hospmed", "depth": 3, "title": "Transitions of Care & Readmission" },
+    { "id": "critcare_hospmed_nutrition", "parent_id": "critcare_hospmed", "depth": 3, "title": "Inpatient Nutrition & Refeeding" }
+
+  ]
+}
