@@ -25,7 +25,7 @@ Assume you must:
 
 Zach opens every session with `/plan`. In plan mode you must:
 
-1. Read CLAUDE.md, PHASES.md, DECISIONS.md, `Medical_Knowledge_Ontology.md`, and `kekki_concepts_v1.json` (when present).
+1. Read CLAUDE.md, ARCHITECTURE.md, PHASES.md, DECISIONS.md, `Medical_Knowledge_Ontology.md`, and `abim_blueprint_v1.json` (when present).
 2. State which phase and which step of PHASES.md you are working on.
 3. Check DECISIONS.md for any conflict with your proposed approach. If there is a conflict, surface it and wait for Zach before acting.
 4. Propose: files to touch, changes to make, how to verify.
@@ -57,7 +57,7 @@ Not allowed anywhere else: LLM in the card review loop, LLM scoring of free-text
 
 The controlled vocabulary is the four-layer tagging framework defined in `Medical_Knowledge_Ontology.md` and locked in DECISIONS.md D17. Layer 1 (concepts) is curated data Zach authors; layers 2–4 (context, qtype, difficulty) are fixed enums on the `cards` table.
 
-The canonical concepts data lives at `kekki_concepts_v1.json` in repo root (TBD — to be authored). Concepts are polyhierarchical: a single concept can have multiple parents (e.g., amyloidosis under both Cardiology and Nephrology), modeled via the `concept_parents` table.
+The canonical concepts data lives at `abim_blueprint_v1.json` in repo root (ABIM Internal Medicine Certification blueprint, January 2026 — see D18). 970 concepts across three levels: 18 systems, 230 subsections, 722 topics. Concepts are polyhierarchical: a single concept can have multiple parents (e.g., amyloidosis under both Cardiology and Nephrology), modeled via the `concept_parents` table. The current ABIM seed produces single-parent edges only; cross-system bridges are added later via card-level `card_ontology_tags` with `tag_role='bridge'` (D19).
 
 Every LLM prompt that extracts concept tags MUST:
 - Be constrained to return a concept `id` (string) from the `concepts` table.
@@ -65,7 +65,9 @@ Every LLM prompt that extracts concept tags MUST:
 
 Never let the LLM invent a concept slug. Fragmentation kills the planner.
 
-Seed into the `concepts` table at Phase 1 with columns: `id`, `title`, `synonyms[]`, `weight`. Hierarchy lives in a separate `concept_parents (child_id, parent_id, is_primary)` table. See `phase1_schema_plan.md`.
+The `concepts` table is seeded by `scripts/seed_ontology.mjs` from `abim_blueprint_v1.json`. Columns: `id`, `title`, `synonyms[]`, `weight`, `level`, `ontology_source`, `ontology_version`. Hierarchy lives in a separate `concept_parents (child_id, parent_id, is_primary)` table. ID format is dot-delimited: `<system>.<subsection>.<topic>`. See D18 for the full ID scheme; ARCHITECTURE.md for the live schema.
+
+Migration 003 (planned per Phase 1 step 1b) adds the retrieval-metadata layer: `cards.primary_lattice`, `cards.secondary_lattices[]`, an expanded 9-value `cards.card_format`, and a 1:1 `card_retrieval_metadata` table with `cognitive_task`, prompt/answer framing, discriminator, and `requires_cloze_one_by_one` / `cloze_grouping`. Migration 004 (Phase 1 step 1c) adds the planning layer (`yield_tier`, `danger_level`, `board_likelihood`, `source_strength`, `review_priority`, `primary_system_id`, `secondary_system_ids[]`, `bridge_reason`) and the `card_discriminators` graph. All enum values are locked by D20.
 
 ## Content rules (legal + editorial)
 
@@ -121,8 +123,11 @@ Both layers are needed because heuristics miss paraphrased stems and LLMs someti
   /migrations    *.sql, numbered
 /prompts         LLM prompt templates — source of truth
 /scripts         one-off: seed, import
-kekki_concepts_v1.json
-Medical_Knowledge_Ontology.md
+abim_blueprint_v1.json                       canonical ontology seed (ABIM IM CERT, Jan 2026; D18)
+Medical_Knowledge_Ontology.md                four-layer tagging framework (D17)
+flashcard_database_design.md                 reference: existing flashcard DB shape
+Flash Card Generation PRACTICE_PATTERNS.md   reference: card-writing norms used by external pipeline
+ARCHITECTURE.md                              live data model + LLM wiring; updated each phase
 CLAUDE.md
 AGENTS.md
 PHASES.md
@@ -130,7 +135,9 @@ DECISIONS.md
 PROJECT_SUMMARY.md
 PRACTICE_PATTERNS.md
 SESSION_LOG.md
-phase1_schema_plan.md
+KEKKI_ORIENTATION.md                         plain-English stack tutor for Zach
+phase1_schema_plan.md                        historical: schema design notes for migrations 001/002
+/archive                                     superseded files retained for traceability
 ```
 
 ## Definition of Done for any change
@@ -194,7 +201,7 @@ supabase db push            # applies any new files in supabase/migrations/
 
 ### Seeding
 
-Seed the concepts table from `kekki_concepts_v1.json`:
+Seed the concepts table from `abim_blueprint_v1.json`:
 
 ```bash
 node --env-file=.env.local scripts/seed_ontology.mjs
@@ -229,6 +236,7 @@ pnpm build
 - Adding a new database table not described in PHASES.md
 - Anything that touches clinical content rules
 - Anything that touches the AI card generation guardrails (D13) — rate limit, attach-to-cluster, citation requirement, draft cooling
+- Anything that touches the locked card metadata enums (D20) — `primary_lattice`, `secondary_lattices`, `cognitive_task`, the 9-value `card_format`, `tag_role`, `granularity`, Cloze One By One. New values are added via forward migration; never silently coerced or repurposed.
 - Anything that costs money on a recurring basis
 - Anything that introduces billing, payment, or pricing logic before Phase 8 + 4 weeks of real beta use
 - Anything that runs scaffolding or installer commands that may overwrite existing project docs (lesson from 2026-04-26: `create-next-app` clobbered CLAUDE.md)

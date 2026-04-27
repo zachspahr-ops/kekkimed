@@ -8,7 +8,7 @@
 
 Every session opens with `/plan` (D11). In plan mode, Claude Code must:
 
-1. Read CLAUDE.md, PHASES.md, DECISIONS.md, and the relevant slice of `kekki_ontology_v0.json`.
+1. Read CLAUDE.md, ARCHITECTURE.md, PHASES.md, DECISIONS.md, and the relevant slice of `abim_blueprint_v1.json`.
 2. State which phase and which step of PHASES.md is being worked on.
 3. Surface any conflict with DECISIONS.md before proposing edits. Locked decisions are not bypassed silently — they are amended in plan mode with Zach's sign-off, or the proposal is reshaped to fit them.
 4. Propose: files to touch, changes to make, how to verify.

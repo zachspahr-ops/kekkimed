@@ -29,14 +29,17 @@ Total target: 10-12 weekends end to end.
 **Goal:** Zach can log in; DB schema reflects the full data model.
 
 **Steps**
-1. Author `supabase/migrations/001_init.sql` with tables: `users` (FK to auth.users), `concepts`, `concept_parents`, `cards`, `clusters`, `cluster_memberships`, `reviews`, `analytics_uploads`, `structured_analytics`, `study_plans`, `plan_items`, `plan_progress`, `waitlist`, `usage_events`. Include Row-Level Security on all user-data tables. See `phase1_schema_plan.md` for full schema design.
-2. Write `scripts/seed_ontology.mjs` — reads `kekki_concepts_v1.json`, upserts into `concepts` and rebuilds `concept_parents`. Run with `node --env-file=.env.local scripts/seed_ontology.mjs`.
+1. Author `supabase/migrations/001_init.sql` with base tables: `users`, `concepts`, `concept_parents`, `cards`, `clusters`, `cluster_memberships`, `reviews`, `analytics_uploads`, `structured_analytics`, `study_plans`, `plan_items`, `plan_progress`, `waitlist`, `usage_events`. RLS on all user-data tables. **DONE 2026-04-26.** See `phase1_schema_plan.md` (now historical).
+1a. Author `supabase/migrations/002_abim_ontology.sql` — adds `concepts.level`, `concepts.ontology_source`, `concepts.ontology_version`; creates `card_ontology_tags` (m:m, with role/granularity/confidence/source/version/review_status); drops `cards.concept_ids[]` array + validator. **DONE 2026-04-26 (applied to kekki-prod).** See D18 + D19.
+1b. Author `supabase/migrations/003_retrieval_metadata.sql` — adds `cards.primary_lattice text NOT NULL`, `cards.secondary_lattices text[]`, expands `cards.card_format` enum 4 → 9, creates `card_retrieval_metadata` (1:1 with cards) carrying `cognitive_task`, `prompt_frame`, `answer_form`, `discriminator`, `requires_cloze_one_by_one`, `cloze_grouping`, `format_review_status`. All enum values locked by D20.
+1c. Author `supabase/migrations/004_planning_layer.sql` — adds `cards.yield_tier`, `cards.danger_level`, `cards.board_likelihood`, `cards.source_strength`, `cards.review_priority`, `cards.primary_system_id`, `cards.secondary_system_ids[]`, `cards.bridge_reason`; creates `card_discriminators` graph table (directed edges between cards that share a discriminator).
+2. Write `scripts/seed_ontology.mjs` — reads `abim_blueprint_v1.json` (ABIM IM CERT, Jan 2026; see D18 for ID scheme), generates dot-delimited snake_case IDs at three depth levels (system / subsection / topic), parses `exam_percent` to numeric (`"14%"` → `0.14`; `"<2%"` → `0.01`; topics → NULL), upserts into `concepts` and rebuilds `concept_parents`. Idempotent. Run with `node --env-file=.env.local scripts/seed_ontology.mjs`. **DONE 2026-04-26 (970 concepts seeded).**
 3. Supabase magic-link auth using `@supabase/ssr`. `/login`, `/auth/callback`.
 4. Protected route group `(app)` with middleware redirect to `/login` when unauthenticated.
 5. `/dashboard` that shows the signed-in user's email and a stub "No clusters yet" state.
 6. Seed 20 real cards across 3 clusters by hand (via SQL or a small script) so the schema survives contact with real data.
 
-**DoD:** fresh user can sign up via magic link, lands on `/dashboard`, sees their email and seed clusters. RLS blocks cross-user reads in Supabase SQL editor spot-check.
+**DoD:** fresh user can sign up via magic link, lands on `/dashboard`, sees their email and seed clusters. RLS blocks cross-user reads in Supabase SQL editor spot-check. ABIM `concepts` table has ~970 rows across three `level` values. Migrations 003+004 applied; `card_retrieval_metadata` and `card_discriminators` tables exist.
 
 ---
 
