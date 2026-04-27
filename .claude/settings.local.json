@@ -30,7 +30,14 @@
       "Bash(git -C \"C:/Users/Zach/Documents/Claude/Projects/Kekki\" status --short --untracked-files=no)",
       "Bash(git -C \"C:/Users/Zach/Documents/Claude/Projects/Kekki\" log --oneline -3)",
       "Bash(git -C \"C:/Users/Zach/Documents/Claude/Projects/Kekki\" push -u origin claude/parent-dir-draft-recovery)",
-      "Bash(git -C \"C:/Users/Zach/Documents/Claude/Projects/Kekki\" checkout main)"
+      "Bash(git -C \"C:/Users/Zach/Documents/Claude/Projects/Kekki\" checkout main)",
+      "Bash(gh pr *)",
+      "Bash(supabase --version)",
+      "Bash(supabase migration *)",
+      "mcp__de5f6ad0-a1fa-49c0-a9b9-0d10c8197990__list_migrations",
+      "mcp__de5f6ad0-a1fa-49c0-a9b9-0d10c8197990__apply_migration",
+      "mcp__de5f6ad0-a1fa-49c0-a9b9-0d10c8197990__get_advisors",
+      "Bash(gh auth *)"
     ]
   }
 }
