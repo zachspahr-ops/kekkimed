@@ -36,12 +36,12 @@ Locked in DECISIONS.md D2. Do not propose stack changes without surfacing the co
 
 ## Phase status
 
-Current: **Phase 0 — Foundation, pre-step 1 (documentation pass).**
+Current: **Phase 1 — Schema + Auth.** Steps 1+2 done (migrations 001+002 applied to kekki-prod, 970 ABIM concepts seeded). Step 3 (magic-link auth) is next.
 
 | Phase | Title | Status |
 |---|---|---|
-| 0 | Foundation (deploy pipeline) | In progress |
-| 1 | Schema + Auth | Not started |
+| 0 | Foundation (deploy pipeline) | Done |
+| 1 | Schema + Auth | In progress (steps 1+2 done; step 3 next) |
 | 2 | Review loop | Not started |
 | 3 | Intake + structuring | Not started |
 | 4 | Plan generator | Not started |
@@ -73,8 +73,10 @@ See [PHASES.md](PHASES.md) for the full step list and Definition of Done per pha
 ## Key references
 
 - [CLAUDE.md](CLAUDE.md) — operating instructions for Claude Code
+- [ARCHITECTURE.md](ARCHITECTURE.md) — live data model, LLM wiring, request flows
 - [PHASES.md](PHASES.md) — phased build plan with DoD per phase
-- [DECISIONS.md](DECISIONS.md) — locked architectural decisions (D1–D16)
+- [DECISIONS.md](DECISIONS.md) — locked architectural decisions (D1–D19)
 - [PRACTICE_PATTERNS.md](PRACTICE_PATTERNS.md) — recurring workflow conventions
 - [SESSION_LOG.md](SESSION_LOG.md) — append-only session-by-session record
-- [kekki_ontology_v0.json](kekki_ontology_v0.json) — controlled vocabulary, 323 nodes
+- [KEKKI_ORIENTATION.md](KEKKI_ORIENTATION.md) — plain-English stack tutor
+- [abim_blueprint_v1.json](abim_blueprint_v1.json) — controlled vocabulary, 970 ABIM concepts (Jan 2026)

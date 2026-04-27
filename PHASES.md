@@ -30,7 +30,7 @@ Total target: 10-12 weekends end to end.
 
 **Steps**
 1. Author `supabase/migrations/001_init.sql` with tables: `users` (FK to auth.users), `concepts`, `concept_parents`, `cards`, `clusters`, `cluster_memberships`, `reviews`, `analytics_uploads`, `structured_analytics`, `study_plans`, `plan_items`, `plan_progress`, `waitlist`, `usage_events`. Include Row-Level Security on all user-data tables. See `phase1_schema_plan.md` for full schema design.
-2. Write `scripts/seed_ontology.mjs` — reads `kekki_concepts_v1.json`, upserts into `concepts` and rebuilds `concept_parents`. Run with `node --env-file=.env.local scripts/seed_ontology.mjs`.
+2. Write `scripts/seed_ontology.mjs` — reads `abim_blueprint_v1.json` (ABIM IM CERT, Jan 2026; see D18 for ID scheme), upserts into `concepts` and rebuilds `concept_parents`. Run with `node --env-file=.env.local scripts/seed_ontology.mjs`.
 3. Supabase magic-link auth using `@supabase/ssr`. `/login`, `/auth/callback`.
 4. Protected route group `(app)` with middleware redirect to `/login` when unauthenticated.
 5. `/dashboard` that shows the signed-in user's email and a stub "No clusters yet" state.

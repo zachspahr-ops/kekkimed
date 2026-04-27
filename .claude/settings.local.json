@@ -19,7 +19,9 @@
       "Bash(mv kekki_ontology_v0.json archive/)",
       "Bash(git push *)",
       "Bash(git fetch *)",
-      "Bash(git stash *)"
+      "Bash(git stash *)",
+      "Bash(git commit *)",
+      "PowerShell($env:Path = [System.Environment]::GetEnvironmentVariable\\(\"Path\",\"Machine\"\\) + \";\" + [System.Environment]::GetEnvironmentVariable\\(\"Path\",\"User\"\\); pnpm install 2>&1 | Select-Object -Last 30)"
     ]
   }
 }

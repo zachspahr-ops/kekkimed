@@ -273,7 +273,7 @@ Model Context Protocol — a standard that lets Claude connect to external tools
 
 ### Phase 1 — Identity and data structure
 *What the user sees:* Login page → magic link email → dashboard showing "No clusters yet."
-*What the database looks like:* All 12 tables exist. The ontology (323 topic nodes) is seeded. RLS is active.
+*What the database looks like:* All 14 tables exist (see ARCHITECTURE.md for the live list). The concept vocabulary (970 nodes from the ABIM IM CERT blueprint, Jan 2026) is seeded. RLS is active.
 *Why this order:* You cannot build any product feature without auth (who is the user?) and schema (where does the data go?). Phase 1 is boring and invisible. It is also load-bearing.
 
 ---

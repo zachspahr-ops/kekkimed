@@ -1,6 +1,7 @@
 # Phase 1 Schema Plan
 
-**Status:** pre-draft, awaiting Zach approval before SQL is written.
+**Status (as of 2026-04-26):** **historical** — Phase 1 steps 1+2 are implemented and applied to kekki-prod. This file is the design notebook that produced migrations 001 and 002 plus DECISIONS D17, D18, D19. Stale references to `kekki_ontology_v0.json` / `kekki_concepts_v1.json` reflect the pre-ABIM-blueprint reasoning and are preserved for traceability — do not treat them as canonical. For current schema state, read [ARCHITECTURE.md](ARCHITECTURE.md). For current canonical seed, see [abim_blueprint_v1.json](abim_blueprint_v1.json) and DECISIONS.md D18.
+
 **Scope:** the artifact this plan produces is `supabase/migrations/001_init.sql` (Phase 1 step 1) and the shape of `scripts/seed_ontology.ts` (Phase 1 step 2).
 **Drafted:** 2026-04-26.
 **Revised:** 2026-04-26 — reconciled with `Medical_Knowledge_Ontology.md` four-layer tag framework. See "Reconciliation" section below.
