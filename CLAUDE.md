@@ -176,10 +176,12 @@ pnpm lint         # ESLint flat config
 
 Use `.env.local` at repo root (git-ignored). Vercel preview/prod gets these from project settings.
 
-Currently required: *(none — placeholder home page only, no API calls yet)*.
+Currently required (Phase 1 step 3 — Supabase auth):
+- `NEXT_PUBLIC_SUPABASE_URL` — exposed to browser. Project URL from Supabase Studio → Settings → API.
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY` — exposed to browser. Public anon key from the same page.
+- `SUPABASE_SERVICE_ROLE_KEY` — server-only. Never exposed to browser. Used by the seed script and any future system-level writes.
 
 Future additions:
-- **Phase 1 step 3 (Supabase auth):** `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` (server-only).
 - **Phase 3 (intake parser):** `ANTHROPIC_API_KEY`.
 
 ### Supabase
