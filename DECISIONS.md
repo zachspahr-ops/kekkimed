@@ -195,3 +195,58 @@ This entry **supersedes the single-dimension topic interpretation in D5.** D5's 
 
 **Why:** the framework lets one card be filtered four ways (study, exam-sim, weakness-drill, cognitive-pattern) without re-coding. Polyhierarchy lets cross-system concepts (e.g., amyloidosis in cardio AND nephro) avoid duplication. Separate typed columns over a unified `tags text[]` because DB-level CHECK constraints are cheaper to maintain than application-level tag validation. Performance is derived rather than tagged because the source of truth is `reviews`; pre-tagging would create a stale-data problem.
 **Revisit if:** real card authoring shows the four layers under-fit (need a fifth dimension) or over-fit (one layer is always empty). Also revisit if performance derivation queries become slow at scale — then materialize them into a `card_user_state` table rather than re-tagging.
+
+---
+
+## D18 — ABIM concept ID scheme and seed rules
+
+Added 2026-04-26. The canonical controlled vocabulary is the ABIM Internal Medicine Certification blueprint (January 2026), seeded from `abim_blueprint_v1.json` (18 systems, ~230 subsections, ~1,500 topics). This entry governs how concept IDs are constructed and how the blueprint is transformed into DB rows.
+
+**ID format:** dot-delimited snake_case, three levels:
+- **System:** `<system_slug>` — e.g., `cardiovascular_disease`
+- **Subsection:** `<system_slug>.<subsection_slug>` — e.g., `cardiovascular_disease.dysrhythmias_and_conduction_defects`
+- **Topic:** `<system_slug>.<subsection_slug>.<topic_slug>` — e.g., `cardiovascular_disease.dysrhythmias_and_conduction_defects.atrial_fibrillation`
+
+**Slug sources:**
+- System slug: taken from `system_slug` field in JSON (pre-computed: lowercase, non-alphanumeric → `_`, collapse repeats, strip trailing `_`).
+- Subsection slug: taken from `subsection_slug` field in JSON, prefixed with `<system_slug>.`.
+- Topic slug: taken from `topic_slugs[i]` field in JSON, prefixed with `<system_slug>.<subsection_slug>.`.
+
+**Column rules for the seed script:**
+- `level`: `'system'` / `'subsection'` / `'topic'` — set explicitly, never inferred.
+- `weight`: parse `exam_percent` string. `"14%"` → `0.14`. `"<2%"` → `0.01`. Applies to system and subsection rows. Topic rows get `NULL`.
+- `synonyms`: empty array `{}`. ABIM JSON has none; enrichment is a future step via a separate data file or migration.
+- `ontology_source`: always `'abim_blueprint'`. Do not override.
+- `ontology_version`: always `'jan_2026'`. Do not override.
+
+**Parent edges (`concept_parents`):**
+- Every subsection → its system (`is_primary = true`).
+- Every topic → its subsection (`is_primary = true`).
+- All edges in this seed are primary (single-parent by definition in the ABIM blueprint).
+
+**Idempotency:** `INSERT ... ON CONFLICT DO UPDATE` for concepts; DELETE-then-INSERT scoped by `child_id` for `concept_parents`. Safe to re-run.
+
+**Why:** a three-level dot-delimited ID makes parent traversal and prefix-matching trivially expressible in SQL (`id LIKE 'cardiovascular_disease.%'`). Keeping slugs in the JSON means the extraction script is deterministic and does not need to re-derive them.
+**Revisit if:** a new ABIM blueprint version ships (then bump `ontology_version` and re-run the seed); or if a fourth level (sub-topic) is needed — that would require a migration to add the `'subtopic'` value to the `level` CHECK.
+
+---
+
+## D19 — `card_ontology_tags` replaces `cards.concept_ids[]`
+
+Added 2026-04-26. Migration 002 drops `cards.concept_ids text[]` and its array-validator trigger, replacing them with the `card_ontology_tags` table. This is a proper relational m:m with FK enforcement at the row level — cleaner than the array trigger approach in migration 001.
+
+**Schema (key columns):**
+- `card_id uuid` + `concept_id text` + `tag_role text` — composite primary key.
+- `tag_role` CHECK: `('primary','secondary','bridge','planning_only')`. Exactly one `primary` tag per card (enforced by partial unique index). `bridge` is used for cross-system concepts (e.g., amyloidosis under both cardiology and nephrology). `planning_only` is for planner-vocabulary concepts not used in content classification.
+- `granularity text` CHECK: `('system','subsection','topic')` — denormalized from `concepts.level` so queries can filter without joining `concepts`.
+- `confidence numeric` 0.0–1.0. Human-authored tags = 1.0. LLM-produced tags carry the model's self-reported value.
+- `tag_source text` CHECK: `('canonical','script','manual_override','model','import')` — provenance of the tag.
+- `tagger_version text NULL` — version string for the script or model that produced the tag; used to invalidate stale tags when a tagger changes.
+- `review_status text` CHECK: `('accepted','needs_review','rejected')`.
+
+**RLS:** SELECT derives from `cards` visibility (reviewed OR author). WRITE restricted to card author. Service role bypasses both.
+
+**Migration cadence:** 001 applied (base schema). 002 applies in the session where this entry is written (ABIM ontology + `card_ontology_tags`). 003 (retrieval metadata / lattice) and 004 (planning fields + discriminator graph) are separate Claude Code sessions.
+
+**Why:** a proper FK table enforces concept-ID validity at the DB level without the bespoke trigger in 001. The `tag_role` + `confidence` + `tag_source` columns give the planner enough metadata to weight uncertain or cross-system tags without an additional lookup table.
+**Revisit if:** a fifth `tag_role` value is needed (e.g., `excluded` for negative training signal); or if `card_ontology_tags` query latency becomes a bottleneck at scale — then consider a materialized tag summary per card.

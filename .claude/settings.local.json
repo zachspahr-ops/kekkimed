@@ -3,7 +3,21 @@
     "allow": [
       "PowerShell(winget install OpenJS.NodeJS.LTS --accept-package-agreements --accept-source-agreements --silent --disable-interactivity)",
       "PowerShell($env:Path = [System.Environment]::GetEnvironmentVariable\\(\"Path\",\"Machine\"\\) + \";\" + [System.Environment]::GetEnvironmentVariable\\(\"Path\",\"User\"\\); Write-Output \"node: $\\(node --version\\)\"; Write-Output \"npm:  $\\(npm --version\\)\"; Write-Output \"corepack: $\\(corepack --version\\)\"; corepack enable; corepack prepare pnpm@latest --activate; Write-Output \"pnpm: $\\(pnpm --version\\)\")",
-      "PowerShell($env:Path = [System.Environment]::GetEnvironmentVariable\\(\"Path\",\"Machine\"\\) + \";\" + [System.Environment]::GetEnvironmentVariable\\(\"Path\",\"User\"\\); pnpm typecheck; if \\($?\\) { Write-Output \"--- TYPECHECK PASSED, BUILDING ---\"; pnpm build })"
+      "PowerShell($env:Path = [System.Environment]::GetEnvironmentVariable\\(\"Path\",\"Machine\"\\) + \";\" + [System.Environment]::GetEnvironmentVariable\\(\"Path\",\"User\"\\); pnpm typecheck; if \\($?\\) { Write-Output \"--- TYPECHECK PASSED, BUILDING ---\"; pnpm build })",
+      "Bash(git ls-tree *)",
+      "Bash(supabase db *)",
+      "Bash(supabase link *)",
+      "Bash(node --env-file=.env.local --input-type=module)",
+      "Bash(node --env-file=\"C:/Users/Zach/Documents/Claude/Projects/Kekki/.env.local\" --input-type=module)",
+      "Bash(pnpm typecheck *)",
+      "Bash(pnpm build *)",
+      "Bash(pnpm install *)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(node --env-file=\"C:/Users/Zach/Documents/Claude/Projects/Kekki/.env.local\" scripts/seed_ontology.mjs)",
+      "Bash(mkdir -p archive)",
+      "Bash(mv kekki_ontology_v0.json archive/)",
+      "Bash(git push *)"
     ]
   }
 }
