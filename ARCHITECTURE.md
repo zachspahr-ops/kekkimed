@@ -2,7 +2,7 @@
 
 *Live snapshot of what exists in the codebase right now. The durable answer to "where does this thing live and how does data flow through it." If you've read CLAUDE.md, DECISIONS.md, and PHASES.md, this file fills the gap between "what we decided" and "what is actually built."*
 
-**Last updated:** 2026-04-27 (Phase 1, after migrations 001+002+003; migration 004 deferred — planning enums TBD).
+**Last updated:** 2026-04-27 (Phase 1 complete — migrations 001+002+003 applied; 20 seed cards across 3 clusters seeded to kekki-prod; migration 004 deferred — planning enums TBD).
 
 ---
 
@@ -223,6 +223,7 @@ proxy.ts                   Next.js 16 proxy (formerly middleware.ts) — refresh
     middleware.ts          updateSession helper used by proxy.ts
 /scripts
   seed_ontology.mjs        seeds concepts + concept_parents from abim_blueprint_v1.json (D18)
+  seed_cards.mjs           Phase 1 step 6: seeds 3 clusters + 20 reviewed cards (HF GDMT, Hyponatremia, DKA/HHS) (applied to kekki-prod 2026-04-27)
 /supabase
   /migrations
     001_init.sql           base schema

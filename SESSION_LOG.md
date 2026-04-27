@@ -15,6 +15,38 @@ Each entry follows this shape:
 
 ---
 
+## 2026-04-27 — Phase 1 Step 6: seed 20 cards across 3 clusters
+
+**Phase + step:** Phase 1 step 6 — seed real card data so the schema survives contact with actual content. Last step of Phase 1. Phase 2 (review loop) is now unblocked.
+
+**What changed:**
+- `scripts/seed_cards.mjs` (new) — idempotent seed script. Ensures the Supabase auth user exists (creates via admin API if not present), inserts 3 clusters (Heart Failure GDMT, Hyponatremia, DKA / HHS), 20 human-authored reviewed cards, 20 `card_retrieval_metadata` rows, 20 `card_ontology_tags` rows (primary tag each), and 20 `cluster_memberships`. Skips if seed clusters already exist.
+- `ARCHITECTURE.md` §7 file layout — added `seed_cards.mjs` entry.
+- `ARCHITECTURE.md` — bumped "Last updated" header to reflect seeded state.
+
+**Seed data applied to kekki-prod 2026-04-27.** Verified row counts: 3 clusters, 20 cards, 20 card_retrieval_metadata, 20 card_ontology_tags, 20 cluster_memberships. User `zachspahr@gmail.com` created in auth.users and public.users via admin API (email_confirm:true — no invite email sent; magic-link flow will use the same account).
+
+**Concept IDs used:**
+- `cardiovascular_disease.myocardial_disease` (subsection) — 6 HF GDMT cards
+- `cardiovascular_disease.myocardial_disease.heart_failure_with_preserved_ejection_fraction_hfpef` (topic) — 1 HFpEF card
+- `nephrology_and_urology.water_and_electrolyte_balance.hyponatremia` (topic) — 7 hyponatremia cards
+- `endocrinology_diabetes_and_metabolism.diabetes_mellitus.complications_of_diabetes_mellitus` (topic) — 6 DKA/HHS cards
+
+**Verification:**
+- `pnpm typecheck` ✅
+- `pnpm build` ✅
+- Seed script output: all 20 rows inserted cleanly, row count verification passed.
+
+**Blocked / deferred:**
+- Migration 004 (planning fields + `card_discriminators`) — still deferred; planning enums not yet locked in DECISIONS.md.
+- Pre-existing security advisor WARNs from 001 — not addressed here.
+
+**Open questions for next session:**
+- Phase 2 (review loop): `/clusters`, `/clusters/[id]`, `/review/[session_id]`. Seed data is now in place to drive this.
+- 🛑 Strategic review checkpoint fires after Phase 2 DoD is green — do not skip.
+
+---
+
 ## 2026-04-26 / 2026-04-27 — Migration 003 authored, D20 amendment, applied to kekki-prod
 
 **Phase + step:** Phase 1 step 1b — `003_retrieval_metadata.sql` written 2026-04-26, applied to kekki-prod 2026-04-27 via Supabase MCP `apply_migration`. Step 1c (`004_planning_layer.sql`) deferred (planning enums TBD).
