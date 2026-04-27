@@ -39,3 +39,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# supabase CLI scratch (link state, cached metadata — per-machine, never commit)
+/supabase/.temp/
