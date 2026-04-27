@@ -17,7 +17,9 @@
       "Bash(node --env-file=\"C:/Users/Zach/Documents/Claude/Projects/Kekki/.env.local\" scripts/seed_ontology.mjs)",
       "Bash(mkdir -p archive)",
       "Bash(mv kekki_ontology_v0.json archive/)",
-      "Bash(git push *)"
+      "Bash(git push *)",
+      "Bash(git fetch *)",
+      "Bash(git stash *)"
     ]
   }
 }
