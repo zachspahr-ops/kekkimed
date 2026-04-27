@@ -58,6 +58,20 @@ Total target: 10-12 weekends end to end.
 
 ---
 
+## 🛑 STRATEGIC REVIEW CHECKPOINT — between Phase 2 and Phase 3
+
+**Scheduled 2026-04-27.** When Phase 2's DoD is green, do not start Phase 3 immediately. Open the next session with a structured strategic review pass — see `.claude` memory `project_phase_status.md` for the full format. In short:
+
+1. DECISIONS.md walk-through — each entry, "still right?" / "revisit because X."
+2. PHASES.md realism check — did Phase 2 reveal a missing or wasted phase?
+3. ARCHITECTURE.md vs reality reconciliation.
+4. Big-bet falsification questions for D4 (cluster scheduling), D9 (binary rating), D6 (three LLM call sites), D20 (lattice/cognitive_task vocab) — for each, "what would falsify this?"
+5. Budget + time check vs. the $1,100 / 10–12 weekend targets.
+
+**Why here:** Phase 2 is the first time Zach uses his own product. Reviewing strategy before is improvising; after is informed. Output: probably a D21 (planning enums); possibly amendments to D4 / D9 / D20 if hands-on review surfaces friction; possibly a phase reshape.
+
+---
+
 ## Phase 3 — Intake + structuring (1-2 weekends)
 
 **Goal:** free-text analytics → structured gaps.
