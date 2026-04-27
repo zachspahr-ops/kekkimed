@@ -36,7 +36,8 @@
       "Bash(supabase migration *)",
       "mcp__de5f6ad0-a1fa-49c0-a9b9-0d10c8197990__list_migrations",
       "mcp__de5f6ad0-a1fa-49c0-a9b9-0d10c8197990__apply_migration",
-      "mcp__de5f6ad0-a1fa-49c0-a9b9-0d10c8197990__get_advisors"
+      "mcp__de5f6ad0-a1fa-49c0-a9b9-0d10c8197990__get_advisors",
+      "Bash(gh auth *)"
     ]
   }
 }
