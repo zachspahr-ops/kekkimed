@@ -26,7 +26,11 @@
       "Read(//c/Users/Zach/Documents/Claude/Projects/Kekki//**)",
       "Bash(git -C \"C:/Users/Zach/Documents/Claude/Projects/Kekki/.claude/worktrees/nostalgic-wiles-154037\" status)",
       "Bash(git worktree *)",
-      "Bash(git branch *)"
+      "Bash(git branch *)",
+      "Bash(git -C \"C:/Users/Zach/Documents/Claude/Projects/Kekki\" status --short --untracked-files=no)",
+      "Bash(git -C \"C:/Users/Zach/Documents/Claude/Projects/Kekki\" log --oneline -3)",
+      "Bash(git -C \"C:/Users/Zach/Documents/Claude/Projects/Kekki\" push -u origin claude/parent-dir-draft-recovery)",
+      "Bash(git -C \"C:/Users/Zach/Documents/Claude/Projects/Kekki\" checkout main)"
     ]
   }
 }

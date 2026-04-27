@@ -250,3 +250,38 @@ Added 2026-04-26. Migration 002 drops `cards.concept_ids text[]` and its array-v
 
 **Why:** a proper FK table enforces concept-ID validity at the DB level without the bespoke trigger in 001. The `tag_role` + `confidence` + `tag_source` columns give the planner enough metadata to weight uncertain or cross-system tags without an additional lookup table.
 **Revisit if:** a fifth `tag_role` value is needed (e.g., `excluded` for negative training signal); or if `card_ontology_tags` query latency becomes a bottleneck at scale — then consider a materialized tag summary per card.
+
+---
+
+## D20 — Card metadata enum lock (lattice / cognitive_task / card_format / cloze)
+
+Added 2026-04-26. Locks the vocabulary every card-authoring path (in-repo AI generator D13, external import pipeline `POST /api/cards/import`, manual authoring) must speak. These values become CHECK constraints in migration 003 (retrieval metadata) and migration 004 (planning + discriminators). Pipelines that emit cards in other vocabularies are rejected at import.
+
+**Lattice codes** — captures the primary clinical relationship the card teaches.
+
+- `cards.primary_lattice text NOT NULL CHECK (primary_lattice in ('t_to_m','p_to_e','e_to_o','s_to_r'))` — exactly one per card.
+  - `t_to_m` = Trigger/Clue → Mechanism or Diagnosis
+  - `p_to_e` = Presentation → Empiric Regimen or Initial Treatment
+  - `e_to_o` = Exposure/History/Context → Organism or Etiology
+  - `s_to_r` = Patient State/Severity → Risk, Complication, or Prognostic Implication
+- `cards.secondary_lattices text[]` with subset CHECK against `('d_to_t','tst_to_int','sev_to_act','tx_to_mon','cx_to_avoid','dx_to_diff','fu_to_next')`. Zero or more per card.
+  - `d_to_t` = Diagnosis → Treatment
+  - `tst_to_int` = Test → Interpretation
+  - `sev_to_act` = Severity → Action
+  - `tx_to_mon` = Treatment → Monitoring
+  - `cx_to_avoid` = Contraindication/Complication → Avoid
+  - `dx_to_diff` = Diagnosis → Differential/Discriminator
+  - `fu_to_next` = Follow-up → Next Step
+
+**Cognitive task** — `card_retrieval_metadata.cognitive_task text NOT NULL CHECK in ('diagnosis_from_clues','management_treatment','test_lab_threshold','mechanism_pathophys','association_risk','classic_feature_pattern','multi_answer_list','term_alias_definition','eponym','superlative_rank','compressed_factoid_other')`.
+
+**Card format** — `cards.card_format` enum expanded 4 → 9, matching the lattice-bible 9-format menu: `single_term_direct_cloze`, `bidirectional_term`, `clue_diagnosis_contrast`, `eponym`, `linked_cloze_threshold`, `management_triplet`, `pairing_matrix`, `complete_set_same_cloze`, `image_first_recognition`. Migration 003 will run `ALTER TABLE cards DROP CONSTRAINT cards_card_format_check; ALTER TABLE cards ADD CONSTRAINT cards_card_format_check CHECK (card_format in (...))` to widen the existing 4-value check from migration 001.
+
+**Tag role** — `card_ontology_tags.tag_role CHECK in ('primary','secondary','bridge','planning_only')`. Already locked by D19; restated here so this entry is self-contained as the canonical metadata vocabulary.
+
+**Granularity** — `card_ontology_tags.granularity CHECK in ('system','subsection','topic')`. Denormalized from `concepts.level` for fast filter without join. Already locked by D19; restated here.
+
+**Cloze One By One** — `card_retrieval_metadata.requires_cloze_one_by_one boolean NOT NULL DEFAULT false`, `card_retrieval_metadata.cloze_grouping text NULL` (e.g., `same_c1`, `separate`, `none`). First-class because the lattice-bible 9-format menu treats it as the default for multi-part retrieval.
+
+**Why:** these enums are the contract between every card producer (in-repo AI, external pipeline, manual authoring) and every consumer (planner, review UI, analytics, import validator). Drift between producer and consumer = broken queries and silent miscategorization. CHECK constraints push validation to the DB so no application path can bypass them. Locking them here means migration 003's SQL must encode exactly these values, not negotiate with itself; and the import endpoint can validate cleanly against this single source of truth.
+**Revisit if:** real card authoring surfaces a missing value (e.g., a card teaches a clinical pattern that doesn't fit any lattice code). Add to the enum via a forward migration; do not silently coerce or repurpose existing values. The import endpoint should hard-fail unknown values rather than guess.

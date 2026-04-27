@@ -67,6 +67,8 @@ Never let the LLM invent a concept slug. Fragmentation kills the planner.
 
 The `concepts` table is seeded by `scripts/seed_ontology.mjs` from `abim_blueprint_v1.json`. Columns: `id`, `title`, `synonyms[]`, `weight`, `level`, `ontology_source`, `ontology_version`. Hierarchy lives in a separate `concept_parents (child_id, parent_id, is_primary)` table. ID format is dot-delimited: `<system>.<subsection>.<topic>`. See D18 for the full ID scheme; ARCHITECTURE.md for the live schema.
 
+Migration 003 (planned per Phase 1 step 1b) adds the retrieval-metadata layer: `cards.primary_lattice`, `cards.secondary_lattices[]`, an expanded 9-value `cards.card_format`, and a 1:1 `card_retrieval_metadata` table with `cognitive_task`, prompt/answer framing, discriminator, and `requires_cloze_one_by_one` / `cloze_grouping`. Migration 004 (Phase 1 step 1c) adds the planning layer (`yield_tier`, `danger_level`, `board_likelihood`, `source_strength`, `review_priority`, `primary_system_id`, `secondary_system_ids[]`, `bridge_reason`) and the `card_discriminators` graph. All enum values are locked by D20.
+
 ## Content rules (legal + editorial)
 
 - Every card traces to a lawful source (primary literature, society guidelines, UpToDate, etc.).
@@ -121,9 +123,11 @@ Both layers are needed because heuristics miss paraphrased stems and LLMs someti
   /migrations    *.sql, numbered
 /prompts         LLM prompt templates — source of truth
 /scripts         one-off: seed, import
-abim_blueprint_v1.json     canonical ontology seed (ABIM IM CERT, Jan 2026)
-Medical_Knowledge_Ontology.md
-ARCHITECTURE.md            live data model + LLM wiring; updated each phase
+abim_blueprint_v1.json                       canonical ontology seed (ABIM IM CERT, Jan 2026; D18)
+Medical_Knowledge_Ontology.md                four-layer tagging framework (D17)
+flashcard_database_design.md                 reference: existing flashcard DB shape
+Flash Card Generation PRACTICE_PATTERNS.md   reference: card-writing norms used by external pipeline
+ARCHITECTURE.md                              live data model + LLM wiring; updated each phase
 CLAUDE.md
 AGENTS.md
 PHASES.md
@@ -131,9 +135,9 @@ DECISIONS.md
 PROJECT_SUMMARY.md
 PRACTICE_PATTERNS.md
 SESSION_LOG.md
-KEKKI_ORIENTATION.md       plain-English stack tutor for Zach
-phase1_schema_plan.md      historical: schema design notes for migrations 001/002
-/archive                   superseded files retained for traceability
+KEKKI_ORIENTATION.md                         plain-English stack tutor for Zach
+phase1_schema_plan.md                        historical: schema design notes for migrations 001/002
+/archive                                     superseded files retained for traceability
 ```
 
 ## Definition of Done for any change
@@ -232,6 +236,7 @@ pnpm build
 - Adding a new database table not described in PHASES.md
 - Anything that touches clinical content rules
 - Anything that touches the AI card generation guardrails (D13) — rate limit, attach-to-cluster, citation requirement, draft cooling
+- Anything that touches the locked card metadata enums (D20) — `primary_lattice`, `secondary_lattices`, `cognitive_task`, the 9-value `card_format`, `tag_role`, `granularity`, Cloze One By One. New values are added via forward migration; never silently coerced or repurposed.
 - Anything that costs money on a recurring basis
 - Anything that introduces billing, payment, or pricing logic before Phase 8 + 4 weeks of real beta use
 - Anything that runs scaffolding or installer commands that may overwrite existing project docs (lesson from 2026-04-26: `create-next-app` clobbered CLAUDE.md)

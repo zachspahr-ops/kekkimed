@@ -75,8 +75,11 @@ See [PHASES.md](PHASES.md) for the full step list and Definition of Done per pha
 - [CLAUDE.md](CLAUDE.md) — operating instructions for Claude Code
 - [ARCHITECTURE.md](ARCHITECTURE.md) — live data model, LLM wiring, request flows
 - [PHASES.md](PHASES.md) — phased build plan with DoD per phase
-- [DECISIONS.md](DECISIONS.md) — locked architectural decisions (D1–D19)
+- [DECISIONS.md](DECISIONS.md) — locked architectural decisions (D1–D20)
 - [PRACTICE_PATTERNS.md](PRACTICE_PATTERNS.md) — recurring workflow conventions
 - [SESSION_LOG.md](SESSION_LOG.md) — append-only session-by-session record
 - [KEKKI_ORIENTATION.md](KEKKI_ORIENTATION.md) — plain-English stack tutor
 - [abim_blueprint_v1.json](abim_blueprint_v1.json) — controlled vocabulary, 970 ABIM concepts (Jan 2026)
+- [flashcard_database_design.md](flashcard_database_design.md) — reference: existing flashcard DB shape
+- [Flash Card Generation PRACTICE_PATTERNS.md](Flash%20Card%20Generation%20PRACTICE_PATTERNS.md) — reference: card-writing norms used by the external pipeline
+- [Medical_Knowledge_Ontology.md](Medical_Knowledge_Ontology.md) — four-layer tagging framework (D17)

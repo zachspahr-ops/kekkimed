@@ -46,6 +46,35 @@ Each entry follows this shape:
 
 ---
 
+## 2026-04-26 (recovered from parent-dir drafts) — ABIM ontology adoption + D20 metadata enum lock
+
+**Phase + step:** Phase 1, steps 1a + 2 (ontology overhaul, pre-auth). Strategy chat in Cowork, draft work in parent dir.
+
+This entry was drafted in the parent project dir during the strategy session that produced D18 + the metadata enum lock (then numbered D19; renumbered to D20 during the evening consolidation pass — see entry above). Recovered from the `claude/parent-dir-draft-recovery` branch.
+
+**What changed:**
+- **Direction shift.** Earlier plan to author `kekki_concepts_v1.json` from scratch is retired. ABIM IM CERT blueprint becomes the canonical Layer 1 ontology. Driven by three uploaded reference docs from Zach: `flashcard_database_design.md`, `Flash Card Generation PRACTICE_PATTERNS.md`, `abim_ontology_improvement_plan.md` (the third was referenced in drafts but never landed in the repo; first two are now committed).
+- **`abim_blueprint_v1.json`** placed in repo root. ABIM IM CERT, January 2026 edition. 18 systems, ~230 subsections, ~1,500 topics in source data; seeded as 970 concepts in DB.
+- **`supabase/migrations/002_abim_ontology.sql`** written and applied to kekki-prod.
+- **DECISIONS.md** D18 (ABIM blueprint canonical) and D19 (`card_ontology_tags` table) locked. The forward-looking metadata enum lock — originally drafted as a second "D19" — was reconciled into **D20** during the evening consolidation pass.
+- Migration cadence locked: 002 (ontology, applied) → 003 (retrieval metadata per D20) → 004 (planning + discriminators per D20). One migration per Claude Code session.
+
+**User decisions made this session (locked):**
+- D18: ABIM blueprint = canonical Layer 1. Three depth levels (system / subsection / topic). Dot-delimited snake_case IDs. Strict tree (one parent per child). Cross-system tagging via `card_ontology_tags.tag_role = 'bridge'`, not concept polyhierarchy.
+- D20: full metadata enum lock — primary_lattice (4-value CHECK), secondary_lattices (subset CHECK on 7 values), cognitive_task (11-value CHECK), card_format (9-value CHECK), tag_role (4-value CHECK), granularity (3-value CHECK), Cloze One By One first-class.
+- "Miscellaneous" system in the ABIM blueprint kept as-is (real category, not a parsing artifact per Zach).
+- exam_percent → numeric: `"14%"` → `0.14`, `"<2%"` → `0.01`, topics → NULL.
+- `cards.concept_ids[]` dropped in 002 outright (no production data to migrate).
+- Discriminator graph (`card_discriminators`) deferred to migration 004; export notes table deferred until multi-variant Anki content actually exists.
+
+**Blocked / deferred:**
+- Migrations 003 and 004 not yet drafted.
+- `card_export_notes` table (Anki variants) deferred until needed.
+- `learner_card_state` materialized view deferred to Phase 5.
+- `abim_ontology_improvement_plan.md` referenced in drafts but never written; references trimmed during consolidation.
+
+---
+
 ## 2026-04-26 — Doc pass: AI card generation guardrails + base project docs
 
 **Phase + step:** Phase 0, pre-step 1. No code yet — pure documentation pass before scaffolding.

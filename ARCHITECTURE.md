@@ -2,7 +2,7 @@
 
 *Live snapshot of what exists in the codebase right now. The durable answer to "where does this thing live and how does data flow through it." If you've read CLAUDE.md, DECISIONS.md, and PHASES.md, this file fills the gap between "what we decided" and "what is actually built."*
 
-**Last updated:** 2026-04-26 (Phase 1, after migrations 001+002).
+**Last updated:** 2026-04-26 (Phase 1, after migrations 001+002; migration 003 forecast per D20).
 
 ---
 
@@ -116,8 +116,8 @@ Per-card concept tags are enforced relationally via `card_ontology_tags.concept_
 |---|---|---|
 | `001_init.sql` | Applied | Base schema (14 tables, RLS, triggers) |
 | `002_abim_ontology.sql` | Applied 2026-04-26 | `concepts.level/ontology_source/ontology_version`; `card_ontology_tags`; drops `cards.concept_ids[]` |
-| `003_*` | Not yet written | Retrieval metadata / lattice (deferred per memory) |
-| `004_*` | Not yet written | Planning fields + `card_discriminators` graph (deferred) |
+| `003_retrieval_metadata.sql` | Not yet written | `cards.primary_lattice` (4-value), `cards.secondary_lattices text[]` (subset CHECK over 7 values), expand `cards.card_format` 4 → 9, new 1:1 `card_retrieval_metadata` (cognitive_task, prompt_frame, answer_form, discriminator, requires_cloze_one_by_one, cloze_grouping, format_review_status). All enum values locked by D20. |
+| `004_planning_layer.sql` | Not yet written | Planning fields on `cards` (yield_tier, danger_level, board_likelihood, source_strength, review_priority, primary_system_id, secondary_system_ids[], bridge_reason); `card_discriminators` directed-graph table for cross-card disambiguation. |
 
 Apply with `supabase db push` (after `supabase link --project-ref jquturibslqzkldngzvf`).
 
@@ -206,8 +206,10 @@ The Anthropic SDK is **not yet imported**. First use lands in Phase 3.
   kekki_concepts_v1.json
   transform_v0_to_v1.mjs
 
-abim_blueprint_v1.json     canonical ontology seed (ABIM IM CERT, Jan 2026)
-Medical_Knowledge_Ontology.md   four-layer tagging framework
+abim_blueprint_v1.json     canonical ontology seed (ABIM IM CERT, Jan 2026; D18)
+Medical_Knowledge_Ontology.md   four-layer tagging framework (D17)
+flashcard_database_design.md    reference: existing flashcard DB shape (informs migration 003+004)
+Flash Card Generation PRACTICE_PATTERNS.md   reference: card-writing norms used by external pipeline
 
 ARCHITECTURE.md            this file
 CLAUDE.md                  agent operating instructions (+ AGENTS.md included via @ at top)
