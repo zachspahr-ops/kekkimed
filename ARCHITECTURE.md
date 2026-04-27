@@ -66,7 +66,7 @@ The user's browser talks to Next.js running on Vercel. Server-side code in Next.
 | Next.js | 14+ App Router | TypeScript strict mode |
 | TypeScript | strict | `tsc --noEmit` is the typecheck gate |
 | Tailwind CSS | latest | shadcn/ui components |
-| Supabase JS | `@supabase/supabase-js` (server scripts) | `@supabase/ssr` will land in Phase 1 step 3 for browser/server cookies |
+| Supabase JS | `@supabase/supabase-js` (server scripts), `@supabase/ssr` ^0.10.2 (auth cookies) | Both installed |
 | Anthropic SDK | `@anthropic-ai/sdk` | not yet imported — first use in Phase 3 |
 | Supabase CLI | latest | installed via Scoop; `supabase link --project-ref jquturibslqzkldngzvf` per worktree |
 
@@ -128,19 +128,20 @@ Apply with `supabase db push` (after `supabase link --project-ref jquturibslqzkl
 
 App-router conventions: folder name = URL segment; `page.tsx` = the page; `route.ts` = the API endpoint.
 
-**Live now (Phase 0 + 1 step 2):**
+**Live now (Phase 0 + 1 steps 2–5):**
 
 | Route | Type | Purpose |
 |---|---|---|
 | `/` | page | Placeholder home page (will be replaced by marketing landing in Phase 8) |
+| `/login` | page + server action | Magic-link sign-in form. Server action `signInWithEmail` calls `supabase.auth.signInWithOtp`; redirects to `/login?status=sent` on success or `/login?error=...` on failure |
+| `/auth/callback` | route handler | GET handler that receives `?code=...` from the Supabase magic link, calls `exchangeCodeForSession`, redirects to `/dashboard` (or `?next=`) |
+| `(app)` route group | layout | Auth gate. The layout calls `supabase.auth.getUser()` and `redirect('/login')` when no session — every page under this group is guaranteed authenticated |
+| `/dashboard` (under `(app)`) | page | Signed-in user landing. Shows email + stub "No clusters yet" + sign-out form |
 
 **Planned by phase** (lightweight pointer; full intent in PHASES.md):
 
 | Route | Phase | Purpose |
 |---|---|---|
-| `/login` | 1 step 3 | Magic-link signup/signin |
-| `/auth/callback` | 1 step 3 | Supabase OAuth callback |
-| `/dashboard` | 1 step 5 | Signed-in user landing |
 | `/clusters`, `/clusters/[id]` | 2 | Cluster list + detail |
 | `/review/[session_id]` | 2 | Card viewer + binary self-rate |
 | `/intake` | 3 | Free-text + file upload + parser preview |
@@ -173,7 +174,17 @@ The Anthropic SDK is **not yet imported**. First use lands in Phase 3.
 
 ## 6. Auth + RLS
 
-**Auth provider:** Supabase magic-link (D2). The `@supabase/ssr` package will land with Phase 1 step 3; cookies are read from request and written to response on every server action.
+**Auth provider:** Supabase magic-link (D2). Implemented via `@supabase/ssr` (^0.10.2) — landed in Phase 1 step 3.
+
+**Cookie + session flow:**
+1. User submits email at `/login`. The server action `signInWithEmail` calls `supabase.auth.signInWithOtp({ email, options: { emailRedirectTo: '<host>/auth/callback' } })`. Supabase emails a magic link.
+2. User clicks the link. Browser hits `/auth/callback?code=...`. The route handler calls `exchangeCodeForSession(code)`, which sets the auth cookie via `cookieStore.set` (called from inside the `setAll` adapter in `lib/supabase/server.ts`).
+3. Subsequent requests are intercepted by `proxy.ts` (Next.js 16's renamed middleware file). It calls `lib/supabase/middleware.ts → updateSession`, which calls `supabase.auth.getUser()` — that call refreshes the access token if needed and rewrites the cookie via `setAll`. **Use `getUser()` not `getSession()` here**: the latter does not refresh, and signed-in users would be silently logged out when their token expires.
+4. Pages and route handlers under `app/(app)/` use `lib/supabase/server.ts → createClient()` to read the user inside Server Components. The `(app)/layout.tsx` is the auth gate: it calls `getUser()` and `redirect('/login')` if absent.
+
+**Why redirect from the layout, not the proxy?** Per Next.js 16 auth guidance, redirects close to the data are more reliable than proxy-level redirects, which run on prefetched routes and can fire spuriously. The proxy's only job is to refresh the cookie.
+
+**Sign-out:** the `/dashboard` page renders a plain `<form>` POSTing to a `signOut` Server Action that calls `supabase.auth.signOut()` and `redirect('/login')`. No JS required.
 
 **The auth-uid invariant.** Every RLS policy on a user-data table predicates on `auth.uid()` matching either `user_id` (self-owned data) or a derived path through a parent table (e.g., `cluster_memberships` → `clusters.owner_user_id`). The service role bypasses RLS entirely; it is used for the seed script and for system writes to `usage_events` and `waitlist`.
 
@@ -191,10 +202,25 @@ The Anthropic SDK is **not yet imported**. First use lands in Phase 3.
   page.tsx                 placeholder home (Phase 0)
   globals.css
   favicon.ico
+  /login
+    page.tsx               magic-link form (Phase 1 step 3)
+    actions.ts             server action: signInWithEmail
+  /auth/callback
+    route.ts               GET handler: exchangeCodeForSession → /dashboard
+  /(app)                   protected route group — layout enforces auth (Phase 1 step 4)
+    layout.tsx             calls getUser; redirect('/login') if null
+    /dashboard
+      page.tsx             email + "No clusters yet" stub (Phase 1 step 5)
+      actions.ts           server action: signOut
+proxy.ts                   Next.js 16 proxy (formerly middleware.ts) — refreshes session cookie via @supabase/ssr
 /components
   /ui                      shadcn/ui primitives
 /lib
-  utils.ts                 (only file so far — pure helpers)
+  utils.ts                 pure helpers
+  /supabase
+    server.ts              createServerClient factory (Server Components, Actions, Route Handlers)
+    client.ts              createBrowserClient factory (Client Components)
+    middleware.ts          updateSession helper used by proxy.ts
 /scripts
   seed_ontology.mjs        seeds concepts + concept_parents from abim_blueprint_v1.json (D18)
 /supabase
@@ -232,8 +258,7 @@ next.config.ts, eslint.config.mjs, postcss.config.mjs, components.json, tsconfig
 
 Planned additions:
 - `/prompts/` — LLM prompt templates (Phase 3+).
-- `/app/(marketing)`, `/app/(app)` route groups (Phase 1 step 3+).
-- `/lib/supabase/` — browser + server clients (Phase 1 step 3).
+- `/app/(marketing)` route group (Phase 8 — public landing + waitlist).
 
 ---
 

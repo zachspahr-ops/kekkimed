@@ -46,6 +46,62 @@ Each entry follows this shape:
 
 ---
 
+## 2026-04-27 — Phase 1 steps 3+4+5: Supabase magic-link auth
+
+**Phase + step:** Phase 1 steps 3 (auth), 4 (protected route group), 5 (dashboard). All three landed together in this PR — they're tightly coupled and splitting them produces three trivially small, mutually dependent PRs.
+
+**Branching:** opened off `origin/main` rather than the in-flight `claude/interesting-chebyshev-7f1f21` branch (PR #3, migration 003). The two PRs are functionally independent — auth doesn't depend on the schema changes in 003 — so working in parallel and resolving any tiny doc conflicts at merge time was cleaner than serializing.
+
+**Critical Next.js 16 surprise:** `middleware.ts` no longer exists — Next 16 renamed the file convention to `proxy.ts`. The export is `proxy()` (default or named), `config.matcher` works the same. AGENTS.md was warning about exactly this. Every Supabase + Next.js tutorial online uses `middleware.ts`, which **does nothing** in Next 16. Documented in ARCHITECTURE.md §6 + §7 so this doesn't surprise the next session.
+
+**What changed (code):**
+- `lib/supabase/server.ts` — `createServerClient` factory using `cookies()` from `next/headers`. The `setAll` adapter swallows errors thrown from Server Components (read-only context); `proxy.ts` rewrites cookies on every request anyway.
+- `lib/supabase/client.ts` — `createBrowserClient` factory for Client Components.
+- `lib/supabase/middleware.ts` — `updateSession(request)`: builds a `NextResponse`, creates a server client wired to `request.cookies` + `response.cookies`, calls `auth.getUser()` to refresh the access token, returns the response with rewritten cookies. Comment in the file flags loudly why `getUser()` not `getSession()` — the latter doesn't refresh.
+- `proxy.ts` (repo root) — calls `updateSession`. `config.matcher` excludes `_next/static`, `_next/image`, `favicon.ico`, and common image extensions.
+- `app/login/page.tsx` — magic-link form. Server component reads `searchParams` (async in Next 16) for `status=sent` and `error` banners.
+- `app/login/actions.ts` — `signInWithEmail` Server Action: validates email, builds an absolute callback URL from `x-forwarded-host`/`host`, calls `signInWithOtp` with `emailRedirectTo` + `shouldCreateUser: true`, redirects to `/login?status=sent` or `/login?error=...`. The `shouldCreateUser` flip-point is documented inline — when invite-code gating lands in Phase 8 (D1), flip to `false`.
+- `app/auth/callback/route.ts` — GET handler exchanging `?code=` for a session, then redirecting to `?next=` or `/dashboard`. Honors `x-forwarded-host` for Vercel preview URLs.
+- `app/(app)/layout.tsx` — auth gate. Calls `getUser()`; redirects to `/login` if absent. Every page under `(app)` is guaranteed authenticated.
+- `app/(app)/dashboard/page.tsx` — shows email + stub "No clusters yet" + sign-out form.
+- `app/(app)/dashboard/actions.ts` — `signOut` Server Action.
+
+**What changed (deps):** added `@supabase/ssr ^0.10.2` (sign-off received in plan-mode). `@supabase/supabase-js` was already present.
+
+**What changed (docs):**
+- `CLAUDE.md` — env-vars section flipped from "Currently required: none" to listing the 3 Supabase vars as currently required.
+- `ARCHITECTURE.md` §2 stack table — marked `@supabase/ssr` installed.
+- `ARCHITECTURE.md` §4 routes — moved `/login`, `/auth/callback`, `/dashboard` from "Planned" to "Live now" with the actual handler types.
+- `ARCHITECTURE.md` §6 Auth + RLS — replaced the "ssr will land" placeholder with the actual cookie + session flow (4 numbered steps), the "why redirect from layout, not proxy" rationale, and the sign-out flow.
+- `ARCHITECTURE.md` §7 file layout — added all the new files; removed `/lib/supabase/` and `/app/(app)` from "Planned additions".
+- `PHASES.md` Phase 1 steps 3, 4, 5 — marked DONE 2026-04-27 with one-line implementation notes per step.
+
+**Verification:**
+- `pnpm typecheck` ✅
+- `pnpm build` ✅. Build output explicitly shows `ƒ Proxy (Middleware)` confirming Next 16 picked up `proxy.ts`. Routes: `/`, `/login`, `/auth/callback`, `/dashboard`, `/_not-found` — all expected.
+- End-to-end magic-link flow not yet verified — Zach to do this locally after setting Vercel env vars + Supabase Studio redirect URLs (see "Manual steps" below).
+
+**Manual steps Zach owns (not bypassable from inside Claude Code):**
+1. **Vercel env vars.** Vercel → kekkimed → Settings → Environment Variables. Add for **Production** and **Preview** (and Development if desired): `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` (mark Sensitive). Values from Supabase Studio → Project Settings → API.
+2. **`.env.local` at parent project dir** (`C:\Users\Zach\Documents\Claude\Projects\Kekki\.env.local`) — same three vars, for `pnpm dev` locally.
+3. **Supabase Studio → Authentication → URL Configuration.** Set Site URL to `https://kekkimed.com`. Add Redirect URLs:
+   - `http://localhost:3000/auth/callback`
+   - `https://kekkimed.com/auth/callback`
+   - `https://kekkimed-*.vercel.app/auth/callback` (preview deploys; wildcard required)
+4. Optionally customize the Magic Link email template (Studio → Authentication → Email Templates).
+
+**Branching / merge note:** this PR was opened off `origin/main` while PR #3 (migration 003) is still pending merge. PR #3's doc edits to `ARCHITECTURE.md` (§3 table list, "Last updated" stamp, migration cadence row, the cards row), `PHASES.md` (Phase 1 DoD line, step 1b/1c), `DECISIONS.md` (D20 amendment), and `SESSION_LOG.md` (top entry) do not overlap with the auth doc edits structurally, but the "top of `SESSION_LOG.md`" and "Last updated" lines may produce 1–3 line conflicts when both PRs merge. Trivial to resolve in a rebase.
+
+**Blocked / deferred:**
+- End-to-end auth verification — needs the manual steps above first.
+- The 5 pre-existing security advisor lints from migration 001 — still flagged for a follow-up cleanup migration, not addressed here.
+
+**Open questions for next session:**
+- After auth ships and Phase 1 step 6 (seed 20 cards) lands, decide planning-layer enums for migration 004 and lock in DECISIONS as D21.
+- Phase 2 (review loop) is the natural next step once Phase 1 closes.
+
+---
+
 ## 2026-04-26 (evening) — Branch consolidation + repo hygiene + ARCHITECTURE.md
 
 **Phase + step:** Phase 1 — between step 2 (done) and step 3 (auth, next). No new product code.
