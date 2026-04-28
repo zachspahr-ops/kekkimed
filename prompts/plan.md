@@ -174,10 +174,10 @@ Return `{ "rejected": true, "reason": "..." }` for these. Do not partial-fulfill
 
 ## Implementation notes (for the server, not the model)
 
-- The server constructs `{{clusters_json}}` from a join across `clusters` × `cluster_memberships` × `cards` × `card_ontology_tags` (D19) plus the D20/D21 enum aggregations. Pre-compute `planning_summary` server-side; do not ask the model to count.
+- The server constructs `{{clusters_json}}` via `buildClustersWithPlanningSummary()` from `/lib/plan/clusters-summary.ts`. The helper takes a `ClusterWithCards[]` (cluster rows joined with their cards' planning fields and concept tags from a single SQL query across `clusters` × `cluster_memberships` × `cards` × `card_ontology_tags` × `card_retrieval_metadata`) and produces the `{{clusters_json}}` shape — including the per-cluster `planning_summary` histograms over D20/D21 enums. Histograms always include zero buckets so the model sees the full distribution shape.
 - Token usage is logged to `usage_events` (D16) with `call_site = 'plan'` and `request_ref` set to the resulting `study_plan_id` (or the upload that triggered the plan if generation pre-dates the row).
-- Validate the model's output against the schema **before** persisting. If validation fails, return a UI error with "regenerate" affordance — do not silently truncate or coerce.
-- Bound the request: refuse to call the model if `clusters_json` exceeds ~150 entries (rare for a single user; surfaces a query bug). If it does, the server should top-N-by-coverage filter before sending.
+- Validate the model's output against the schema **before** persisting. If validation fails, return a UI error with "regenerate" affordance — do not silently truncate or coerce. Use the `is*` type guards from `/lib/cards/types.ts` to narrow LLM-returned enum strings before writing to the DB.
+- Bound the request: when `clusters_json` would exceed ~150 entries, pre-rank with `rankClustersByGapOverlap()` (same module) and slice to the top 150 before sending. Tie-break: gap-overlap desc → card_count desc → cluster_id asc, deterministic across runs so prompt caching can hit on repeated inputs.
 
 ## Cross-references
 

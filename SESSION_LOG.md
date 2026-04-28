@@ -15,6 +15,43 @@ Each entry follows this shape:
 
 ---
 
+## 2026-04-28 — Phase 4 plan generator: shared card vocab types + clusters aggregator
+
+**Phase + step:** Phase 4 prep — pre-authors the consumer-side helpers that `/prompts/plan.md` references, plus a shared card-vocabulary types module that encodes D17/D19/D20/D21 in TypeScript. After this, the plan-generator server action's only remaining work is the SQL query, the Anthropic SDK call, and the UI.
+
+**What changed:**
+- `/lib/cards/types.ts` (new) — single TypeScript source of truth for the locked card vocabulary. Encodes 17 enums spanning D7 (`status`), D13 (`source`), D17 (`difficulty`, `granularity`), D19 (`tag_role`, `tag_review_status`, `tag_source`), D20 (`primary_lattice`, `secondary_lattice`, `card_format`, `cognitive_task`, `retrieval_direction`, `format_review_status`), and D21 (`yield_tier`, `danger_level`, `board_likelihood`, `source_strength`, `review_priority`). Each enum gets a string-literal type, a `const` tuple (for runtime iteration), and a generated type-guard (`isYieldTier`, etc.). The guards reject non-strings, wrong-case strings, and unknown values — important since `auth.users` row attributes and LLM-returned strings arrive as `unknown`.
+- `/lib/cards/types.test.ts` (new) — 21 tests. Cardinality checks for every enum (drift detector against DECISIONS.md — e.g., "DANGER_LEVELS has 4 values per D21" fails loudly if someone adds a fifth without a forward migration). Spot-checks for specific values (`lethal` in danger, `society_guideline` in source_strength, the four D20 lattice codes). Table-driven test asserts every guard accepts every documented value and rejects garbage / non-strings / wrong case.
+- `/lib/plan/clusters-summary.ts` (new) — `buildClustersWithPlanningSummary(clusters)` aggregates per-cluster D20/D21 histograms (`yield_tier`, `danger_level`, `board_likelihood`, `primary_lattice`, `cognitive_task`) plus deduplicated `concept_coverage` and `card_count`. Histograms always include zero buckets so the LLM sees the full distribution shape rather than inferring "absent = zero". Postgres does the join (single SQL query); TypeScript does the rollup. Plus `rankClustersByGapOverlap(clusters, gapConceptIds)` for when a user has > 150 clusters — pre-ranks by gap-concept overlap (tie-break: card_count desc → cluster_id asc, deterministic across runs so prompt caching can hit on repeated inputs).
+- `/lib/plan/clusters-summary.test.ts` (new) — 20 tests. Identity passthrough (cluster_id / name / description, including null), card_count correctness, concept_coverage dedup + sort, histogram zero-buckets invariant, histogram counts on three different fixture clusters (HF GDMT with management-treatment dominance + lethal card; Hyponatremia with threshold cognitive task; Empty cluster with all-zero histograms), histogram-sum-equals-card-count invariant for every enum field. Plus 5 ranking tests: no-gaps passthrough, higher overlap first, tie-break by card_count, multi-overlap counting, deterministic across runs.
+- `/prompts/plan.md` — implementation notes refreshed to point at `buildClustersWithPlanningSummary()` and `rankClustersByGapOverlap()` rather than restating the algorithms in prose. Also added a note that the server should use the `is*` type guards from `/lib/cards/types.ts` to narrow LLM-returned enum strings before persisting.
+- `ARCHITECTURE.md` §7 — added `/lib/cards/` and `/lib/plan/` subdirectories with the four new files.
+
+**Why now:** the plan.md prompt references `planning_summary` histograms in five enum dimensions; without a typed implementation the Phase 4 server would have to either build them ad-hoc (silently desync from D20/D21) or skip them (LLM has to count cards itself, expensive and error-prone). Landing the typed source-of-truth (`/lib/cards/types.ts`) plus the aggregator now means the Phase 4 wiring is just SQL + an Anthropic SDK call + a UI.
+
+**Decisions made this session:**
+- **Single shared vocabulary module over per-feature enum copies.** `/lib/cards/types.ts` is imported by the planner aggregator now, will be imported by the Phase 6 import validator and the Phase 3 intake schema check next. Keeping enums in one place means updating D20/D21 (via forward migration only — CLAUDE.md guardrail) is one file edit, not a hunt across the codebase.
+- **`as const satisfies readonly Foo[]` over `as readonly Foo[]`.** Modern TS pattern: `satisfies` checks the literal contents are valid `Foo` values without widening the array type. Result: the const array carries narrow tuple types AND is type-checked against the union. Safer drift detection.
+- **Generated guards via `makeIsMember(values)`.** Avoids 17 hand-written `is*` functions that could drift from their tuples. Single helper, used 17 times.
+- **Histograms include zero buckets.** Forces the LLM to see "0 lethal, 4 high" instead of inferring that absent buckets mean zero. Slightly larger payload; zero ambiguity.
+- **Ranking helper uses deterministic tie-break.** `card_count desc → cluster_id asc` so prompt caching can hit on repeated identical inputs (Anthropic prompt caching keys on exact byte equality).
+
+**Verification:**
+- `pnpm test` → 95/95 pass (22 stem-rejection + 27 candidate-concepts + 21 types + 25 clusters-summary).
+- `pnpm typecheck` → green.
+- `pnpm build` → green.
+
+**Out of scope (intentional):**
+- The Supabase SQL query that produces the `ClusterWithCards[]` input is deferred to Phase 4 wiring. Mobile sandbox can't test it against kekki-prod.
+- `is*` guards exist for every D20/D21 enum but are not yet imported anywhere. Phase 4 server action will import them when validating LLM-returned cluster-id and rationale text. Intentional — adding consumers without real wiring would create dead code.
+- No card-shape Zod-equivalent runtime validator yet (Phase 6 work). The shared types module is the foundation; the validator builds on top.
+
+**Open questions for next session:**
+- The Phase 4 SQL query should probably live in a typed query helper `/lib/plan/queries.ts` rather than inline in the server action. Defer until actually wiring.
+- `cognitive_task` is on `card_retrieval_metadata` (1:1 with cards from m003) — the SQL query needs an explicit join. Phase 4 wiring should capture this or LEFT JOIN with a fallback if `card_retrieval_metadata` is missing for a card (shouldn't happen given the 1:1 constraint, but defensive coding).
+
+---
+
 ## 2026-04-28 — Phase 3 intake foundation: candidate-concepts filter helper
 
 **Phase + step:** Phase 3 prep — completes the pure-logic side of the intake parser. The Phase 3 server action can now compose two helpers (`checkForQbankStem` + `filterCandidateConcepts`) and the `intake.md` prompt; the only remaining work is wiring (Anthropic SDK call + UI).
