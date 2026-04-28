@@ -15,6 +15,47 @@ Each entry follows this shape:
 
 ---
 
+## 2026-04-28 — Phase 6 import validator (`POST /api/cards/import`)
+
+**Phase + step:** Phase 6 prep — pre-authors the runtime validator the bulk-import endpoint will use as its boundary. After this commit, Phase 6's remaining work is the route handler (calls `validateImportPayload`, then writes to DB), the cluster editor UI, and the 24-hour cooling DB trigger (already in m001 per CLAUDE.md).
+
+**What changed:**
+- `/lib/cards/import-schema.ts` (new) — runtime validator for the import payload. Builds on `/lib/cards/types.ts` (every D17/D19/D20/D21 enum guard is used). Pure logic; no DB access. Cluster-id existence and concept-id existence checks are deferred to the consumer (require DB queries). Public surface:
+  - `ImportPayload` / `ImportCard` / `ImportOntologyTag` / `ImportClusterDefinition` — input shape every external pipeline must speak.
+  - `NormalizedImportPayload` / `NormalizedCard` / `NormalizedOntologyTag` / `NormalizedClusterDefinition` — output shape with all defaults applied (D21 enum defaults, ontology-tag confidence 1.0, etc.). Direct mapping target for DB rows.
+  - `ImportError` — discriminated by 11 `code` values (`NOT_OBJECT`, `NOT_ARRAY`, `EMPTY_ARRAY`, `WRONG_TYPE`, `MISSING_REQUIRED`, `EMPTY_STRING`, `INVALID_ENUM`, `OUT_OF_RANGE`, `INVALID_CLUSTER_PLACEMENT`, `INVALID_PRIMARY_TAG_COUNT`, `DUPLICATE_VALUE`); each error carries a JSON-pointer-style path so the response can pinpoint exactly which card and field is wrong.
+  - `validateImportPayload(input: unknown)` → `{valid: true, payload: NormalizedImportPayload} | {valid: false, errors: ImportError[]}`. **Errors accumulate** rather than short-circuit — a fully-broken card surfaces every required-field issue in one round-trip, not one error per resubmit.
+  - `IMPORT_DEFAULTS` exported as a frozen object so callers can document the contract.
+- `/lib/cards/import-schema.test.ts` (new) — 43 tests. Top-level shape rejections (non-object, missing cards, empty array, non-array). Minimal valid payload + defaults applied check. Maximal payload preserving every field. Required-field-missing test for each of the 7 required card fields (loop). Empty-string rejection. Invalid-enum rejection for each of 11 enum-typed fields (loop). Secondary-lattices array bad-element. Ontology tags: empty array, no primary, multiple primaries (D19 enforces partial unique index — validator front-runs the DB), missing fields, confidence out of `[0,1]`. format_confidence boundary cases (0, 1, null). Cluster placement: neither set, both set, valid id, valid definition, default visibility = private, bad visibility enum. Multi-card error path correctness (`['cards', 1, 'yield_tier']`). Error accumulation (3 broken cards → ≥3 errors). Type-checking smoke test.
+- `ARCHITECTURE.md` §7 — added the two new files under `/lib/cards/`.
+
+**Why now:** with `/lib/cards/types.ts` shipped, the import validator is a 30-minute write of guarded property reads. Landing it now means Phase 6's route handler can be a one-liner — `validateImportPayload(req.body)` — and the external pipeline contract is documented in code (the `ImportCard` interface is the single source of truth that bulk authors can target).
+
+**Decisions made this session:**
+- **Errors accumulate, never short-circuit.** Validator collects every issue then returns. External pipelines submit batches of 50+ cards; a single MISSING_REQUIRED on card 17 should not hide a duplicate-primary on card 23. The accumulation cost is one pass over broken cards; the correctness benefit is "fix everything in one PR review cycle."
+- **JSON-pointer-style path arrays (`['cards', 0, 'yield_tier']`).** Easier for clients to navigate programmatically than a string. `path.join('.')` gives a human-readable form when needed.
+- **11 stable error codes (TS literal union).** External-pipeline authors can pattern-match on codes for retry logic without parsing messages. `INVALID_PRIMARY_TAG_COUNT` is a specific code (rather than generic INVALID) because the D19 partial unique index makes this a hard contract — surfacing it cleanly upstream of the DB is the whole point.
+- **Validator does NOT check DB-existence facts.** `cluster_id` references and `concept_id` references are validated by the DB at write time. Pulling those into the validator would either need a fake DB layer in tests (premature) or a real one (impossible on mobile). Phase 6's route handler does the existence checks after schema validation succeeds.
+- **Defaults applied during validation, not after.** Output is fully-normalized `NormalizedCard` with no `undefined` fields. The Phase 6 consumer can map straight to DB rows without re-checking which fields are optional.
+
+**Verification:**
+- `pnpm test` → 138/138 pass (22 stem-rejection + 27 candidate-concepts + 21 types + 25 clusters-summary + 43 import-schema).
+- `pnpm typecheck` → green.
+- `pnpm build` → green.
+
+**Out of scope (intentional):**
+- DB existence checks (cluster_id, concept_id) — Phase 6 consumer handles these post-validation.
+- 24-hour cooling enforcement — already in the m001 `cards_status_transition` trigger; not the validator's job.
+- Idempotency-key replay logic — consumer concern (probably a `usage_events`-like table or a dedicated `import_idempotency_keys` table; defer to Phase 6 wiring).
+- Auth — `POST /api/cards/import` will require auth; that lands in the route handler, not here.
+- Coercion of stringified booleans / numbers — validator is strict (`true` is true, `"true"` is rejected with WRONG_TYPE). External pipelines should send proper JSON types; coercion hides bugs.
+
+**Open questions for next session:**
+- Should `confidence` for ontology tags default to something other than 1.0 when `tag_source = 'model'`? Currently defaults to 1.0 across the board. D19 says "Human-authored tags = 1.0. LLM-produced tags carry the model's self-reported value." Strict reading: model-source tags without confidence should be a validation error. Pragmatic: default to 1.0 and let the human reviewer downgrade. Lean pragmatic for now; revisit if the data quality hurts.
+- Should the validator enforce a max card count per request (e.g., 1000)? Currently unbounded. Phase 6 wiring's body-size limit catches the worst, but a 1000-card cap in the validator gives clearer error messages.
+
+---
+
 ## 2026-04-28 — Phase 4 plan generator: shared card vocab types + clusters aggregator
 
 **Phase + step:** Phase 4 prep — pre-authors the consumer-side helpers that `/prompts/plan.md` references, plus a shared card-vocabulary types module that encodes D17/D19/D20/D21 in TypeScript. After this, the plan-generator server action's only remaining work is the SQL query, the Anthropic SDK call, and the UI.
