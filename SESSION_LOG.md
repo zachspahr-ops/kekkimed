@@ -15,6 +15,282 @@ Each entry follows this shape:
 
 ---
 
+## 2026-04-28 — `/prompts/ai_card.md` authored (LLM call site #3)
+
+**Phase + step:** post-Phase-6 prep — pre-authors the third and most-guardrailed LLM prompt before its consumer (private AI card generation, gated behind D13). All three D6 call-site prompts now exist in repo. Continuation of the same mobile session.
+
+**What changed:**
+- `/prompts/ai_card.md` (new) — full prompt template for the AI card generator (D6 #3, D13 guardrails). Spec: input schema (`{{gap_json}}`, `{{target_cluster_json}}`, `{{candidate_concepts_json}}`, `{{user_request_json}}`, `{{today_iso}}`), output JSON schema mirroring `ImportCard` from `/lib/cards/import-schema.ts` so the server can pipe the result through the same validator + mapper used by the bulk-import endpoint, and explicit refusal cases. Two principles dominate: (1) citation or refuse — hallucinated citations are worse than no card; (2) constrained vocabulary everywhere — D7/D17/D19/D20/D21 enums map to DB CHECK constraints. Vocabulary picking guidance per enum (which `card_format` for which retrieval pattern, which `source_strength` for which citation type, etc.). Three worked examples: concrete-gap clean output, refusal-due-to-no-citation, refusal-due-to-vague-gap.
+- `ARCHITECTURE.md` §5 row 3 — flipped from `(planned)` to `(authored 2026-04-28; consumer not yet wired)`.
+- `ARCHITECTURE.md` §7 — added `ai_card.md` under `/prompts/`; removed it from "Planned additions".
+
+**Why now:** symmetry with the other two prompts (`intake.md`, `plan.md`). All three call-site prompts are now reviewable end-to-end. The shared types module + import validator + import mapper are already in place to back this prompt's consumer when D13 finally implements (post-Phase-6); the prompt closes the design loop.
+
+**Decisions made this session:**
+- **Single-card output (not multi).** The prompt produces one card per call. Rate limit (D13: 10/user/local-day) is per card; sequential calls give the user UI feedback per generation. Multi-card output would muddy the rate-limit semantics and the failure modes (one bad citation in a batch shouldn't reject the whole batch).
+- **Output shape mirrors `ImportCard` exactly.** The server can run the AI-card output through the same `validateImportPayload` + `mapNormalizedPayloadToInsertRows` pipeline as bulk imports — no second validator needed. This is the payoff for landing the import path before D13 implementation.
+- **Citation post-validation is documented.** The server should run a "looks like a real citation" sniff test (year present, name pattern, known canonical source phrase) on top of the prompt's "no fabrication" constraint. Defense in depth.
+- **`source = 'ai_private'` and `status = 'draft'` set by the server, not the model.** Same pattern as the import endpoint hard-coding. D13 forbids auto-promote regardless of what the model emits.
+
+**Verification:** docs only this commit; `pnpm typecheck`, `pnpm test`, `pnpm build` all green from prior commit. No code changes.
+
+**Out of scope (intentional):**
+- The D13 consumer (`/app/(app)/cards/generate/page.tsx` or similar). Lands post-Phase-6.
+- The rate-limit counter on `usage_events` (D16). Wiring detail; the `usage_events` table already exists from m001.
+- The "AI-generated, unreviewed" badge (D15). Review-UI render concern; not a prompt detail.
+- The token-metering wrapper. Same — server side.
+
+**Open questions for next session:**
+- Should the AI card generator support a "regenerate / refine" loop (user sees draft, asks for revision)? D13 doesn't say either way. Adding it later is cheap; defer until the first consumer is wired and dogfooding shows what's missing.
+- Citation sniff test heuristics — should they live in `/lib/cards/citation-validation.ts` as a pure function (testable on mobile) or inline in the route handler? Lean toward pure function. Save for the next mobile slice if we come back.
+
+---
+
+## 2026-04-28 — Phase 6 import → DB row mapper (+ citation_kind tightening)
+
+**Phase + step:** Phase 6 prep — finishes the validated-payload-to-DB-rows path. After this commit, the route handler is `validate → map → transactional insert`; almost no logic of its own. Continuation of the same mobile session.
+
+**What changed:**
+- `/lib/cards/import-mapper.ts` (new) — `mapNormalizedPayloadToInsertRows(payload, options)` takes a `NormalizedImportPayload` from the validator and produces an `ImportInsertRows` bundle: arrays for `clusters` (new), `cards`, `card_retrieval_metadata`, `card_ontology_tags`, and `cluster_memberships`. Pure logic, no DB access. ID generation defaults to `crypto.randomUUID()` but is injectable for deterministic tests. Cluster definitions deduplicate by name within the batch (two cards with `cluster_definition: { name: "Hyponatremia" }` share one new cluster). Cluster-id references pass through verbatim (existence checks remain the route handler's job).
+- `/lib/cards/import-mapper.test.ts` (new) — 19 tests. Single-card → 5-table-row counts. Verbatim field preservation across D7/D17/D19/D20/D21. Mapper hard-codes `source = 'external_pipeline'` and `status = 'draft'` per Phase 6 spec. `card_retrieval_metadata.card_id` FK match. `card_ontology_tags.review_status = 'accepted'` default per D19. New-cluster path: ClusterInsertRow with `owner_user_id` wired, FK link to membership. Cluster dedup by name (one cluster, two memberships). Distinct-name → distinct clusters. Mix of existing cluster_id + new cluster_definition. Position assignment: 1-indexed, increments per cluster, independent counters. Card-id uniqueness + FK consistency across all output tables. Default `crypto.randomUUID()` smoke test. Defensive invariants: 1 metadata per card, 1 membership per card, sum(ontology_tags) = sum across cards. Input-order preservation.
+- `/lib/cards/types.ts` — added `CitationKind` enum (`'guideline' | 'primary_lit' | 'textbook' | 'uptodate' | 'other'`) per the m001 CHECK constraint. Was previously not in the locked vocab. Plus `CITATION_KINDS` const array and `isCitationKind` guard.
+- `/lib/cards/types.test.ts` — added cardinality test (`CITATION_KINDS.length === 5`) and guard contract entry. Existing guards-table tests automatically extend coverage.
+- `/lib/cards/import-schema.ts` — tightened `citation_kind` validation from arbitrary string to `isCitationKind` enum guard. Closes a gap where `citation_kind: "tweet"` would pass the validator but fail at DB insert time.
+- `/lib/cards/import-schema.test.ts` — added `citation_kind: "tweet"` to the table-driven invalid-enum test loop. Pulls validator coverage to 12 enum-typed fields.
+- `ARCHITECTURE.md` §7 — added `import-mapper.ts` + tests to the `/lib/cards/` listing.
+
+**Why now:** the Phase 6 validator landed last commit; the natural follow-on is "what does the route handler actually call after validation?" With the mapper shipped, the route handler is `validate → map → transactional insert`. Plus the `citation_kind` gap was a real bug (DB rejection at insert time, surfacing as a 500 instead of a 400) — fixing it now while the validator is fresh in mind is cheaper than catching it in Phase 6 dogfooding.
+
+**Decisions made this session:**
+- **Cluster definitions dedupe within batch by `name`.** Two cards with the same new-cluster name share one ClusterInsertRow. Reasoning: external pipelines bulk-generating cards for a topic naturally produce many cards targeting the same cluster definition. Forcing them to use a separate envelope-level `cluster_definitions` array would complicate the contract for marginal gain. Cross-batch dedup (against existing clusters with same name) is the route handler's call — `clusters` table doesn't have a unique constraint on `(owner_user_id, name)`, and it's not obvious it should.
+- **`source = 'external_pipeline'` and `status = 'draft'` are hard-coded by the mapper, not configurable.** D13 forbids auto-promote; the import path always lands in draft. If a future use case (e.g., admin tool) needs to import as `human` or `reviewed`, that's a different route, not a flag here.
+- **Position is 1-indexed, increments per cluster, batch-local.** Schema default is 0 with no uniqueness; the mapper produces sensible ordering for fresh clusters. Caller can offset by existing-card-count when appending to a non-empty cluster (documented in the mapper's `position` comment).
+- **`card_ontology_tags.review_status = 'accepted'` default for import.** D19 doesn't force this; `manual_override` and `import` tag_sources are typically vetted upstream by the pipeline. Tag-review workflow can downgrade to `needs_review` later.
+- **`generateId` is injectable but defaults to `crypto.randomUUID()`.** Tests use a deterministic counter (`id-1`, `id-2`...) to assert FK linkage exactly. Production never sees the test generator. Small, conventional seam.
+
+**Verification:**
+- `pnpm test` → 159/159 pass (22 stem-rejection + 27 candidate-concepts + 22 types + 25 clusters-summary + 44 import-schema + 19 import-mapper).
+- `pnpm typecheck` → green.
+- `pnpm build` → green.
+
+**Out of scope (intentional):**
+- Existing-cluster dedup (mapper doesn't query DB; route handler can deduplicate by querying first if desired).
+- Idempotency replay logic (separate concern; deferred to Phase 6 wiring).
+- Position offsetting against existing cluster cards (mapper documents the contract; caller offsets if needed).
+
+**Open questions for next session:**
+- Should there be an `idempotency_keys` table migration so retries with the same `idempotency_key` return the same response? Defer until Phase 6 wiring is in progress and we know the actual replay semantics needed.
+- Should the route handler be at `app/api/cards/import/route.ts` (App Router convention) with a Server Action wrapper, or is the standalone route fine? Defer.
+
+---
+
+## 2026-04-28 — Phase 6 import validator (`POST /api/cards/import`)
+
+**Phase + step:** Phase 6 prep — pre-authors the runtime validator the bulk-import endpoint will use as its boundary. After this commit, Phase 6's remaining work is the route handler (calls `validateImportPayload`, then writes to DB), the cluster editor UI, and the 24-hour cooling DB trigger (already in m001 per CLAUDE.md).
+
+**What changed:**
+- `/lib/cards/import-schema.ts` (new) — runtime validator for the import payload. Builds on `/lib/cards/types.ts` (every D17/D19/D20/D21 enum guard is used). Pure logic; no DB access. Cluster-id existence and concept-id existence checks are deferred to the consumer (require DB queries). Public surface:
+  - `ImportPayload` / `ImportCard` / `ImportOntologyTag` / `ImportClusterDefinition` — input shape every external pipeline must speak.
+  - `NormalizedImportPayload` / `NormalizedCard` / `NormalizedOntologyTag` / `NormalizedClusterDefinition` — output shape with all defaults applied (D21 enum defaults, ontology-tag confidence 1.0, etc.). Direct mapping target for DB rows.
+  - `ImportError` — discriminated by 11 `code` values (`NOT_OBJECT`, `NOT_ARRAY`, `EMPTY_ARRAY`, `WRONG_TYPE`, `MISSING_REQUIRED`, `EMPTY_STRING`, `INVALID_ENUM`, `OUT_OF_RANGE`, `INVALID_CLUSTER_PLACEMENT`, `INVALID_PRIMARY_TAG_COUNT`, `DUPLICATE_VALUE`); each error carries a JSON-pointer-style path so the response can pinpoint exactly which card and field is wrong.
+  - `validateImportPayload(input: unknown)` → `{valid: true, payload: NormalizedImportPayload} | {valid: false, errors: ImportError[]}`. **Errors accumulate** rather than short-circuit — a fully-broken card surfaces every required-field issue in one round-trip, not one error per resubmit.
+  - `IMPORT_DEFAULTS` exported as a frozen object so callers can document the contract.
+- `/lib/cards/import-schema.test.ts` (new) — 43 tests. Top-level shape rejections (non-object, missing cards, empty array, non-array). Minimal valid payload + defaults applied check. Maximal payload preserving every field. Required-field-missing test for each of the 7 required card fields (loop). Empty-string rejection. Invalid-enum rejection for each of 11 enum-typed fields (loop). Secondary-lattices array bad-element. Ontology tags: empty array, no primary, multiple primaries (D19 enforces partial unique index — validator front-runs the DB), missing fields, confidence out of `[0,1]`. format_confidence boundary cases (0, 1, null). Cluster placement: neither set, both set, valid id, valid definition, default visibility = private, bad visibility enum. Multi-card error path correctness (`['cards', 1, 'yield_tier']`). Error accumulation (3 broken cards → ≥3 errors). Type-checking smoke test.
+- `ARCHITECTURE.md` §7 — added the two new files under `/lib/cards/`.
+
+**Why now:** with `/lib/cards/types.ts` shipped, the import validator is a 30-minute write of guarded property reads. Landing it now means Phase 6's route handler can be a one-liner — `validateImportPayload(req.body)` — and the external pipeline contract is documented in code (the `ImportCard` interface is the single source of truth that bulk authors can target).
+
+**Decisions made this session:**
+- **Errors accumulate, never short-circuit.** Validator collects every issue then returns. External pipelines submit batches of 50+ cards; a single MISSING_REQUIRED on card 17 should not hide a duplicate-primary on card 23. The accumulation cost is one pass over broken cards; the correctness benefit is "fix everything in one PR review cycle."
+- **JSON-pointer-style path arrays (`['cards', 0, 'yield_tier']`).** Easier for clients to navigate programmatically than a string. `path.join('.')` gives a human-readable form when needed.
+- **11 stable error codes (TS literal union).** External-pipeline authors can pattern-match on codes for retry logic without parsing messages. `INVALID_PRIMARY_TAG_COUNT` is a specific code (rather than generic INVALID) because the D19 partial unique index makes this a hard contract — surfacing it cleanly upstream of the DB is the whole point.
+- **Validator does NOT check DB-existence facts.** `cluster_id` references and `concept_id` references are validated by the DB at write time. Pulling those into the validator would either need a fake DB layer in tests (premature) or a real one (impossible on mobile). Phase 6's route handler does the existence checks after schema validation succeeds.
+- **Defaults applied during validation, not after.** Output is fully-normalized `NormalizedCard` with no `undefined` fields. The Phase 6 consumer can map straight to DB rows without re-checking which fields are optional.
+
+**Verification:**
+- `pnpm test` → 138/138 pass (22 stem-rejection + 27 candidate-concepts + 21 types + 25 clusters-summary + 43 import-schema).
+- `pnpm typecheck` → green.
+- `pnpm build` → green.
+
+**Out of scope (intentional):**
+- DB existence checks (cluster_id, concept_id) — Phase 6 consumer handles these post-validation.
+- 24-hour cooling enforcement — already in the m001 `cards_status_transition` trigger; not the validator's job.
+- Idempotency-key replay logic — consumer concern (probably a `usage_events`-like table or a dedicated `import_idempotency_keys` table; defer to Phase 6 wiring).
+- Auth — `POST /api/cards/import` will require auth; that lands in the route handler, not here.
+- Coercion of stringified booleans / numbers — validator is strict (`true` is true, `"true"` is rejected with WRONG_TYPE). External pipelines should send proper JSON types; coercion hides bugs.
+
+**Open questions for next session:**
+- Should `confidence` for ontology tags default to something other than 1.0 when `tag_source = 'model'`? Currently defaults to 1.0 across the board. D19 says "Human-authored tags = 1.0. LLM-produced tags carry the model's self-reported value." Strict reading: model-source tags without confidence should be a validation error. Pragmatic: default to 1.0 and let the human reviewer downgrade. Lean pragmatic for now; revisit if the data quality hurts.
+- Should the validator enforce a max card count per request (e.g., 1000)? Currently unbounded. Phase 6 wiring's body-size limit catches the worst, but a 1000-card cap in the validator gives clearer error messages.
+
+---
+
+## 2026-04-28 — Phase 4 plan generator: shared card vocab types + clusters aggregator
+
+**Phase + step:** Phase 4 prep — pre-authors the consumer-side helpers that `/prompts/plan.md` references, plus a shared card-vocabulary types module that encodes D17/D19/D20/D21 in TypeScript. After this, the plan-generator server action's only remaining work is the SQL query, the Anthropic SDK call, and the UI.
+
+**What changed:**
+- `/lib/cards/types.ts` (new) — single TypeScript source of truth for the locked card vocabulary. Encodes 17 enums spanning D7 (`status`), D13 (`source`), D17 (`difficulty`, `granularity`), D19 (`tag_role`, `tag_review_status`, `tag_source`), D20 (`primary_lattice`, `secondary_lattice`, `card_format`, `cognitive_task`, `retrieval_direction`, `format_review_status`), and D21 (`yield_tier`, `danger_level`, `board_likelihood`, `source_strength`, `review_priority`). Each enum gets a string-literal type, a `const` tuple (for runtime iteration), and a generated type-guard (`isYieldTier`, etc.). The guards reject non-strings, wrong-case strings, and unknown values — important since `auth.users` row attributes and LLM-returned strings arrive as `unknown`.
+- `/lib/cards/types.test.ts` (new) — 21 tests. Cardinality checks for every enum (drift detector against DECISIONS.md — e.g., "DANGER_LEVELS has 4 values per D21" fails loudly if someone adds a fifth without a forward migration). Spot-checks for specific values (`lethal` in danger, `society_guideline` in source_strength, the four D20 lattice codes). Table-driven test asserts every guard accepts every documented value and rejects garbage / non-strings / wrong case.
+- `/lib/plan/clusters-summary.ts` (new) — `buildClustersWithPlanningSummary(clusters)` aggregates per-cluster D20/D21 histograms (`yield_tier`, `danger_level`, `board_likelihood`, `primary_lattice`, `cognitive_task`) plus deduplicated `concept_coverage` and `card_count`. Histograms always include zero buckets so the LLM sees the full distribution shape rather than inferring "absent = zero". Postgres does the join (single SQL query); TypeScript does the rollup. Plus `rankClustersByGapOverlap(clusters, gapConceptIds)` for when a user has > 150 clusters — pre-ranks by gap-concept overlap (tie-break: card_count desc → cluster_id asc, deterministic across runs so prompt caching can hit on repeated inputs).
+- `/lib/plan/clusters-summary.test.ts` (new) — 20 tests. Identity passthrough (cluster_id / name / description, including null), card_count correctness, concept_coverage dedup + sort, histogram zero-buckets invariant, histogram counts on three different fixture clusters (HF GDMT with management-treatment dominance + lethal card; Hyponatremia with threshold cognitive task; Empty cluster with all-zero histograms), histogram-sum-equals-card-count invariant for every enum field. Plus 5 ranking tests: no-gaps passthrough, higher overlap first, tie-break by card_count, multi-overlap counting, deterministic across runs.
+- `/prompts/plan.md` — implementation notes refreshed to point at `buildClustersWithPlanningSummary()` and `rankClustersByGapOverlap()` rather than restating the algorithms in prose. Also added a note that the server should use the `is*` type guards from `/lib/cards/types.ts` to narrow LLM-returned enum strings before persisting.
+- `ARCHITECTURE.md` §7 — added `/lib/cards/` and `/lib/plan/` subdirectories with the four new files.
+
+**Why now:** the plan.md prompt references `planning_summary` histograms in five enum dimensions; without a typed implementation the Phase 4 server would have to either build them ad-hoc (silently desync from D20/D21) or skip them (LLM has to count cards itself, expensive and error-prone). Landing the typed source-of-truth (`/lib/cards/types.ts`) plus the aggregator now means the Phase 4 wiring is just SQL + an Anthropic SDK call + a UI.
+
+**Decisions made this session:**
+- **Single shared vocabulary module over per-feature enum copies.** `/lib/cards/types.ts` is imported by the planner aggregator now, will be imported by the Phase 6 import validator and the Phase 3 intake schema check next. Keeping enums in one place means updating D20/D21 (via forward migration only — CLAUDE.md guardrail) is one file edit, not a hunt across the codebase.
+- **`as const satisfies readonly Foo[]` over `as readonly Foo[]`.** Modern TS pattern: `satisfies` checks the literal contents are valid `Foo` values without widening the array type. Result: the const array carries narrow tuple types AND is type-checked against the union. Safer drift detection.
+- **Generated guards via `makeIsMember(values)`.** Avoids 17 hand-written `is*` functions that could drift from their tuples. Single helper, used 17 times.
+- **Histograms include zero buckets.** Forces the LLM to see "0 lethal, 4 high" instead of inferring that absent buckets mean zero. Slightly larger payload; zero ambiguity.
+- **Ranking helper uses deterministic tie-break.** `card_count desc → cluster_id asc` so prompt caching can hit on repeated identical inputs (Anthropic prompt caching keys on exact byte equality).
+
+**Verification:**
+- `pnpm test` → 95/95 pass (22 stem-rejection + 27 candidate-concepts + 21 types + 25 clusters-summary).
+- `pnpm typecheck` → green.
+- `pnpm build` → green.
+
+**Out of scope (intentional):**
+- The Supabase SQL query that produces the `ClusterWithCards[]` input is deferred to Phase 4 wiring. Mobile sandbox can't test it against kekki-prod.
+- `is*` guards exist for every D20/D21 enum but are not yet imported anywhere. Phase 4 server action will import them when validating LLM-returned cluster-id and rationale text. Intentional — adding consumers without real wiring would create dead code.
+- No card-shape Zod-equivalent runtime validator yet (Phase 6 work). The shared types module is the foundation; the validator builds on top.
+
+**Open questions for next session:**
+- The Phase 4 SQL query should probably live in a typed query helper `/lib/plan/queries.ts` rather than inline in the server action. Defer until actually wiring.
+- `cognitive_task` is on `card_retrieval_metadata` (1:1 with cards from m003) — the SQL query needs an explicit join. Phase 4 wiring should capture this or LEFT JOIN with a fallback if `card_retrieval_metadata` is missing for a card (shouldn't happen given the 1:1 constraint, but defensive coding).
+
+---
+
+## 2026-04-28 — Phase 3 intake foundation: candidate-concepts filter helper
+
+**Phase + step:** Phase 3 prep — completes the pure-logic side of the intake parser. The Phase 3 server action can now compose two helpers (`checkForQbankStem` + `filterCandidateConcepts`) and the `intake.md` prompt; the only remaining work is wiring (Anthropic SDK call + UI).
+
+**What changed:**
+- `/lib/intake/candidate-concepts.ts` (new) — `filterCandidateConcepts(userInput, concepts, options?)` helper. Takes the full `concepts` table (970 rows in production) and returns ~30–80 records for the intake LLM's `{{candidate_concepts_json}}`. Algorithm: tokenize input (lowercase, drop short / stopword / digit tokens), score each concept by token overlap against `title` + `synonyms[]`, take top-N with topic > subsection > system tie-break, always include all 18 systems as a coverage floor, pull in parent subsections of top topic matches, cap at `maxTotal` by dropping subsection ancestors first (systems and direct matches preserved). Output sorted by id for deterministic prompts. Exports `__testing` namespace for white-box tests on internal helpers without leaking API surface.
+- `/lib/intake/candidate-concepts.test.ts` (new) — 27 tests: 12 unit tests on internal helpers (tokenize, deriveParentId, buildParentPath, scoreConcept), 11 unit tests on the public `filterCandidateConcepts` (system floor invariant, topic + parent inclusion, synonym matching, multi-topic input, deterministic ordering, parent_path correctness, maxTotal cap behavior, topN cap, minOverlap threshold, empty/stopword input), and 4 integration tests against the real `abim_blueprint_v1.json` (970 concepts loaded; result stays under maxTotal; "hyponatremia correction rate" returns the matching topic; empty input returns exactly the 18 systems). All 27 pass; combined suite is now 49/49 (22 stem-rejection + 27 candidate-concepts).
+- `/prompts/intake.md` — implementation note updated to point at `filterCandidateConcepts()` rather than the prose algorithm. Server doesn't need to re-implement the heuristic.
+- `ARCHITECTURE.md` §7 — added the two new files under `/lib/intake/`.
+
+**Why now:** the prompt template's `{{candidate_concepts_json}}` placeholder needs a concrete server-side implementation, otherwise Phase 3 wiring would have to design the filter on the spot. Pure logic with deterministic output makes this fully unit-testable on mobile, and the integration tests against the real blueprint catch any scaling bugs before Phase 3 hits production data.
+
+**Decisions made this session:**
+- **Token-overlap heuristic over embeddings** — for an MVP with a 970-row table where concepts have human-readable titles, simple token overlap is sufficient. The integration test against the real blueprint confirms relevance on a real-shaped query. Embeddings can land later if dogfooding shows the heuristic missing obvious matches; gated on the prompt's "Open question" in SESSION_LOG.
+- **Always include all 18 systems** — coverage floor so the LLM can fall back to system-level granularity when no topic is a confident match. Costs ~18 lines of prompt; saves the LLM from inventing slugs (CLAUDE.md: "Never let the LLM invent a concept slug. Fragmentation kills the planner.").
+- **Subsection ancestors yes, deeper grandparents no** — topics' grandparents are systems (already in the floor). The helper only adds direct subsection parents, keeping the candidate count predictable.
+- **`__testing` re-export over manual visibility juggling** — small, conventional, and clearly marked. Test-only seam without polluting the public API.
+
+**Verification:**
+- `pnpm test` → 49/49 pass (22 stem-rejection + 27 candidate-concepts).
+- `pnpm typecheck` → green.
+- `pnpm build` → green.
+
+**Out of scope (intentional):**
+- No Supabase query helper to load concepts. Phase 3's server action will do the query and pass the rows to `filterCandidateConcepts`. Adding a query helper now would either need Supabase access (none on mobile) or a fake data layer (premature).
+- No tagger version / confidence in output. The intake parser writes to `structured_analytics` which has its own `confidence` enum (D17); that's separate from filter confidence and lives at the prompt boundary.
+
+**Open questions for next session:**
+- Should `synonyms` be backfilled into the `concepts` table for common medical aliases (e.g., `hyponatremia` → `["SIADH", "low sodium"]`)? The seed currently produces empty arrays. Synonym-rich rows would improve overlap scoring meaningfully. Consider a Layer-1.5 pass that pre-populates synonyms from `Medical_Knowledge_Ontology.md` or the LLM itself (one-shot, human-reviewed).
+- The integration test asserts result count ≤ 80, which holds at typical scale. If a paragraph-length input causes the cap to bind regularly, revisit `maxTotal` or add a second-stage tier-3 (subsection ancestors) prioritization.
+
+---
+
+## 2026-04-28 — Phase 3 intake foundation: D14 Layer 1 + Layer 2 + native test runner
+
+**Phase + step:** Phase 3 prep — pre-authors both layers of the D14 stem-rejection design plus the intake-parser prompt (LLM call site #1). Adds the project's first runnable unit-test harness using Node 22's native `node:test`. Continuation of the same mobile session.
+
+**What changed:**
+- `/lib/intake/stem-rejection.ts` (new) — Layer 1 heuristic precheck per D14. Six rule patterns (`lettered_choice_block`, `correct_answer_marker`, `educational_objective`, `repeated_key_point_header`, `patient_vignette_with_likely_diagnosis_question`, `qbank_item_header`). Detection bias: prefer false negatives over false positives (a user mentioning "MKSAP" in their notes must not be rejected). Result type is a discriminated union `{rejected: false} | {rejected: true; reason; matched_pattern}` for clean call-site narrowing under strict mode.
+- `/lib/intake/stem-rejection.test.ts` (new) — 22 unit tests using Node 22's `node:test` runner. Covers: empty input, plain narrative, qbank product names in legitimate prose, single-letter-in-prose, classic 5-choice MCQ, 3-choice with parens, "correct answer" markers, "Educational Objective:" rationale, repeated "Key Point:" headers, "Which of the following…" stems, "Item N:" headers, combined adversarial input, false-positive guards ("the answer was…" without "correct"), case-insensitive matches, and the `QBANK_STEM_RULE_NAMES` contract. All 22 pass.
+- `/prompts/intake.md` (new) — Layer 2 LLM prompt for the intake parser (D6 #1). Mirrors `plan.md` style: input schema (`{{user_input}}`, `{{candidate_concepts_json}}` pre-filtered to ~30–80 records, `{{today_iso}}`), output schema (`{rejected: false, items[]}` or `{rejected: true, reason}` per D14 Layer 2), severity / confidence rubrics, granularity guidance per D17/D18 (system / subsection / topic), four worked examples covering acceptance, vague-but-not-rejected, paraphrased-stem rejection, and CSV analytics dump.
+- `package.json` — added `"test": "node --experimental-strip-types --test lib/**/*.test.ts"` script. Uses Node 22+ native test runner with experimental TS strip-types — no new dependencies. Verified 22/22 tests pass on the sandbox's Node v22.22.2.
+- `CLAUDE.md` DoD — added `pnpm test` to the bullet list. Common-commands block — added `pnpm test` with the underlying invocation documented.
+- `ARCHITECTURE.md` §5 row 1 — flipped intake prompt from `(planned)` to `(authored 2026-04-28; consumer not yet wired)` and noted the Layer 1 helper location.
+- `ARCHITECTURE.md` §7 file layout — added `/lib/intake/` subdirectory with both files; added `intake.md` under `/prompts/`; removed `intake.md` from "Planned additions".
+
+**Why now:** D14 stem rejection is a hard guardrail (refusing proprietary qbank content) — landing both layers as runnable code/prompt before Phase 3 starts means the Phase 3 implementer (likely Zach in a future session) just wires the call site instead of designing the rejection logic on the spot. Native `node:test` was available all along; the project just hadn't picked a test framework yet, and Phase 3 will need tested logic regardless.
+
+**Decisions made this session (no DECISIONS.md edits required):**
+- **Test framework:** Node 22+ native `node:test` with `--experimental-strip-types`. Zero new dependencies. Lives in `lib/**/*.test.ts` co-located with source. Reasoning: Vitest and Jest both add 30+ MB and a config burden; the native runner has been adequate since Node 18 and is stable from 22.6.
+- **Layer 1 detection bias:** false negatives over false positives. Two of the six rules have explicit safeguards (lettered choices require ≥3 separate lines; "Key Point:" requires repetition) precisely to avoid rejecting legitimate user notes. Layer 2 is the safety net for paraphrased stems.
+
+**Verification:**
+- `pnpm test` → 22/22 pass.
+- `pnpm typecheck` → green.
+- `pnpm build` → green.
+
+**Out of scope (intentional):**
+- No server-side intake route (Phase 3 wires `/intake/page.tsx` + the server action).
+- No live LLM call (no `ANTHROPIC_API_KEY` on mobile sandbox).
+- No `/prompts/ai_card.md` (Phase 6+, gated on D13).
+- No Zod or runtime schema validator for `structured_analytics` rows — Phase 3 implementer can add when wiring the consumer; the manual TypeScript-types-only path is fine for an MVP given how narrow the schema is.
+
+**Open questions for next session:**
+- Should `candidate_concepts_json` filtering live in a `/lib/intake/candidate-concepts.ts` helper now (testable in isolation) or be inlined in the Phase 3 server action? Lean toward extracting now, but it depends on whether the filter needs a seeded `concepts` table to test — if so, defer.
+- The Layer 2 prompt suggests pre-filtering candidates by token overlap against `concepts.title` and `concepts.synonyms[]`. If overlap is poor (rare medical synonyms), consider a small embedding lookup later — but only if Phase 3 dogfooding shows the overlap heuristic missing obvious matches.
+
+---
+
+## 2026-04-28 — `/prompts/plan.md` authored (LLM call site #2)
+
+**Phase + step:** Phase 4 prep — pre-authoring the prompt template before the consumer (server action at `/plan/new`) is wired. Continuation of the same mobile session that landed D21 + migration 004.
+
+**What changed:**
+- `/prompts/plan.md` (new) — full prompt template for the plan-generator LLM call site (D6 #2). Spec: input schema (`{{gaps_json}}`, `{{clusters_json}}`, `{{today_iso}}`, `{{recent_plan_history_json}}`), output JSON schema (`{rejected, items[5..15], target_window_days[7..14], plan_rationale, uncovered_gaps}`), hard constraints (cluster_id constrained-enum from input, never invent), selection rubric (severity → danger floor → yield × board → recency damping → coverage diversity → format diversity), refusal cases, worked example with two real concept IDs from the seed data. Leverages D17–D21 vocabulary throughout (concept IDs, lattice codes, cognitive_task, yield_tier, danger_level, board_likelihood). Server pre-computes `planning_summary` distributions per cluster — the model does not aggregate.
+- `ARCHITECTURE.md` §5 (LLM Call Sites) — flipped row 2 prompt location from `(planned)` to `(authored 2026-04-28; consumer not yet wired)`.
+- `ARCHITECTURE.md` §7 (File Layout) — added `/prompts/` directory, listed `plan.md`, added `003_retrieval_metadata.sql` and `004_planning_layer.sql` to the migrations list (was stale).
+- `ARCHITECTURE.md` §7 "Planned additions" — replaced `/prompts/` with the still-pending `/prompts/intake.md` and `/prompts/ai_card.md`.
+
+**Why now:** D21 just locked the planning vocabulary, so the prompt can constrain LLM output to `yield_tier ∈ {high, medium, low}`, `danger_level ∈ {low, moderate, high, lethal}`, etc. Authoring this template now while the vocabulary is fresh is cheaper than re-deriving it during Phase 4 implementation.
+
+**Out of scope (intentional):**
+- No server code, no Anthropic SDK import, no `/plan/new` route handler. Phase 4 wires the consumer.
+- No live LLM testing — that needs `ANTHROPIC_API_KEY`, which the mobile sandbox doesn't have.
+- Worked-example output is illustrative (5 items with 3 unspecified supporting clusters); first real plan generation will produce the canonical example to fold back into the template.
+
+**Blocked / deferred:**
+- `/prompts/intake.md` (call site #1) — Phase 3 work, not started.
+- `/prompts/ai_card.md` (call site #3) — post-Phase-6, gated on D13.
+
+**Open questions for next session:**
+- Should the server's `planning_summary` aggregation be a SQL view or computed in-route? View is testable in isolation; in-route saves a migration. Defer until Phase 4 starts.
+- The selection rubric's "recency damping" leans on `recent_plan_history_json` — does the server pre-compute a "do not repeat" flag, or does the model decide? Currently the prompt asks the model to soft-damp; revisit if Phase 4 reveals the model over-repeats.
+
+---
+
+## 2026-04-28 — D21 planning enum lock + migration 004 authored (mobile session)
+
+**Phase + step:** Phase 1 step 1c — unblocks the migration deferred 2026-04-26. Mobile-only session: doc + schema work, zero application code, `supabase db push` deferred to Zach's next laptop session before Phase 4 starts.
+
+**What changed:**
+- `DECISIONS.md` — appended **D21** (planning-layer enum lock). Locks the five planning enums on `cards`: `yield_tier`/`board_likelihood`/`review_priority ∈ {high,medium,low}`, `danger_level ∈ {low,moderate,high,lethal}`, `source_strength ∈ {society_guideline, primary_trial, systematic_review, narrative_review, expert_opinion}`. Also locks the `primary_system_id` / `secondary_system_ids[]` / `bridge_reason` denorm shape and the `card_discriminators` directed-graph table contract. Sister entry to D20 (D20 = what the card teaches; D21 = how the planner prioritizes it). Includes "Revisit if" clauses for each open question — `review_priority` is explicitly on probation pending Phase 4 planner first-pass.
+- `supabase/migrations/004_planning_layer.sql` (new) — adds eight columns to `cards` (five enums + three system fields), creates `card_discriminators` with composite PK, three indexes, and RLS mirroring `card_ontology_tags` (D19). All five enums NOT NULL with sensible defaults (`medium` / `moderate` / `narrative_review` / `medium`) so the 20 existing seed cards take defaults without backfill SQL. `primary_system_id` is NULLABLE because the FK to `concepts(id)` requires a real concept ID and the seed cards predate this migration. Style mirrors m003 (CHECK constraints, not Postgres ENUMs; `comment on column ...` per column referencing D21).
+- `ARCHITECTURE.md` — bumped "Last updated" to 2026-04-28; updated table count `15 → 16 tables` (with note that #16 lands on push); appended planning enums to the cards row in §3 Tables; inserted new `card_discriminators` row between `card_retrieval_metadata` and `cluster_memberships`; flipped the `004_planning_layer.sql` migration cadence row from "Deferred 2026-04-26 — enum values TBD" to "Authored 2026-04-28 (file written, not yet `supabase db push`'d). Enum values locked by D21 (added same day)."
+- `PHASES.md` — flipped step 1c status from "Deferred 2026-04-26" to "Authored 2026-04-28 (file written, not yet `supabase db push`'d)" with the locked enum values inline. Updated the Phase 1 DoD line to reflect that m004 is authored but `supabase db push` is outstanding.
+- `CLAUDE.md` — distinguished m003/D20 from m004/D21 in the migration-summary paragraph (was "All enum values are locked by D20"). Added a new "Things to ask Zach before changing" bullet covering the D21 locked enums + `card_discriminators` graph.
+- `SESSION_LOG.md` — this entry.
+
+**User decisions made this session (locked in DECISIONS.md):**
+- D21: `source_strength` is **categorical** (5 values), not integer 1–5. Reason: D6/D13 require constrained-enum LLM outputs; strings carry semantics ("primary_trial" beats "5"). Future `sources.source_quality` integer (`flashcard_database_design.md` L137) keeps the integer for raw provenance; reconcile via a view.
+- D21: `review_priority` **kept** as card-level `high/medium/low`, on probation. Distinct from `learner_card_state.priority_score` (per-user computed). Drop in a forward migration if Phase 4 planner shows it's redundant with `yield × danger × board`.
+- D21: `danger_level` keeps `lethal` as a **fourth tier** above `high` (planner needs a "must-not-miss" trump for anaphylaxis / MH / tamponade).
+- D21: all five enums **NOT NULL with sensible defaults** so the 20 existing seed cards take defaults without backfill SQL.
+- D21: `primary_system_id` is a **denorm** of the system-level placement from `card_ontology_tags` (D19). Polyhierarchy (D17) still authoritative there. No validating trigger now; revisit if drift bites.
+- D21: `secondary_system_ids text[]` has **no row-level FK enforcement** — validated at the app layer (parallel to the `concept_ids[]` validator trigger m002 dropped).
+
+**Blocked / deferred:**
+- `supabase db push` — needs Zach's laptop. Smoke-test recipe: column shape check via `information_schema.columns`, `select count(*) from card_discriminators` → 0, CHECK rejection test (`update cards set yield_tier='extreme'` → expect violation), defaults check on the 20 seed cards.
+- RLS spot-check — needs Supabase SQL editor with two impersonated users; deferred to laptop session.
+- Backfill of meaningful (non-default) enum values for the 20 seed cards — deferred to manual authoring once Phase 4 lands. Backfilling now would lock arbitrary guesses.
+- Validating trigger for `cards.primary_system_id ↔ card_ontology_tags` primary tag — deferred per D21 "Revisit if" clause; revisit if drift becomes a problem.
+
+**Open questions for next session:**
+- Strategic Review Checkpoint (PHASES.md L61–71) is still queued between Phase 2 DoD and Phase 3 start. The D21 work doesn't change that schedule but does mean Phase 4 (plan generator) is now unblocked once m004 is pushed.
+- Whether the planner's first pass should treat `review_priority` as a separate signal or fold it into the `yield × danger × board` algebra — answer comes from Phase 4 implementation; if it's pure overhead, drop in a follow-up forward migration.
+- Whether Phase 4's prompt should emit these enums directly or accept LLM proposals for them. D6/D13 imply emit-required; surface in the Phase 4 prompt design.
+
+---
+
 ## 2026-04-27 — Phase 1 Step 6: seed 20 cards across 3 clusters
 
 **Phase + step:** Phase 1 step 6 — seed real card data so the schema survives contact with actual content. Last step of Phase 1. Phase 2 (review loop) is now unblocked.

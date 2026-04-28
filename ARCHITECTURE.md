@@ -2,7 +2,7 @@
 
 *Live snapshot of what exists in the codebase right now. The durable answer to "where does this thing live and how does data flow through it." If you've read CLAUDE.md, DECISIONS.md, and PHASES.md, this file fills the gap between "what we decided" and "what is actually built."*
 
-**Last updated:** 2026-04-27 (Phase 1 complete — migrations 001+002+003 applied; 20 seed cards across 3 clusters seeded to kekki-prod; migration 004 deferred — planning enums TBD).
+**Last updated:** 2026-04-28 (Phase 1 complete — migrations 001+002+003 applied; 20 seed cards across 3 clusters seeded to kekki-prod; migration 004 authored — planning enums locked by D21, awaiting `supabase db push`).
 
 ---
 
@@ -74,9 +74,9 @@ Stack is locked in DECISIONS.md D2. New dependencies require Zach's sign-off in 
 
 ---
 
-## 3. Data Model — live (migrations 001 + 002 applied to kekki-prod)
+## 3. Data Model — live (migrations 001 + 002 + 003 applied to kekki-prod; m004 authored)
 
-The schema is **15 tables** in `public`, plus the `auth.users` table managed by Supabase. All listed tables enable RLS; tables without explicit policies are service-role-only by default.
+The schema is **16 tables** in `public` (15 applied; `card_discriminators` lands when m004 is pushed), plus the `auth.users` table managed by Supabase. All listed tables enable RLS; tables without explicit policies are service-role-only by default.
 
 ### Tables
 
@@ -86,9 +86,10 @@ The schema is **15 tables** in `public`, plus the `auth.users` table managed by 
 | `concepts` | Controlled vocabulary, ABIM blueprint (D5, D17, D18) | `id` is dot-delimited slug; `level ∈ {system,subsection,topic}`; `ontology_source='abim_blueprint'`, `ontology_version='jan_2026'` | Authed read; service-role write |
 | `concept_parents` | Polyhierarchy edges (D17) | Composite PK; partial unique index for one `is_primary=true` per child | Authed read; service-role write |
 | `clusters` | Cluster snapshots — the unit of review (D4) | `visibility ∈ {private,shared}`; `definition jsonb` reserved for future "refresh" feature | Owner CRUD + shared SELECT |
-| `cards` | Flashcards | `citation NOT NULL` (D7); `source ∈ {human,external_pipeline,ai_private}` (D13); `status ∈ {draft,reviewed,retired}`; `difficulty NOT NULL ∈ {core,advanced,trap}` (D17); `primary_lattice NOT NULL ∈ {t_to_m,p_to_e,e_to_o,s_to_r}` and `secondary_lattices text[]` subset of 7 values (D20, m003); `card_format` 9-value enum (D20, m003) | `reviewed` visible to all authed; `draft` author-only |
+| `cards` | Flashcards | `citation NOT NULL` (D7); `source ∈ {human,external_pipeline,ai_private}` (D13); `status ∈ {draft,reviewed,retired}`; `difficulty NOT NULL ∈ {core,advanced,trap}` (D17); `primary_lattice NOT NULL ∈ {t_to_m,p_to_e,e_to_o,s_to_r}` and `secondary_lattices text[]` subset of 7 values (D20, m003); `card_format` 9-value enum (D20, m003); planning enums `yield_tier`/`board_likelihood`/`review_priority ∈ {high,medium,low}`, `danger_level ∈ {low,moderate,high,lethal}`, `source_strength ∈ {society_guideline,primary_trial,systematic_review,narrative_review,expert_opinion}` — all NOT NULL with defaults (D21, m004); `primary_system_id text NULL` FK→concepts, `secondary_system_ids text[]`, `bridge_reason text NULL` (D21, m004) | `reviewed` visible to all authed; `draft` author-only |
 | `card_ontology_tags` | Cards ↔ concepts m:m (D19, replaces `cards.concept_ids[]`) | `tag_role ∈ {primary,secondary,bridge,planning_only}` with partial unique on primary; `confidence` 0–1; `tag_source` provenance | Derived from `cards` visibility |
 | `card_retrieval_metadata` | 1:1 with `cards`; how the card should be studied (D20, m003) | `cognitive_task NOT NULL` 11-value enum; `retrieval_direction` 5-value; `requires_cloze_one_by_one bool`; `format_review_status` 4-value enum (D20 amendment); `format_confidence` 0–1 | Derived from `cards` visibility |
+| `card_discriminators` | Directed-graph edges between cards that share a discriminator key (D21, m004) | Composite PK `(source_card_id, target_card_id, discriminator_key)`; CHECK `source_card_id ≠ target_card_id`; cascade on card delete; `created_by` set-null on user delete | Both endpoints visible to caller; INSERT requires authoring either endpoint |
 | `cluster_memberships` | Cards ↔ clusters m:m | Composite PK + `position int` for ordering | Derived from `clusters` ownership |
 | `reviews` | Append-only rating log (D9) | `rating ∈ {again,good}`; `time_ms` for D17 derived `slow` | Self read/insert; no update/delete |
 | `analytics_uploads` | Raw intake (text or file ref) | `kind ∈ {text,file}` with payload check | Self CRUD |
@@ -118,7 +119,7 @@ Per-card concept tags are enforced relationally via `card_ontology_tags.concept_
 | `001_init.sql` | Applied | Base schema (14 tables, RLS, triggers) |
 | `002_abim_ontology.sql` | Applied 2026-04-26 | `concepts.level/ontology_source/ontology_version`; `card_ontology_tags`; drops `cards.concept_ids[]` |
 | `003_retrieval_metadata.sql` | Applied 2026-04-27 (via Supabase MCP `apply_migration`; version stamp `20260427040324_retrieval_metadata`) | `cards.primary_lattice` (4-value), `cards.secondary_lattices text[]` (subset CHECK over 7 values), expand `cards.card_format` 4 → 9 (drops the prior `'basic'` default — every authoring path supplies a format), new 1:1 `card_retrieval_metadata` (cognitive_task, prompt_frame, answer_form, retrieval_direction, discriminator, confusable_with, requires_cloze_one_by_one, cloze_grouping, format_confidence, format_review_status, format_review_note). Enum values locked by D20 + the 2026-04-26 D20 amendment (`format_review_status`). |
-| `004_planning_layer.sql` | Deferred 2026-04-26 — enum values TBD | Would add planning fields on `cards` (yield_tier, danger_level, board_likelihood, source_strength, review_priority, primary_system_id, secondary_system_ids[], bridge_reason) and the `card_discriminators` directed-graph table. Deferred because the planning-field enum values are not defined in DECISIONS.md, PHASES.md, or either reference doc. Revisit before Phase 4 (plan generator) needs them. |
+| `004_planning_layer.sql` | Authored 2026-04-28 (file written, not yet `supabase db push`'d). Enum values locked by D21 (added same day). | Adds planning enums on `cards` (`yield_tier`, `danger_level`, `board_likelihood`, `source_strength`, `review_priority` — all NOT NULL with defaults so existing seed cards take defaults without backfill); adds `cards.primary_system_id text NULL` FK→concepts, `cards.secondary_system_ids text[] NOT NULL DEFAULT '{}'`, `cards.bridge_reason text NULL`; creates `card_discriminators` directed-graph table joining cards by shared `discriminator_key` (the `discriminator` column lives on `card_retrieval_metadata` from m003), with RLS mirroring `card_ontology_tags` (D19). |
 
 Apply with `supabase db push` (after `supabase link --project-ref jquturibslqzkldngzvf`).
 
@@ -158,9 +159,9 @@ The Anthropic SDK is **not yet imported**. First use lands in Phase 3.
 
 | # | Site | Phase | Inputs | Outputs | Prompt location |
 |---|---|---|---|---|---|
-| 1 | Intake parser | 3 | Free-text/file from `/intake` | Structured gaps mapped to `concepts.id` (or `{rejected:true,reason}` per D14) | `/prompts/intake.md` (planned) |
-| 2 | Plan generator | 4 | Recent `structured_analytics` rows + user's clusters | Ordered list of 5–15 cluster IDs with rationale + 7–14d target window | `/prompts/plan.md` (planned) |
-| 3 | Private AI card generator | (post-Phase-6, see D13) | Existing gap (`structured_analytics` row or named concept) + target cluster | Card with `source='ai_private'`, `status='draft'`, citation, ontology tags | `/prompts/ai_card.md` (planned) |
+| 1 | Intake parser | 3 | Free-text/file from `/intake` | Structured gaps mapped to `concepts.id` (or `{rejected:true,reason}` per D14) | `/prompts/intake.md` (authored 2026-04-28; consumer not yet wired); Layer 1 heuristic at `/lib/intake/stem-rejection.ts` |
+| 2 | Plan generator | 4 | Recent `structured_analytics` rows + user's clusters | Ordered list of 5–15 cluster IDs with rationale + 7–14d target window | `/prompts/plan.md` (authored 2026-04-28; consumer not yet wired) |
+| 3 | Private AI card generator | (post-Phase-6, see D13) | Existing gap (`structured_analytics` row or named concept) + target cluster | Card with `source='ai_private'`, `status='draft'`, citation, ontology tags | `/prompts/ai_card.md` (authored 2026-04-28; consumer not yet wired) |
 
 **Hard rules across all sites:**
 - Token usage logged to `usage_events` (D16) per request, with `request_ref` pointing to the originating row (`upload_id`, `plan_id`, or `card_id`).
@@ -217,6 +218,21 @@ proxy.ts                   Next.js 16 proxy (formerly middleware.ts) — refresh
   /ui                      shadcn/ui primitives
 /lib
   utils.ts                 pure helpers
+  /cards
+    types.ts                   locked card vocabulary (D17/D19/D20/D21 enum types + const arrays + type guards)
+    types.test.ts              cardinality + guard contract tests
+    import-schema.ts           Phase 6 validator for `POST /api/cards/import` payload (returns NormalizedImportPayload or accumulated ImportError[])
+    import-schema.test.ts      validator test suite
+    import-mapper.ts           maps NormalizedImportPayload → flat insert rows for clusters, cards, card_retrieval_metadata, card_ontology_tags, cluster_memberships
+    import-mapper.test.ts      mapper test suite
+  /intake
+    stem-rejection.ts          D14 Layer 1 — heuristic regex precheck for proprietary qbank stems
+    stem-rejection.test.ts     unit tests (run via `pnpm test`)
+    candidate-concepts.ts      filters the 970-row concepts table → ~30–80 candidates for the intake LLM (`{{candidate_concepts_json}}`)
+    candidate-concepts.test.ts unit + integration tests (uses real abim_blueprint_v1.json)
+  /plan
+    clusters-summary.ts        builds `{{clusters_json}}` (per-cluster planning_summary histograms) for the plan-generator LLM
+    clusters-summary.test.ts   unit tests
   /supabase
     server.ts              createServerClient factory (Server Components, Actions, Route Handlers)
     client.ts              createBrowserClient factory (Client Components)
@@ -226,10 +242,16 @@ proxy.ts                   Next.js 16 proxy (formerly middleware.ts) — refresh
   seed_cards.mjs           Phase 1 step 6: seeds 3 clusters + 20 reviewed cards (HF GDMT, Hyponatremia, DKA/HHS) (applied to kekki-prod 2026-04-27)
 /supabase
   /migrations
-    001_init.sql           base schema
-    002_abim_ontology.sql  ABIM hierarchy + card_ontology_tags
-/public                    static assets (Next.js default svgs for now)
-/archive                   superseded files retained for traceability
+    001_init.sql                 base schema
+    002_abim_ontology.sql        ABIM hierarchy + card_ontology_tags
+    003_retrieval_metadata.sql   retrieval-metadata layer (D20)
+    004_planning_layer.sql       planning layer + card_discriminators (D21)
+/prompts                       LLM prompt templates (D6 source of truth)
+  intake.md                    LLM call site #1 — intake parser (Phase 3); Layer 2 of D14 stem rejection
+  plan.md                      LLM call site #2 — plan generator (Phase 4)
+  ai_card.md                   LLM call site #3 — private AI card generator (post-Phase-6, D13 guardrails)
+/public                        static assets (Next.js default svgs for now)
+/archive                       superseded files retained for traceability
   kekki_ontology_v0.json
   kekki_concepts_v1.json
   transform_v0_to_v1.mjs
@@ -258,7 +280,6 @@ next.config.ts, eslint.config.mjs, postcss.config.mjs, components.json, tsconfig
 ```
 
 Planned additions:
-- `/prompts/` — LLM prompt templates (Phase 3+).
 - `/app/(marketing)` route group (Phase 8 — public landing + waitlist).
 
 ---

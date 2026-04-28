@@ -96,13 +96,14 @@ Scheduling, plans, and review sessions operate at the cluster level (D4). Cards 
 
 - `pnpm typecheck` passes
 - `pnpm build` passes
+- `pnpm test` passes (when the change touches anything in `/lib` with a corresponding `*.test.ts`)
 - The change works end-to-end on a real user flow you can describe in one sentence
 - Has at least one test, or a documented manual-test recipe for UI flows
 - Branch pushed, preview deploy green before merging to main
 
 ## Must ask before changing
 
-DECISIONS.md entries, new dependencies, new LLM call sites (current count: three — D6), new DB tables not in PHASES.md, clinical content rules, AI card guardrails (D13), locked card metadata enums (D20), anything costing money on a recurring basis, billing/pricing logic before Phase 8 + 4 weeks, scaffolding/installer commands that may overwrite project docs.
+DECISIONS.md entries, new dependencies, new LLM call sites (current count: three — D6), new DB tables not in PHASES.md, clinical content rules, AI card guardrails (D13), locked card metadata enums (D20), locked planning enums (D21), anything costing money on a recurring basis, billing/pricing logic before Phase 8 + 4 weeks, scaffolding/installer commands that may overwrite project docs.
 
 ## File layout and local setup
 
