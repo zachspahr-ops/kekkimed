@@ -2,7 +2,7 @@
 
 *Live snapshot of what exists in the codebase right now. The durable answer to "where does this thing live and how does data flow through it." If you've read CLAUDE.md, DECISIONS.md, and PHASES.md, this file fills the gap between "what we decided" and "what is actually built."*
 
-**Last updated:** 2026-04-28 (Phase 1 complete — migrations 001+002+003 applied; 20 seed cards across 3 clusters seeded to kekki-prod; migration 004 authored — planning enums locked by D21, awaiting `supabase db push`).
+**Last updated:** 2026-04-28 (Phases 3 + 4 complete — intake parser and plan generator wired; migrations 001–004 all applied to kekki-prod).
 
 ---
 
@@ -67,14 +67,14 @@ The user's browser talks to Next.js running on Vercel. Server-side code in Next.
 | TypeScript | strict | `tsc --noEmit` is the typecheck gate |
 | Tailwind CSS | latest | shadcn/ui components |
 | Supabase JS | `@supabase/supabase-js` (server scripts), `@supabase/ssr` ^0.10.2 (auth cookies) | Both installed |
-| Anthropic SDK | `@anthropic-ai/sdk` | not yet imported — first use in Phase 3 |
+| Anthropic SDK | `@anthropic-ai/sdk` | imported Phase 3+; call sites at `/app/(app)/intake/actions.ts` and `/app/(app)/plan/new/actions.ts` |
 | Supabase CLI | latest | installed via Scoop; `supabase link --project-ref jquturibslqzkldngzvf` per worktree |
 
 Stack is locked in DECISIONS.md D2. New dependencies require Zach's sign-off in `/plan`.
 
 ---
 
-## 3. Data Model — live (migrations 001 + 002 + 003 applied to kekki-prod; m004 authored)
+## 3. Data Model — live (migrations 001–004 applied to kekki-prod)
 
 The schema is **16 tables** in `public` (15 applied; `card_discriminators` lands when m004 is pushed), plus the `auth.users` table managed by Supabase. All listed tables enable RLS; tables without explicit policies are service-role-only by default.
 
@@ -119,7 +119,7 @@ Per-card concept tags are enforced relationally via `card_ontology_tags.concept_
 | `001_init.sql` | Applied | Base schema (14 tables, RLS, triggers) |
 | `002_abim_ontology.sql` | Applied 2026-04-26 | `concepts.level/ontology_source/ontology_version`; `card_ontology_tags`; drops `cards.concept_ids[]` |
 | `003_retrieval_metadata.sql` | Applied 2026-04-27 (via Supabase MCP `apply_migration`; version stamp `20260427040324_retrieval_metadata`) | `cards.primary_lattice` (4-value), `cards.secondary_lattices text[]` (subset CHECK over 7 values), expand `cards.card_format` 4 → 9 (drops the prior `'basic'` default — every authoring path supplies a format), new 1:1 `card_retrieval_metadata` (cognitive_task, prompt_frame, answer_form, retrieval_direction, discriminator, confusable_with, requires_cloze_one_by_one, cloze_grouping, format_confidence, format_review_status, format_review_note). Enum values locked by D20 + the 2026-04-26 D20 amendment (`format_review_status`). |
-| `004_planning_layer.sql` | Authored 2026-04-28 (file written, not yet `supabase db push`'d). Enum values locked by D21 (added same day). | Adds planning enums on `cards` (`yield_tier`, `danger_level`, `board_likelihood`, `source_strength`, `review_priority` — all NOT NULL with defaults so existing seed cards take defaults without backfill); adds `cards.primary_system_id text NULL` FK→concepts, `cards.secondary_system_ids text[] NOT NULL DEFAULT '{}'`, `cards.bridge_reason text NULL`; creates `card_discriminators` directed-graph table joining cards by shared `discriminator_key` (the `discriminator` column lives on `card_retrieval_metadata` from m003), with RLS mirroring `card_ontology_tags` (D19). |
+| `004_planning_layer.sql` | Applied 2026-04-28. Enum values locked by D21 (added same day). | Adds planning enums on `cards` (`yield_tier`, `danger_level`, `board_likelihood`, `source_strength`, `review_priority` — all NOT NULL with defaults so existing seed cards take defaults without backfill); adds `cards.primary_system_id text NULL` FK→concepts, `cards.secondary_system_ids text[] NOT NULL DEFAULT '{}'`, `cards.bridge_reason text NULL`; creates `card_discriminators` directed-graph table joining cards by shared `discriminator_key` (the `discriminator` column lives on `card_retrieval_metadata` from m003), with RLS mirroring `card_ontology_tags` (D19). |
 
 Apply with `supabase db push` (after `supabase link --project-ref jquturibslqzkldngzvf`).
 
@@ -129,7 +129,7 @@ Apply with `supabase db push` (after `supabase link --project-ref jquturibslqzkl
 
 App-router conventions: folder name = URL segment; `page.tsx` = the page; `route.ts` = the API endpoint.
 
-**Live now (Phase 0 + 1 steps 2–5):**
+**Live now (Phases 0–4):**
 
 | Route | Type | Purpose |
 |---|---|---|
@@ -137,16 +137,18 @@ App-router conventions: folder name = URL segment; `page.tsx` = the page; `route
 | `/login` | page + server action | Magic-link sign-in form. Server action `signInWithEmail` calls `supabase.auth.signInWithOtp`; redirects to `/login?status=sent` on success or `/login?error=...` on failure |
 | `/auth/callback` | route handler | GET handler that receives `?code=...` from the Supabase magic link, calls `exchangeCodeForSession`, redirects to `/dashboard` (or `?next=`) |
 | `(app)` route group | layout | Auth gate. The layout calls `supabase.auth.getUser()` and `redirect('/login')` when no session — every page under this group is guaranteed authenticated |
-| `/dashboard` (under `(app)`) | page | Signed-in user landing. Shows email + stub "No clusters yet" + sign-out form |
+| `/dashboard` | page | Signed-in user landing. Shows email, nav links to clusters / intake / plan |
+| `/clusters` | page | Cluster list — shows all user-accessible clusters with card counts |
+| `/clusters/[id]` | page + server action | Cluster detail + "Start review session" button |
+| `/review/[session_id]` | page + client component + server action | Card viewer (prompt → reveal → Again/Good buttons). Writes to `reviews`; "Finish" writes to `plan_progress`. |
+| `/intake` | page + client component + server action | Two-step: textarea → `parseIntakeAction` (D14 Layer 1 + Haiku 4.5 + validate) → editable gap table → `saveGapsAction` (writes `analytics_uploads` + `structured_analytics` + `usage_events`) |
+| `/plan/new` | page + client component + server action | Two-step: gap/cluster context card → `generatePlanAction` (6 DB queries + `buildClustersWithPlanningSummary` + Haiku 4.5 + validate) → ordered cluster plan review → `savePlanAction` (writes `study_plans` + `plan_items` + `usage_events`) |
 
 **Planned by phase** (lightweight pointer; full intent in PHASES.md):
 
 | Route | Phase | Purpose |
 |---|---|---|
-| `/clusters`, `/clusters/[id]` | 2 | Cluster list + detail |
-| `/review/[session_id]` | 2 | Card viewer + binary self-rate |
-| `/intake` | 3 | Free-text + file upload + parser preview |
-| `/plan/new`, `/plan/[id]` | 4 + 5 | Plan generation, execution |
+| `/plan/[id]` | 5 | Plan detail + walk clusters in order + completion tracking |
 | `POST /api/cards/import` | 6 | Bulk import endpoint for the external pipeline |
 
 Update this section when a route lands.
@@ -155,13 +157,13 @@ Update this section when a route lands.
 
 ## 5. LLM Call Sites — exactly three (D6)
 
-The Anthropic SDK is **not yet imported**. First use lands in Phase 3.
+The Anthropic SDK (`@anthropic-ai/sdk`) is imported via `lib/llm/client.ts`. Sites #1 and #2 are wired; site #3 is authored but consumer not yet built.
 
-| # | Site | Phase | Inputs | Outputs | Prompt location |
-|---|---|---|---|---|---|
-| 1 | Intake parser | 3 | Free-text/file from `/intake` | Structured gaps mapped to `concepts.id` (or `{rejected:true,reason}` per D14) | `/prompts/intake.md` (authored 2026-04-28; consumer not yet wired); Layer 1 heuristic at `/lib/intake/stem-rejection.ts` |
-| 2 | Plan generator | 4 | Recent `structured_analytics` rows + user's clusters | Ordered list of 5–15 cluster IDs with rationale + 7–14d target window | `/prompts/plan.md` (authored 2026-04-28; consumer not yet wired) |
-| 3 | Private AI card generator | (post-Phase-6, see D13) | Existing gap (`structured_analytics` row or named concept) + target cluster | Card with `source='ai_private'`, `status='draft'`, citation, ontology tags | `/prompts/ai_card.md` (authored 2026-04-28; consumer not yet wired) |
+| # | Site | Phase | Inputs | Outputs | Prompt location | Status |
+|---|---|---|---|---|---|---|
+| 1 | Intake parser | 3 | Free-text from `/intake` textarea | Structured gaps mapped to `concepts.id` (or `{rejected:true,reason}` per D14) | `/prompts/intake.md`; Layer 1 heuristic at `lib/intake/stem-rejection.ts` | **Wired** — `app/(app)/intake/actions.ts` |
+| 2 | Plan generator | 4 | Recent `structured_analytics` + cluster library | Ordered 5–15 cluster plan + rationale + 7–14d window | `/prompts/plan.md` | **Wired** — `app/(app)/plan/new/actions.ts` |
+| 3 | Private AI card generator | post-Phase-6 (D13) | Gap row + target cluster | Card with `source='ai_private'`, `status='draft'`, citation, ontology tags | `/prompts/ai_card.md` | Prompt authored; consumer not yet built |
 
 **Hard rules across all sites:**
 - Token usage logged to `usage_events` (D16) per request, with `request_ref` pointing to the originating row (`upload_id`, `plan_id`, or `card_id`).
@@ -211,8 +213,25 @@ The Anthropic SDK is **not yet imported**. First use lands in Phase 3.
   /(app)                   protected route group — layout enforces auth (Phase 1 step 4)
     layout.tsx             calls getUser; redirect('/login') if null
     /dashboard
-      page.tsx             email + "No clusters yet" stub (Phase 1 step 5)
+      page.tsx             email + nav links (clusters / intake / plan)
       actions.ts           server action: signOut
+    /clusters
+      page.tsx             cluster list with card counts (Phase 2)
+      /[id]
+        page.tsx           cluster detail + "Start review session" (Phase 2)
+        actions.ts         server actions: start session (Phase 2)
+    /review/[session_id]
+      page.tsx             review session page (Phase 2)
+      ReviewClient.tsx     client component: prompt → reveal → Again/Good (Phase 2)
+      actions.ts           server actions: rate card, finish session (Phase 2)
+    /intake
+      page.tsx             server wrapper: checks isLlmEnabled, passes gap/cluster counts (Phase 3)
+      IntakeClient.tsx     client component: two-step textarea → gap review table (Phase 3)
+      actions.ts           parseIntakeAction (D14 + LLM call site #1) + saveGapsAction (Phase 3)
+    /plan/new
+      page.tsx             server wrapper: pre-loads gap/cluster counts (Phase 4)
+      PlanNewClient.tsx    client component: two-step generate → plan review (Phase 4)
+      actions.ts           generatePlanAction (LLM call site #2) + savePlanAction (Phase 4)
 proxy.ts                   Next.js 16 proxy (formerly middleware.ts) — refreshes session cookie via @supabase/ssr
 /components
   /ui                      shadcn/ui primitives
@@ -230,6 +249,8 @@ proxy.ts                   Next.js 16 proxy (formerly middleware.ts) — refresh
     stem-rejection.test.ts     unit tests (run via `pnpm test`)
     candidate-concepts.ts      filters the 970-row concepts table → ~30–80 candidates for the intake LLM (`{{candidate_concepts_json}}`)
     candidate-concepts.test.ts unit + integration tests (uses real abim_blueprint_v1.json)
+  /llm
+    client.ts              getAnthropicClient() factory + isLlmEnabled() feature flag
   /plan
     clusters-summary.ts        builds `{{clusters_json}}` (per-cluster planning_summary histograms) for the plan-generator LLM
     clusters-summary.test.ts   unit tests

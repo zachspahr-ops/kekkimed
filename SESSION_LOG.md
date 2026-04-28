@@ -15,6 +15,50 @@ Each entry follows this shape:
 
 ---
 
+## 2026-04-28 — Phase 3 + 4 wired: intake parser + plan generator
+
+**Phase + step:** Phase 3 (Intake + Structuring) complete; Phase 4 (Plan Generator) complete. Strategic Review Checkpoint done inline — all big bets (D4, D9, D6, D20) still valid; ~$0 Anthropic spend to date.
+
+**What changed:**
+
+Phase 3 — intake parser wired (LLM call site #1):
+- `app/(app)/intake/actions.ts` (new) — `parseIntakeAction`: Layer 1 heuristic check → load 970 concepts → `filterCandidateConcepts` → interpolate `prompts/intake.md` (strips implementation-notes section) → Haiku 4.5 at temp=0 with `{` prefill → validate response (concept IDs must be in candidate set, enums must match) → return proposal to client without DB write yet. `saveGapsAction`: inserts `analytics_uploads` (kind=text) + `structured_analytics` rows + `usage_events` (call_site='intake').
+- `app/(app)/intake/IntakeClient.tsx` (new) — two-step client component. Step 1: textarea + "Parse my gaps" button; shows rejection reason inline. Step 2: editable gap table (severity select, note input, remove button); shows uncovered-gaps warning; "Save" or "Back" buttons.
+- `app/(app)/intake/page.tsx` (new) — thin server wrapper; calls `isLlmEnabled()` and passes flag to client (shows "LLM not configured" banner when key absent).
+- `app/(app)/dashboard/page.tsx` — added "Upload Analytics" nav link.
+- `next.config.ts` — added top-level `outputFileTracingIncludes: { '/**': ['./prompts/**'] }` so Vercel bundles `prompts/intake.md` and `prompts/plan.md` at runtime.
+
+Phase 4 — plan generator wired (LLM call site #2):
+- `app/(app)/plan/new/actions.ts` (new) — `generatePlanAction`: 6 DB queries to assemble `ClusterWithCards[]` (clusters → memberships → cards → card_retrieval_metadata → card_ontology_tags → recent plans) → `buildClustersWithPlanningSummary` + `rankClustersByGapOverlap` (cap at 150) → interpolate `prompts/plan.md` → Haiku 4.5 → validate (cluster IDs constrained to input set, items 5–15, target_window_days 7–14) → return enriched proposal with cluster names. `savePlanAction`: inserts `study_plans` + `plan_items` (1-indexed positions) + `usage_events` (call_site='plan').
+- `app/(app)/plan/new/PlanNewClient.tsx` (new) — two-step client component. Step 1: gap/cluster context card + "Generate study plan" button + error display. Step 2: plan rationale paragraph, ordered cluster list (each with LLM rationale), uncovered-gaps yellow banner if any, "Regenerate" or "Save plan" buttons.
+- `app/(app)/plan/new/page.tsx` (new) — server wrapper; pre-loads gap count (from latest upload) and cluster count; passes to client (shows "no gaps" / "no clusters" states if either is zero).
+- `app/(app)/dashboard/page.tsx` — added "Generate Study Plan" nav link.
+
+**ARCHITECTURE.md sections updated:** §2 (Anthropic SDK now imported), §3 (m004 status → Applied), §4 (Phase 2–4 routes moved to Live; planned list trimmed to Phase 5+6), §5 (LLM call sites table — sites #1 + #2 status → Wired), §7 (file layout — added Phase 2–4 route files + lib/llm/).
+
+**Verification:**
+- `pnpm typecheck` ✅
+- `pnpm build` ✅ — `/intake` and `/plan/new` appear as `ƒ (Dynamic)` routes.
+
+**Manual end-to-end to run:**
+1. `pnpm dev`; sign in.
+2. `/intake`: paste "I bombed hyponatremia — especially the overcorrection questions. Also missed DKA fluid management twice." → parse → expect two rows, both `severity=high`. Edit if needed, save. Verify `analytics_uploads` + `structured_analytics` rows in Supabase dashboard.
+3. `/plan/new`: click "Generate study plan" → expect 5+ clusters ordered by gap relevance → save. Verify `study_plans` + `plan_items` rows.
+4. Rejection test: paste a UWorld vignette at `/intake` → expect Layer 1 or Layer 2 rejection, no DB writes.
+5. Check `usage_events` table for intake + plan rows with correct token counts.
+
+**Blocked / deferred:**
+- Phase 5 (`/plan/[id]` detail view + per-item review sessions + completion tracking). Currently `savePlanAction` redirects to `/dashboard` after save.
+- File upload at `/intake` (textarea-only for Phase 3; file input fits Phase 6 import work).
+- `ANTHROPIC_API_KEY` must be in `.env.local` for LLM calls to work locally. Confirm it's set before testing.
+
+**Open questions for next session:**
+- Phase 5: what should `/plan/[id]` show? Ordered cluster list + "Start review session" per item + completion checkmarks? Link back to the existing `/review/[session_id]` flow?
+- Should `savePlanAction` redirect to `/plan/[id]` when Phase 5 lands (yes — update the TODO comment in `PlanNewClient.tsx`)?
+- Synonym backfill for `concepts` table (raised in earlier session) would improve `filterCandidateConcepts` relevance for MKSAP-style abbreviations — still open.
+
+---
+
 ## 2026-04-28 — `/prompts/ai_card.md` authored (LLM call site #3)
 
 **Phase + step:** post-Phase-6 prep — pre-authors the third and most-guardrailed LLM prompt before its consumer (private AI card generation, gated behind D13). All three D6 call-site prompts now exist in repo. Continuation of the same mobile session.

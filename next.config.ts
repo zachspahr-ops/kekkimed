@@ -10,6 +10,11 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: path.resolve(__dirname),
   },
+  // Ensure prompts/*.md files are bundled in Vercel's output file tracing
+  // so server actions can read them at runtime via fs.readFileSync.
+  outputFileTracingIncludes: {
+    '/**': ['./prompts/**'],
+  },
 };
 
 export default nextConfig;

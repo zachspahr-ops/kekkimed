@@ -31,12 +31,26 @@ export default async function DashboardPage() {
         </form>
       </header>
 
-      <section>
+      <section className="space-y-2">
         <Link
           href="/clusters"
           className="flex items-center justify-between rounded-md border bg-card px-4 py-3 text-sm shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground"
         >
           <span className="font-medium">My Clusters</span>
+          <span className="text-muted-foreground">→</span>
+        </Link>
+        <Link
+          href="/intake"
+          className="flex items-center justify-between rounded-md border bg-card px-4 py-3 text-sm shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground"
+        >
+          <span className="font-medium">Upload Analytics</span>
+          <span className="text-muted-foreground">→</span>
+        </Link>
+        <Link
+          href="/plan/new"
+          className="flex items-center justify-between rounded-md border bg-card px-4 py-3 text-sm shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground"
+        >
+          <span className="font-medium">Generate Study Plan</span>
           <span className="text-muted-foreground">→</span>
         </Link>
       </section>
