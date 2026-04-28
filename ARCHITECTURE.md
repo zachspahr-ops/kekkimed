@@ -159,7 +159,7 @@ The Anthropic SDK is **not yet imported**. First use lands in Phase 3.
 
 | # | Site | Phase | Inputs | Outputs | Prompt location |
 |---|---|---|---|---|---|
-| 1 | Intake parser | 3 | Free-text/file from `/intake` | Structured gaps mapped to `concepts.id` (or `{rejected:true,reason}` per D14) | `/prompts/intake.md` (planned) |
+| 1 | Intake parser | 3 | Free-text/file from `/intake` | Structured gaps mapped to `concepts.id` (or `{rejected:true,reason}` per D14) | `/prompts/intake.md` (authored 2026-04-28; consumer not yet wired); Layer 1 heuristic at `/lib/intake/stem-rejection.ts` |
 | 2 | Plan generator | 4 | Recent `structured_analytics` rows + user's clusters | Ordered list of 5–15 cluster IDs with rationale + 7–14d target window | `/prompts/plan.md` (authored 2026-04-28; consumer not yet wired) |
 | 3 | Private AI card generator | (post-Phase-6, see D13) | Existing gap (`structured_analytics` row or named concept) + target cluster | Card with `source='ai_private'`, `status='draft'`, citation, ontology tags | `/prompts/ai_card.md` (planned) |
 
@@ -218,6 +218,9 @@ proxy.ts                   Next.js 16 proxy (formerly middleware.ts) — refresh
   /ui                      shadcn/ui primitives
 /lib
   utils.ts                 pure helpers
+  /intake
+    stem-rejection.ts      D14 Layer 1 — heuristic regex precheck for proprietary qbank stems
+    stem-rejection.test.ts unit tests (run via `pnpm test`)
   /supabase
     server.ts              createServerClient factory (Server Components, Actions, Route Handlers)
     client.ts              createBrowserClient factory (Client Components)
@@ -232,6 +235,7 @@ proxy.ts                   Next.js 16 proxy (formerly middleware.ts) — refresh
     003_retrieval_metadata.sql   retrieval-metadata layer (D20)
     004_planning_layer.sql       planning layer + card_discriminators (D21)
 /prompts                       LLM prompt templates (D6 source of truth)
+  intake.md                    LLM call site #1 — intake parser (Phase 3); Layer 2 of D14 stem rejection
   plan.md                      LLM call site #2 — plan generator (Phase 4)
 /public                        static assets (Next.js default svgs for now)
 /archive                       superseded files retained for traceability
@@ -263,7 +267,6 @@ next.config.ts, eslint.config.mjs, postcss.config.mjs, components.json, tsconfig
 ```
 
 Planned additions:
-- `/prompts/intake.md` — LLM call site #1 (Phase 3).
 - `/prompts/ai_card.md` — LLM call site #3 (post-Phase-6, see D13).
 - `/app/(marketing)` route group (Phase 8 — public landing + waitlist).
 

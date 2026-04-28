@@ -144,6 +144,7 @@ phase1_schema_plan.md                        historical: schema design notes for
 
 - `pnpm typecheck` passes
 - `pnpm build` passes
+- `pnpm test` passes (when the change touches anything in `/lib` with a corresponding `*.test.ts`)
 - The change works end-to-end on a real user flow you can describe in one sentence
 - Has at least one test, or a documented manual-test recipe for UI flows
 - Branch pushed, preview deploy green before merging to main
@@ -169,6 +170,7 @@ pnpm dev          # Next.js dev server at http://localhost:3000
 pnpm build        # Production build
 pnpm start        # Serve the production build
 pnpm typecheck    # tsc --noEmit (CLAUDE.md DoD)
+pnpm test         # node --experimental-strip-types --test lib/**/*.test.ts (Node 22+ native runner; no test framework dependency)
 pnpm lint         # ESLint flat config
 ```
 

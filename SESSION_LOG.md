@@ -15,6 +15,42 @@ Each entry follows this shape:
 
 ---
 
+## 2026-04-28 — Phase 3 intake foundation: D14 Layer 1 + Layer 2 + native test runner
+
+**Phase + step:** Phase 3 prep — pre-authors both layers of the D14 stem-rejection design plus the intake-parser prompt (LLM call site #1). Adds the project's first runnable unit-test harness using Node 22's native `node:test`. Continuation of the same mobile session.
+
+**What changed:**
+- `/lib/intake/stem-rejection.ts` (new) — Layer 1 heuristic precheck per D14. Six rule patterns (`lettered_choice_block`, `correct_answer_marker`, `educational_objective`, `repeated_key_point_header`, `patient_vignette_with_likely_diagnosis_question`, `qbank_item_header`). Detection bias: prefer false negatives over false positives (a user mentioning "MKSAP" in their notes must not be rejected). Result type is a discriminated union `{rejected: false} | {rejected: true; reason; matched_pattern}` for clean call-site narrowing under strict mode.
+- `/lib/intake/stem-rejection.test.ts` (new) — 22 unit tests using Node 22's `node:test` runner. Covers: empty input, plain narrative, qbank product names in legitimate prose, single-letter-in-prose, classic 5-choice MCQ, 3-choice with parens, "correct answer" markers, "Educational Objective:" rationale, repeated "Key Point:" headers, "Which of the following…" stems, "Item N:" headers, combined adversarial input, false-positive guards ("the answer was…" without "correct"), case-insensitive matches, and the `QBANK_STEM_RULE_NAMES` contract. All 22 pass.
+- `/prompts/intake.md` (new) — Layer 2 LLM prompt for the intake parser (D6 #1). Mirrors `plan.md` style: input schema (`{{user_input}}`, `{{candidate_concepts_json}}` pre-filtered to ~30–80 records, `{{today_iso}}`), output schema (`{rejected: false, items[]}` or `{rejected: true, reason}` per D14 Layer 2), severity / confidence rubrics, granularity guidance per D17/D18 (system / subsection / topic), four worked examples covering acceptance, vague-but-not-rejected, paraphrased-stem rejection, and CSV analytics dump.
+- `package.json` — added `"test": "node --experimental-strip-types --test lib/**/*.test.ts"` script. Uses Node 22+ native test runner with experimental TS strip-types — no new dependencies. Verified 22/22 tests pass on the sandbox's Node v22.22.2.
+- `CLAUDE.md` DoD — added `pnpm test` to the bullet list. Common-commands block — added `pnpm test` with the underlying invocation documented.
+- `ARCHITECTURE.md` §5 row 1 — flipped intake prompt from `(planned)` to `(authored 2026-04-28; consumer not yet wired)` and noted the Layer 1 helper location.
+- `ARCHITECTURE.md` §7 file layout — added `/lib/intake/` subdirectory with both files; added `intake.md` under `/prompts/`; removed `intake.md` from "Planned additions".
+
+**Why now:** D14 stem rejection is a hard guardrail (refusing proprietary qbank content) — landing both layers as runnable code/prompt before Phase 3 starts means the Phase 3 implementer (likely Zach in a future session) just wires the call site instead of designing the rejection logic on the spot. Native `node:test` was available all along; the project just hadn't picked a test framework yet, and Phase 3 will need tested logic regardless.
+
+**Decisions made this session (no DECISIONS.md edits required):**
+- **Test framework:** Node 22+ native `node:test` with `--experimental-strip-types`. Zero new dependencies. Lives in `lib/**/*.test.ts` co-located with source. Reasoning: Vitest and Jest both add 30+ MB and a config burden; the native runner has been adequate since Node 18 and is stable from 22.6.
+- **Layer 1 detection bias:** false negatives over false positives. Two of the six rules have explicit safeguards (lettered choices require ≥3 separate lines; "Key Point:" requires repetition) precisely to avoid rejecting legitimate user notes. Layer 2 is the safety net for paraphrased stems.
+
+**Verification:**
+- `pnpm test` → 22/22 pass.
+- `pnpm typecheck` → green.
+- `pnpm build` → green.
+
+**Out of scope (intentional):**
+- No server-side intake route (Phase 3 wires `/intake/page.tsx` + the server action).
+- No live LLM call (no `ANTHROPIC_API_KEY` on mobile sandbox).
+- No `/prompts/ai_card.md` (Phase 6+, gated on D13).
+- No Zod or runtime schema validator for `structured_analytics` rows — Phase 3 implementer can add when wiring the consumer; the manual TypeScript-types-only path is fine for an MVP given how narrow the schema is.
+
+**Open questions for next session:**
+- Should `candidate_concepts_json` filtering live in a `/lib/intake/candidate-concepts.ts` helper now (testable in isolation) or be inlined in the Phase 3 server action? Lean toward extracting now, but it depends on whether the filter needs a seeded `concepts` table to test — if so, defer.
+- The Layer 2 prompt suggests pre-filtering candidates by token overlap against `concepts.title` and `concepts.synonyms[]`. If overlap is poor (rare medical synonyms), consider a small embedding lookup later — but only if Phase 3 dogfooding shows the overlap heuristic missing obvious matches.
+
+---
+
 ## 2026-04-28 — `/prompts/plan.md` authored (LLM call site #2)
 
 **Phase + step:** Phase 4 prep — pre-authoring the prompt template before the consumer (server action at `/plan/new`) is wired. Continuation of the same mobile session that landed D21 + migration 004.
