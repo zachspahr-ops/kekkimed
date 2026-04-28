@@ -37,16 +37,20 @@ export function ReviewClient({ sessionId, clusterId, clusterName, cards }: Props
 
   function rate(rating: 'again' | 'good') {
     const timeMs = revealedAt.current ? Date.now() - revealedAt.current : 0
+
+    // Fire DB write in the background — do not block UI on the roundtrip
     startTransition(async () => {
       await submitRating(sessionId, card.id, clusterId, rating, timeMs)
-      if (index + 1 >= cards.length) {
-        setDone(true)
-      } else {
-        setIndex((i) => i + 1)
-        setRevealed(false)
-        revealedAt.current = null
-      }
     })
+
+    // Advance UI immediately (synchronous, outside startTransition)
+    if (index + 1 >= cards.length) {
+      setDone(true)
+    } else {
+      setIndex((i) => i + 1)
+      setRevealed(false)
+      revealedAt.current = null
+    }
   }
 
   function finish() {

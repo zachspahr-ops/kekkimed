@@ -47,8 +47,6 @@ export default async function ReviewPage({ params, searchParams }: Props) {
     .map((m) => m.cards)
     .filter(Boolean)
     .flat()
-    // Shuffle for variety each session.
-    .sort(() => Math.random() - 0.5)
 
   if (cards.length === 0) notFound()
 

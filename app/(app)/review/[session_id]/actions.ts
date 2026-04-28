@@ -51,11 +51,10 @@ export async function finishSession(sessionId: string, clusterId: string) {
     .maybeSingle()
 
   if (planItem) {
-    await supabase.from('plan_progress').insert({
-      plan_item_id: planItem.id,
-      user_id: user.id,
-      session_id: sessionId,
-    })
+    await supabase.from('plan_progress').upsert(
+      { plan_item_id: planItem.id, session_id: sessionId },
+      { onConflict: 'plan_item_id', ignoreDuplicates: true }
+    )
   }
 
   redirect(`/clusters/${clusterId}`)
