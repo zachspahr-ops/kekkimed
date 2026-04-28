@@ -12,6 +12,7 @@ import {
   CARD_SOURCES,
   CARD_STATUSES,
   DIFFICULTIES,
+  CITATION_KINDS,
   TAG_ROLES,
   GRANULARITIES,
   TAG_REVIEW_STATUSES,
@@ -31,6 +32,7 @@ import {
   isCardSource,
   isCardStatus,
   isDifficulty,
+  isCitationKind,
   isTagRole,
   isGranularity,
   isPrimaryLattice,
@@ -51,6 +53,8 @@ import {
 test('CARD_SOURCES has 3 values per D13', () => assert.equal(CARD_SOURCES.length, 3));
 test('CARD_STATUSES has 3 values per D7', () => assert.equal(CARD_STATUSES.length, 3));
 test('DIFFICULTIES has 3 values per D17', () => assert.equal(DIFFICULTIES.length, 3));
+test('CITATION_KINDS has 5 values per D7 (m001 CHECK)', () =>
+  assert.equal(CITATION_KINDS.length, 5));
 
 test('TAG_ROLES has 4 values per D19', () => assert.equal(TAG_ROLES.length, 4));
 test('GRANULARITIES has 3 values per D17/D19', () => assert.equal(GRANULARITIES.length, 3));
@@ -119,6 +123,7 @@ const GUARDS: ReadonlyArray<{
   { name: 'isCardSource', guard: isCardSource, values: CARD_SOURCES },
   { name: 'isCardStatus', guard: isCardStatus, values: CARD_STATUSES },
   { name: 'isDifficulty', guard: isDifficulty, values: DIFFICULTIES },
+  { name: 'isCitationKind', guard: isCitationKind, values: CITATION_KINDS },
   { name: 'isTagRole', guard: isTagRole, values: TAG_ROLES },
   { name: 'isGranularity', guard: isGranularity, values: GRANULARITIES },
   { name: 'isPrimaryLattice', guard: isPrimaryLattice, values: PRIMARY_LATTICES },

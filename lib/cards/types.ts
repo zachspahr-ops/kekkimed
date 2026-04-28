@@ -19,6 +19,9 @@ export type CardStatus = 'draft' | 'reviewed' | 'retired';
 /** D17: pedagogical difficulty layer. */
 export type Difficulty = 'core' | 'advanced' | 'trap';
 
+/** D7: citation provenance category, enforced by m001 CHECK constraint. */
+export type CitationKind = 'guideline' | 'primary_lit' | 'textbook' | 'uptodate' | 'other';
+
 // ---------- D19 / D17: card_ontology_tags ----------
 
 /** D19: tag role. Exactly one `primary` per card (partial unique index). */
@@ -107,6 +110,7 @@ export type ReviewPriority = 'high' | 'medium' | 'low';
 export const CARD_SOURCES = ['human', 'external_pipeline', 'ai_private'] as const satisfies readonly CardSource[];
 export const CARD_STATUSES = ['draft', 'reviewed', 'retired'] as const satisfies readonly CardStatus[];
 export const DIFFICULTIES = ['core', 'advanced', 'trap'] as const satisfies readonly Difficulty[];
+export const CITATION_KINDS = ['guideline', 'primary_lit', 'textbook', 'uptodate', 'other'] as const satisfies readonly CitationKind[];
 
 export const TAG_ROLES = ['primary', 'secondary', 'bridge', 'planning_only'] as const satisfies readonly TagRole[];
 export const GRANULARITIES = ['system', 'subsection', 'topic'] as const satisfies readonly Granularity[];
@@ -191,6 +195,7 @@ function makeIsMember<T extends string>(values: readonly T[]) {
 export const isCardSource = makeIsMember(CARD_SOURCES);
 export const isCardStatus = makeIsMember(CARD_STATUSES);
 export const isDifficulty = makeIsMember(DIFFICULTIES);
+export const isCitationKind = makeIsMember(CITATION_KINDS);
 
 export const isTagRole = makeIsMember(TAG_ROLES);
 export const isGranularity = makeIsMember(GRANULARITIES);

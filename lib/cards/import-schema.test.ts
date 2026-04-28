@@ -225,6 +225,7 @@ const ENUM_FIELDS_WITH_BAD_VALUES: ReadonlyArray<{ field: string; bad: string }>
   { field: 'review_priority', bad: 'urgent' },
   { field: 'retrieval_direction', bad: 'sideways' },
   { field: 'format_review_status', bad: 'pending_committee' },
+  { field: 'citation_kind', bad: 'tweet' },
 ];
 
 for (const { field, bad } of ENUM_FIELDS_WITH_BAD_VALUES) {

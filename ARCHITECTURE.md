@@ -222,7 +222,9 @@ proxy.ts                   Next.js 16 proxy (formerly middleware.ts) — refresh
     types.ts                   locked card vocabulary (D17/D19/D20/D21 enum types + const arrays + type guards)
     types.test.ts              cardinality + guard contract tests
     import-schema.ts           Phase 6 validator for `POST /api/cards/import` payload (returns NormalizedImportPayload or accumulated ImportError[])
-    import-schema.test.ts      validator test suite (43 tests)
+    import-schema.test.ts      validator test suite
+    import-mapper.ts           maps NormalizedImportPayload → flat insert rows for clusters, cards, card_retrieval_metadata, card_ontology_tags, cluster_memberships
+    import-mapper.test.ts      mapper test suite
   /intake
     stem-rejection.ts          D14 Layer 1 — heuristic regex precheck for proprietary qbank stems
     stem-rejection.test.ts     unit tests (run via `pnpm test`)

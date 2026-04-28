@@ -16,6 +16,7 @@
 
 import {
   isCardFormat,
+  isCitationKind,
   isCognitiveTask,
   isDangerLevel,
   isDifficulty,
@@ -32,6 +33,7 @@ import {
   isBoardLikelihood,
   type BoardLikelihood,
   type CardFormat,
+  type CitationKind,
   type CognitiveTask,
   type DangerLevel,
   type Difficulty,
@@ -72,7 +74,7 @@ export interface ImportCard {
   prompt: string;
   answer: string;
   citation: string;
-  citation_kind?: string;
+  citation_kind?: CitationKind;
   difficulty: Difficulty;
 
   // D20 lattice
@@ -142,7 +144,7 @@ export interface NormalizedCard {
   prompt: string;
   answer: string;
   citation: string;
-  citation_kind: string;
+  citation_kind: CitationKind;
   difficulty: Difficulty;
 
   primary_lattice: PrimaryLattice;
@@ -210,7 +212,7 @@ export type ValidationResult<T> =
 // ---------- Default values applied during normalization ----------
 
 export const IMPORT_DEFAULTS = {
-  citation_kind: 'other',
+  citation_kind: 'other' as CitationKind,
   yield_tier: 'medium' as YieldTier,
   danger_level: 'moderate' as DangerLevel,
   board_likelihood: 'medium' as BoardLikelihood,
@@ -505,7 +507,7 @@ function validateCard(
   const prompt = requireString(raw, 'prompt', parentPath, errors);
   const answer = requireString(raw, 'answer', parentPath, errors);
   const citation = requireString(raw, 'citation', parentPath, errors);
-  const citation_kind = optionalString(raw, 'citation_kind', parentPath, errors);
+  const citation_kind = optionalEnum(raw, 'citation_kind', isCitationKind, parentPath, errors);
   const difficulty = requireEnum(raw, 'difficulty', isDifficulty, parentPath, errors);
 
   const primary_lattice = requireEnum(raw, 'primary_lattice', isPrimaryLattice, parentPath, errors);

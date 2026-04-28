@@ -15,6 +15,44 @@ Each entry follows this shape:
 
 ---
 
+## 2026-04-28 — Phase 6 import → DB row mapper (+ citation_kind tightening)
+
+**Phase + step:** Phase 6 prep — finishes the validated-payload-to-DB-rows path. After this commit, the route handler is `validate → map → transactional insert`; almost no logic of its own. Continuation of the same mobile session.
+
+**What changed:**
+- `/lib/cards/import-mapper.ts` (new) — `mapNormalizedPayloadToInsertRows(payload, options)` takes a `NormalizedImportPayload` from the validator and produces an `ImportInsertRows` bundle: arrays for `clusters` (new), `cards`, `card_retrieval_metadata`, `card_ontology_tags`, and `cluster_memberships`. Pure logic, no DB access. ID generation defaults to `crypto.randomUUID()` but is injectable for deterministic tests. Cluster definitions deduplicate by name within the batch (two cards with `cluster_definition: { name: "Hyponatremia" }` share one new cluster). Cluster-id references pass through verbatim (existence checks remain the route handler's job).
+- `/lib/cards/import-mapper.test.ts` (new) — 19 tests. Single-card → 5-table-row counts. Verbatim field preservation across D7/D17/D19/D20/D21. Mapper hard-codes `source = 'external_pipeline'` and `status = 'draft'` per Phase 6 spec. `card_retrieval_metadata.card_id` FK match. `card_ontology_tags.review_status = 'accepted'` default per D19. New-cluster path: ClusterInsertRow with `owner_user_id` wired, FK link to membership. Cluster dedup by name (one cluster, two memberships). Distinct-name → distinct clusters. Mix of existing cluster_id + new cluster_definition. Position assignment: 1-indexed, increments per cluster, independent counters. Card-id uniqueness + FK consistency across all output tables. Default `crypto.randomUUID()` smoke test. Defensive invariants: 1 metadata per card, 1 membership per card, sum(ontology_tags) = sum across cards. Input-order preservation.
+- `/lib/cards/types.ts` — added `CitationKind` enum (`'guideline' | 'primary_lit' | 'textbook' | 'uptodate' | 'other'`) per the m001 CHECK constraint. Was previously not in the locked vocab. Plus `CITATION_KINDS` const array and `isCitationKind` guard.
+- `/lib/cards/types.test.ts` — added cardinality test (`CITATION_KINDS.length === 5`) and guard contract entry. Existing guards-table tests automatically extend coverage.
+- `/lib/cards/import-schema.ts` — tightened `citation_kind` validation from arbitrary string to `isCitationKind` enum guard. Closes a gap where `citation_kind: "tweet"` would pass the validator but fail at DB insert time.
+- `/lib/cards/import-schema.test.ts` — added `citation_kind: "tweet"` to the table-driven invalid-enum test loop. Pulls validator coverage to 12 enum-typed fields.
+- `ARCHITECTURE.md` §7 — added `import-mapper.ts` + tests to the `/lib/cards/` listing.
+
+**Why now:** the Phase 6 validator landed last commit; the natural follow-on is "what does the route handler actually call after validation?" With the mapper shipped, the route handler is `validate → map → transactional insert`. Plus the `citation_kind` gap was a real bug (DB rejection at insert time, surfacing as a 500 instead of a 400) — fixing it now while the validator is fresh in mind is cheaper than catching it in Phase 6 dogfooding.
+
+**Decisions made this session:**
+- **Cluster definitions dedupe within batch by `name`.** Two cards with the same new-cluster name share one ClusterInsertRow. Reasoning: external pipelines bulk-generating cards for a topic naturally produce many cards targeting the same cluster definition. Forcing them to use a separate envelope-level `cluster_definitions` array would complicate the contract for marginal gain. Cross-batch dedup (against existing clusters with same name) is the route handler's call — `clusters` table doesn't have a unique constraint on `(owner_user_id, name)`, and it's not obvious it should.
+- **`source = 'external_pipeline'` and `status = 'draft'` are hard-coded by the mapper, not configurable.** D13 forbids auto-promote; the import path always lands in draft. If a future use case (e.g., admin tool) needs to import as `human` or `reviewed`, that's a different route, not a flag here.
+- **Position is 1-indexed, increments per cluster, batch-local.** Schema default is 0 with no uniqueness; the mapper produces sensible ordering for fresh clusters. Caller can offset by existing-card-count when appending to a non-empty cluster (documented in the mapper's `position` comment).
+- **`card_ontology_tags.review_status = 'accepted'` default for import.** D19 doesn't force this; `manual_override` and `import` tag_sources are typically vetted upstream by the pipeline. Tag-review workflow can downgrade to `needs_review` later.
+- **`generateId` is injectable but defaults to `crypto.randomUUID()`.** Tests use a deterministic counter (`id-1`, `id-2`...) to assert FK linkage exactly. Production never sees the test generator. Small, conventional seam.
+
+**Verification:**
+- `pnpm test` → 159/159 pass (22 stem-rejection + 27 candidate-concepts + 22 types + 25 clusters-summary + 44 import-schema + 19 import-mapper).
+- `pnpm typecheck` → green.
+- `pnpm build` → green.
+
+**Out of scope (intentional):**
+- Existing-cluster dedup (mapper doesn't query DB; route handler can deduplicate by querying first if desired).
+- Idempotency replay logic (separate concern; deferred to Phase 6 wiring).
+- Position offsetting against existing cluster cards (mapper documents the contract; caller offsets if needed).
+
+**Open questions for next session:**
+- Should there be an `idempotency_keys` table migration so retries with the same `idempotency_key` return the same response? Defer until Phase 6 wiring is in progress and we know the actual replay semantics needed.
+- Should the route handler be at `app/api/cards/import/route.ts` (App Router convention) with a Server Action wrapper, or is the standalone route fine? Defer.
+
+---
+
 ## 2026-04-28 — Phase 6 import validator (`POST /api/cards/import`)
 
 **Phase + step:** Phase 6 prep — pre-authors the runtime validator the bulk-import endpoint will use as its boundary. After this commit, Phase 6's remaining work is the route handler (calls `validateImportPayload`, then writes to DB), the cluster editor UI, and the 24-hour cooling DB trigger (already in m001 per CLAUDE.md).
