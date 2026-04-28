@@ -161,7 +161,7 @@ The Anthropic SDK is **not yet imported**. First use lands in Phase 3.
 |---|---|---|---|---|---|
 | 1 | Intake parser | 3 | Free-text/file from `/intake` | Structured gaps mapped to `concepts.id` (or `{rejected:true,reason}` per D14) | `/prompts/intake.md` (authored 2026-04-28; consumer not yet wired); Layer 1 heuristic at `/lib/intake/stem-rejection.ts` |
 | 2 | Plan generator | 4 | Recent `structured_analytics` rows + user's clusters | Ordered list of 5–15 cluster IDs with rationale + 7–14d target window | `/prompts/plan.md` (authored 2026-04-28; consumer not yet wired) |
-| 3 | Private AI card generator | (post-Phase-6, see D13) | Existing gap (`structured_analytics` row or named concept) + target cluster | Card with `source='ai_private'`, `status='draft'`, citation, ontology tags | `/prompts/ai_card.md` (planned) |
+| 3 | Private AI card generator | (post-Phase-6, see D13) | Existing gap (`structured_analytics` row or named concept) + target cluster | Card with `source='ai_private'`, `status='draft'`, citation, ontology tags | `/prompts/ai_card.md` (authored 2026-04-28; consumer not yet wired) |
 
 **Hard rules across all sites:**
 - Token usage logged to `usage_events` (D16) per request, with `request_ref` pointing to the originating row (`upload_id`, `plan_id`, or `card_id`).
@@ -249,6 +249,7 @@ proxy.ts                   Next.js 16 proxy (formerly middleware.ts) — refresh
 /prompts                       LLM prompt templates (D6 source of truth)
   intake.md                    LLM call site #1 — intake parser (Phase 3); Layer 2 of D14 stem rejection
   plan.md                      LLM call site #2 — plan generator (Phase 4)
+  ai_card.md                   LLM call site #3 — private AI card generator (post-Phase-6, D13 guardrails)
 /public                        static assets (Next.js default svgs for now)
 /archive                       superseded files retained for traceability
   kekki_ontology_v0.json
@@ -279,7 +280,6 @@ next.config.ts, eslint.config.mjs, postcss.config.mjs, components.json, tsconfig
 ```
 
 Planned additions:
-- `/prompts/ai_card.md` — LLM call site #3 (post-Phase-6, see D13).
 - `/app/(marketing)` route group (Phase 8 — public landing + waitlist).
 
 ---

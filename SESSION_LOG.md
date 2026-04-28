@@ -15,6 +15,37 @@ Each entry follows this shape:
 
 ---
 
+## 2026-04-28 — `/prompts/ai_card.md` authored (LLM call site #3)
+
+**Phase + step:** post-Phase-6 prep — pre-authors the third and most-guardrailed LLM prompt before its consumer (private AI card generation, gated behind D13). All three D6 call-site prompts now exist in repo. Continuation of the same mobile session.
+
+**What changed:**
+- `/prompts/ai_card.md` (new) — full prompt template for the AI card generator (D6 #3, D13 guardrails). Spec: input schema (`{{gap_json}}`, `{{target_cluster_json}}`, `{{candidate_concepts_json}}`, `{{user_request_json}}`, `{{today_iso}}`), output JSON schema mirroring `ImportCard` from `/lib/cards/import-schema.ts` so the server can pipe the result through the same validator + mapper used by the bulk-import endpoint, and explicit refusal cases. Two principles dominate: (1) citation or refuse — hallucinated citations are worse than no card; (2) constrained vocabulary everywhere — D7/D17/D19/D20/D21 enums map to DB CHECK constraints. Vocabulary picking guidance per enum (which `card_format` for which retrieval pattern, which `source_strength` for which citation type, etc.). Three worked examples: concrete-gap clean output, refusal-due-to-no-citation, refusal-due-to-vague-gap.
+- `ARCHITECTURE.md` §5 row 3 — flipped from `(planned)` to `(authored 2026-04-28; consumer not yet wired)`.
+- `ARCHITECTURE.md` §7 — added `ai_card.md` under `/prompts/`; removed it from "Planned additions".
+
+**Why now:** symmetry with the other two prompts (`intake.md`, `plan.md`). All three call-site prompts are now reviewable end-to-end. The shared types module + import validator + import mapper are already in place to back this prompt's consumer when D13 finally implements (post-Phase-6); the prompt closes the design loop.
+
+**Decisions made this session:**
+- **Single-card output (not multi).** The prompt produces one card per call. Rate limit (D13: 10/user/local-day) is per card; sequential calls give the user UI feedback per generation. Multi-card output would muddy the rate-limit semantics and the failure modes (one bad citation in a batch shouldn't reject the whole batch).
+- **Output shape mirrors `ImportCard` exactly.** The server can run the AI-card output through the same `validateImportPayload` + `mapNormalizedPayloadToInsertRows` pipeline as bulk imports — no second validator needed. This is the payoff for landing the import path before D13 implementation.
+- **Citation post-validation is documented.** The server should run a "looks like a real citation" sniff test (year present, name pattern, known canonical source phrase) on top of the prompt's "no fabrication" constraint. Defense in depth.
+- **`source = 'ai_private'` and `status = 'draft'` set by the server, not the model.** Same pattern as the import endpoint hard-coding. D13 forbids auto-promote regardless of what the model emits.
+
+**Verification:** docs only this commit; `pnpm typecheck`, `pnpm test`, `pnpm build` all green from prior commit. No code changes.
+
+**Out of scope (intentional):**
+- The D13 consumer (`/app/(app)/cards/generate/page.tsx` or similar). Lands post-Phase-6.
+- The rate-limit counter on `usage_events` (D16). Wiring detail; the `usage_events` table already exists from m001.
+- The "AI-generated, unreviewed" badge (D15). Review-UI render concern; not a prompt detail.
+- The token-metering wrapper. Same — server side.
+
+**Open questions for next session:**
+- Should the AI card generator support a "regenerate / refine" loop (user sees draft, asks for revision)? D13 doesn't say either way. Adding it later is cheap; defer until the first consumer is wired and dogfooding shows what's missing.
+- Citation sniff test heuristics — should they live in `/lib/cards/citation-validation.ts` as a pure function (testable on mobile) or inline in the route handler? Lean toward pure function. Save for the next mobile slice if we come back.
+
+---
+
 ## 2026-04-28 — Phase 6 import → DB row mapper (+ citation_kind tightening)
 
 **Phase + step:** Phase 6 prep — finishes the validated-payload-to-DB-rows path. After this commit, the route handler is `validate → map → transactional insert`; almost no logic of its own. Continuation of the same mobile session.
