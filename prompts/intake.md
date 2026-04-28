@@ -230,11 +230,7 @@ Hypertension targets, 78
 ## Implementation notes (for the server, not the model)
 
 - **Layer 1 first.** Call `checkForQbankStem(input)` from `/lib/intake/stem-rejection.ts` BEFORE building this prompt. If Layer 1 rejects, return its reason directly to the UI. Do not call the LLM. Do not store the input.
-- **Candidate filtering.** Pre-filter `candidate_concepts` to ~30–80 records by:
-  1. Tokenize the input.
-  2. Score each row in `concepts` by token overlap against `title` and `synonyms[]`.
-  3. Keep top-N + their ancestors (so the model can pick the right granularity).
-  4. Always include all 18 system-level concepts as a coverage floor.
+- **Candidate filtering.** Use `filterCandidateConcepts()` from `/lib/intake/candidate-concepts.ts`. The helper takes the user input + the full `concepts` table rows and returns ~30–80 records (configurable via `topN` / `maxTotal`). It always includes all 18 systems as a coverage floor, scores remaining concepts by token overlap against `title` and `synonyms[]`, takes the top-N matches (tie-break: prefer topic > subsection > system), and pulls in their parent subsections so the model can pick the right D17/D18 granularity. Output is sorted by `id` for deterministic prompts (helps cache hits and easier diffing in `usage_events` logs).
 - **Validation.** Validate the model's output against the schema before writing to `structured_analytics`. Reject `concept_id`s not present in the candidate set. Reject any output that's not valid JSON.
 - **Telemetry.** Log token usage to `usage_events` (D16) with `call_site = 'intake'`. On rejection (Layer 1 or Layer 2), log the rejection reason and `matched_pattern` (Layer 1 only) — do not store the user's input on rejection per D14.
 - **Storage.** Store the original input in `analytics_uploads` only on acceptance. Link `structured_analytics.upload_id` per row.

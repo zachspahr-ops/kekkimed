@@ -219,8 +219,10 @@ proxy.ts                   Next.js 16 proxy (formerly middleware.ts) — refresh
 /lib
   utils.ts                 pure helpers
   /intake
-    stem-rejection.ts      D14 Layer 1 — heuristic regex precheck for proprietary qbank stems
-    stem-rejection.test.ts unit tests (run via `pnpm test`)
+    stem-rejection.ts          D14 Layer 1 — heuristic regex precheck for proprietary qbank stems
+    stem-rejection.test.ts     unit tests (run via `pnpm test`)
+    candidate-concepts.ts      filters the 970-row concepts table → ~30–80 candidates for the intake LLM (`{{candidate_concepts_json}}`)
+    candidate-concepts.test.ts unit + integration tests (uses real abim_blueprint_v1.json)
   /supabase
     server.ts              createServerClient factory (Server Components, Actions, Route Handlers)
     client.ts              createBrowserClient factory (Client Components)

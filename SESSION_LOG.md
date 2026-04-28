@@ -15,6 +15,39 @@ Each entry follows this shape:
 
 ---
 
+## 2026-04-28 — Phase 3 intake foundation: candidate-concepts filter helper
+
+**Phase + step:** Phase 3 prep — completes the pure-logic side of the intake parser. The Phase 3 server action can now compose two helpers (`checkForQbankStem` + `filterCandidateConcepts`) and the `intake.md` prompt; the only remaining work is wiring (Anthropic SDK call + UI).
+
+**What changed:**
+- `/lib/intake/candidate-concepts.ts` (new) — `filterCandidateConcepts(userInput, concepts, options?)` helper. Takes the full `concepts` table (970 rows in production) and returns ~30–80 records for the intake LLM's `{{candidate_concepts_json}}`. Algorithm: tokenize input (lowercase, drop short / stopword / digit tokens), score each concept by token overlap against `title` + `synonyms[]`, take top-N with topic > subsection > system tie-break, always include all 18 systems as a coverage floor, pull in parent subsections of top topic matches, cap at `maxTotal` by dropping subsection ancestors first (systems and direct matches preserved). Output sorted by id for deterministic prompts. Exports `__testing` namespace for white-box tests on internal helpers without leaking API surface.
+- `/lib/intake/candidate-concepts.test.ts` (new) — 27 tests: 12 unit tests on internal helpers (tokenize, deriveParentId, buildParentPath, scoreConcept), 11 unit tests on the public `filterCandidateConcepts` (system floor invariant, topic + parent inclusion, synonym matching, multi-topic input, deterministic ordering, parent_path correctness, maxTotal cap behavior, topN cap, minOverlap threshold, empty/stopword input), and 4 integration tests against the real `abim_blueprint_v1.json` (970 concepts loaded; result stays under maxTotal; "hyponatremia correction rate" returns the matching topic; empty input returns exactly the 18 systems). All 27 pass; combined suite is now 49/49 (22 stem-rejection + 27 candidate-concepts).
+- `/prompts/intake.md` — implementation note updated to point at `filterCandidateConcepts()` rather than the prose algorithm. Server doesn't need to re-implement the heuristic.
+- `ARCHITECTURE.md` §7 — added the two new files under `/lib/intake/`.
+
+**Why now:** the prompt template's `{{candidate_concepts_json}}` placeholder needs a concrete server-side implementation, otherwise Phase 3 wiring would have to design the filter on the spot. Pure logic with deterministic output makes this fully unit-testable on mobile, and the integration tests against the real blueprint catch any scaling bugs before Phase 3 hits production data.
+
+**Decisions made this session:**
+- **Token-overlap heuristic over embeddings** — for an MVP with a 970-row table where concepts have human-readable titles, simple token overlap is sufficient. The integration test against the real blueprint confirms relevance on a real-shaped query. Embeddings can land later if dogfooding shows the heuristic missing obvious matches; gated on the prompt's "Open question" in SESSION_LOG.
+- **Always include all 18 systems** — coverage floor so the LLM can fall back to system-level granularity when no topic is a confident match. Costs ~18 lines of prompt; saves the LLM from inventing slugs (CLAUDE.md: "Never let the LLM invent a concept slug. Fragmentation kills the planner.").
+- **Subsection ancestors yes, deeper grandparents no** — topics' grandparents are systems (already in the floor). The helper only adds direct subsection parents, keeping the candidate count predictable.
+- **`__testing` re-export over manual visibility juggling** — small, conventional, and clearly marked. Test-only seam without polluting the public API.
+
+**Verification:**
+- `pnpm test` → 49/49 pass (22 stem-rejection + 27 candidate-concepts).
+- `pnpm typecheck` → green.
+- `pnpm build` → green.
+
+**Out of scope (intentional):**
+- No Supabase query helper to load concepts. Phase 3's server action will do the query and pass the rows to `filterCandidateConcepts`. Adding a query helper now would either need Supabase access (none on mobile) or a fake data layer (premature).
+- No tagger version / confidence in output. The intake parser writes to `structured_analytics` which has its own `confidence` enum (D17); that's separate from filter confidence and lives at the prompt boundary.
+
+**Open questions for next session:**
+- Should `synonyms` be backfilled into the `concepts` table for common medical aliases (e.g., `hyponatremia` → `["SIADH", "low sodium"]`)? The seed currently produces empty arrays. Synonym-rich rows would improve overlap scoring meaningfully. Consider a Layer-1.5 pass that pre-populates synonyms from `Medical_Knowledge_Ontology.md` or the LLM itself (one-shot, human-reviewed).
+- The integration test asserts result count ≤ 80, which holds at typical scale. If a paragraph-length input causes the cap to bind regularly, revisit `maxTotal` or add a second-stage tier-3 (subsection ancestors) prioritization.
+
+---
+
 ## 2026-04-28 — Phase 3 intake foundation: D14 Layer 1 + Layer 2 + native test runner
 
 **Phase + step:** Phase 3 prep — pre-authors both layers of the D14 stem-rejection design plus the intake-parser prompt (LLM call site #1). Adds the project's first runnable unit-test harness using Node 22's native `node:test`. Continuation of the same mobile session.
