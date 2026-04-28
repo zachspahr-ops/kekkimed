@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { signOut } from './actions'
 
@@ -30,8 +31,14 @@ export default async function DashboardPage() {
         </form>
       </header>
 
-      <section className="rounded-md border border-dashed bg-card p-8 text-center text-sm text-muted-foreground">
-        No clusters yet.
+      <section>
+        <Link
+          href="/clusters"
+          className="flex items-center justify-between rounded-md border bg-card px-4 py-3 text-sm shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground"
+        >
+          <span className="font-medium">My Clusters</span>
+          <span className="text-muted-foreground">→</span>
+        </Link>
       </section>
     </main>
   )
