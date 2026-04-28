@@ -15,6 +15,39 @@ Each entry follows this shape:
 
 ---
 
+## 2026-04-28 — D21 planning enum lock + migration 004 authored (mobile session)
+
+**Phase + step:** Phase 1 step 1c — unblocks the migration deferred 2026-04-26. Mobile-only session: doc + schema work, zero application code, `supabase db push` deferred to Zach's next laptop session before Phase 4 starts.
+
+**What changed:**
+- `DECISIONS.md` — appended **D21** (planning-layer enum lock). Locks the five planning enums on `cards`: `yield_tier`/`board_likelihood`/`review_priority ∈ {high,medium,low}`, `danger_level ∈ {low,moderate,high,lethal}`, `source_strength ∈ {society_guideline, primary_trial, systematic_review, narrative_review, expert_opinion}`. Also locks the `primary_system_id` / `secondary_system_ids[]` / `bridge_reason` denorm shape and the `card_discriminators` directed-graph table contract. Sister entry to D20 (D20 = what the card teaches; D21 = how the planner prioritizes it). Includes "Revisit if" clauses for each open question — `review_priority` is explicitly on probation pending Phase 4 planner first-pass.
+- `supabase/migrations/004_planning_layer.sql` (new) — adds eight columns to `cards` (five enums + three system fields), creates `card_discriminators` with composite PK, three indexes, and RLS mirroring `card_ontology_tags` (D19). All five enums NOT NULL with sensible defaults (`medium` / `moderate` / `narrative_review` / `medium`) so the 20 existing seed cards take defaults without backfill SQL. `primary_system_id` is NULLABLE because the FK to `concepts(id)` requires a real concept ID and the seed cards predate this migration. Style mirrors m003 (CHECK constraints, not Postgres ENUMs; `comment on column ...` per column referencing D21).
+- `ARCHITECTURE.md` — bumped "Last updated" to 2026-04-28; updated table count `15 → 16 tables` (with note that #16 lands on push); appended planning enums to the cards row in §3 Tables; inserted new `card_discriminators` row between `card_retrieval_metadata` and `cluster_memberships`; flipped the `004_planning_layer.sql` migration cadence row from "Deferred 2026-04-26 — enum values TBD" to "Authored 2026-04-28 (file written, not yet `supabase db push`'d). Enum values locked by D21 (added same day)."
+- `PHASES.md` — flipped step 1c status from "Deferred 2026-04-26" to "Authored 2026-04-28 (file written, not yet `supabase db push`'d)" with the locked enum values inline. Updated the Phase 1 DoD line to reflect that m004 is authored but `supabase db push` is outstanding.
+- `CLAUDE.md` — distinguished m003/D20 from m004/D21 in the migration-summary paragraph (was "All enum values are locked by D20"). Added a new "Things to ask Zach before changing" bullet covering the D21 locked enums + `card_discriminators` graph.
+- `SESSION_LOG.md` — this entry.
+
+**User decisions made this session (locked in DECISIONS.md):**
+- D21: `source_strength` is **categorical** (5 values), not integer 1–5. Reason: D6/D13 require constrained-enum LLM outputs; strings carry semantics ("primary_trial" beats "5"). Future `sources.source_quality` integer (`flashcard_database_design.md` L137) keeps the integer for raw provenance; reconcile via a view.
+- D21: `review_priority` **kept** as card-level `high/medium/low`, on probation. Distinct from `learner_card_state.priority_score` (per-user computed). Drop in a forward migration if Phase 4 planner shows it's redundant with `yield × danger × board`.
+- D21: `danger_level` keeps `lethal` as a **fourth tier** above `high` (planner needs a "must-not-miss" trump for anaphylaxis / MH / tamponade).
+- D21: all five enums **NOT NULL with sensible defaults** so the 20 existing seed cards take defaults without backfill SQL.
+- D21: `primary_system_id` is a **denorm** of the system-level placement from `card_ontology_tags` (D19). Polyhierarchy (D17) still authoritative there. No validating trigger now; revisit if drift bites.
+- D21: `secondary_system_ids text[]` has **no row-level FK enforcement** — validated at the app layer (parallel to the `concept_ids[]` validator trigger m002 dropped).
+
+**Blocked / deferred:**
+- `supabase db push` — needs Zach's laptop. Smoke-test recipe: column shape check via `information_schema.columns`, `select count(*) from card_discriminators` → 0, CHECK rejection test (`update cards set yield_tier='extreme'` → expect violation), defaults check on the 20 seed cards.
+- RLS spot-check — needs Supabase SQL editor with two impersonated users; deferred to laptop session.
+- Backfill of meaningful (non-default) enum values for the 20 seed cards — deferred to manual authoring once Phase 4 lands. Backfilling now would lock arbitrary guesses.
+- Validating trigger for `cards.primary_system_id ↔ card_ontology_tags` primary tag — deferred per D21 "Revisit if" clause; revisit if drift becomes a problem.
+
+**Open questions for next session:**
+- Strategic Review Checkpoint (PHASES.md L61–71) is still queued between Phase 2 DoD and Phase 3 start. The D21 work doesn't change that schedule but does mean Phase 4 (plan generator) is now unblocked once m004 is pushed.
+- Whether the planner's first pass should treat `review_priority` as a separate signal or fold it into the `yield × danger × board` algebra — answer comes from Phase 4 implementation; if it's pure overhead, drop in a follow-up forward migration.
+- Whether Phase 4's prompt should emit these enums directly or accept LLM proposals for them. D6/D13 imply emit-required; surface in the Phase 4 prompt design.
+
+---
+
 ## 2026-04-27 — Phase 1 Step 6: seed 20 cards across 3 clusters
 
 **Phase + step:** Phase 1 step 6 — seed real card data so the schema survives contact with actual content. Last step of Phase 1. Phase 2 (review loop) is now unblocked.

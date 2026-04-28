@@ -67,7 +67,7 @@ Never let the LLM invent a concept slug. Fragmentation kills the planner.
 
 The `concepts` table is seeded by `scripts/seed_ontology.mjs` from `abim_blueprint_v1.json`. Columns: `id`, `title`, `synonyms[]`, `weight`, `level`, `ontology_source`, `ontology_version`. Hierarchy lives in a separate `concept_parents (child_id, parent_id, is_primary)` table. ID format is dot-delimited: `<system>.<subsection>.<topic>`. See D18 for the full ID scheme; ARCHITECTURE.md for the live schema.
 
-Migration 003 (planned per Phase 1 step 1b) adds the retrieval-metadata layer: `cards.primary_lattice`, `cards.secondary_lattices[]`, an expanded 9-value `cards.card_format`, and a 1:1 `card_retrieval_metadata` table with `cognitive_task`, prompt/answer framing, discriminator, and `requires_cloze_one_by_one` / `cloze_grouping`. Migration 004 (Phase 1 step 1c) adds the planning layer (`yield_tier`, `danger_level`, `board_likelihood`, `source_strength`, `review_priority`, `primary_system_id`, `secondary_system_ids[]`, `bridge_reason`) and the `card_discriminators` graph. All enum values are locked by D20.
+Migration 003 (planned per Phase 1 step 1b) adds the retrieval-metadata layer: `cards.primary_lattice`, `cards.secondary_lattices[]`, an expanded 9-value `cards.card_format`, and a 1:1 `card_retrieval_metadata` table with `cognitive_task`, prompt/answer framing, discriminator, and `requires_cloze_one_by_one` / `cloze_grouping`. Migration 004 (Phase 1 step 1c) adds the planning layer (`yield_tier`, `danger_level`, `board_likelihood`, `source_strength`, `review_priority`, `primary_system_id`, `secondary_system_ids[]`, `bridge_reason`) and the `card_discriminators` graph. Migration 003 enum values are locked by D20; migration 004 enum values are locked by D21.
 
 ## Content rules (legal + editorial)
 
@@ -239,6 +239,7 @@ pnpm build
 - Anything that touches clinical content rules
 - Anything that touches the AI card generation guardrails (D13) — rate limit, attach-to-cluster, citation requirement, draft cooling
 - Anything that touches the locked card metadata enums (D20) — `primary_lattice`, `secondary_lattices`, `cognitive_task`, the 9-value `card_format`, `tag_role`, `granularity`, Cloze One By One. New values are added via forward migration; never silently coerced or repurposed.
+- Anything that touches the locked planning enums (D21) — `yield_tier`, `danger_level`, `board_likelihood`, `source_strength`, `review_priority`, `primary_system_id`, `secondary_system_ids`, `bridge_reason`, and the `card_discriminators` graph. Same forward-migration rule as D20.
 - Anything that costs money on a recurring basis
 - Anything that introduces billing, payment, or pricing logic before Phase 8 + 4 weeks of real beta use
 - Anything that runs scaffolding or installer commands that may overwrite existing project docs (lesson from 2026-04-26: `create-next-app` clobbered CLAUDE.md)
