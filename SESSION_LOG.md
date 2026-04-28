@@ -15,6 +15,33 @@ Each entry follows this shape:
 
 ---
 
+## 2026-04-28 — `/prompts/plan.md` authored (LLM call site #2)
+
+**Phase + step:** Phase 4 prep — pre-authoring the prompt template before the consumer (server action at `/plan/new`) is wired. Continuation of the same mobile session that landed D21 + migration 004.
+
+**What changed:**
+- `/prompts/plan.md` (new) — full prompt template for the plan-generator LLM call site (D6 #2). Spec: input schema (`{{gaps_json}}`, `{{clusters_json}}`, `{{today_iso}}`, `{{recent_plan_history_json}}`), output JSON schema (`{rejected, items[5..15], target_window_days[7..14], plan_rationale, uncovered_gaps}`), hard constraints (cluster_id constrained-enum from input, never invent), selection rubric (severity → danger floor → yield × board → recency damping → coverage diversity → format diversity), refusal cases, worked example with two real concept IDs from the seed data. Leverages D17–D21 vocabulary throughout (concept IDs, lattice codes, cognitive_task, yield_tier, danger_level, board_likelihood). Server pre-computes `planning_summary` distributions per cluster — the model does not aggregate.
+- `ARCHITECTURE.md` §5 (LLM Call Sites) — flipped row 2 prompt location from `(planned)` to `(authored 2026-04-28; consumer not yet wired)`.
+- `ARCHITECTURE.md` §7 (File Layout) — added `/prompts/` directory, listed `plan.md`, added `003_retrieval_metadata.sql` and `004_planning_layer.sql` to the migrations list (was stale).
+- `ARCHITECTURE.md` §7 "Planned additions" — replaced `/prompts/` with the still-pending `/prompts/intake.md` and `/prompts/ai_card.md`.
+
+**Why now:** D21 just locked the planning vocabulary, so the prompt can constrain LLM output to `yield_tier ∈ {high, medium, low}`, `danger_level ∈ {low, moderate, high, lethal}`, etc. Authoring this template now while the vocabulary is fresh is cheaper than re-deriving it during Phase 4 implementation.
+
+**Out of scope (intentional):**
+- No server code, no Anthropic SDK import, no `/plan/new` route handler. Phase 4 wires the consumer.
+- No live LLM testing — that needs `ANTHROPIC_API_KEY`, which the mobile sandbox doesn't have.
+- Worked-example output is illustrative (5 items with 3 unspecified supporting clusters); first real plan generation will produce the canonical example to fold back into the template.
+
+**Blocked / deferred:**
+- `/prompts/intake.md` (call site #1) — Phase 3 work, not started.
+- `/prompts/ai_card.md` (call site #3) — post-Phase-6, gated on D13.
+
+**Open questions for next session:**
+- Should the server's `planning_summary` aggregation be a SQL view or computed in-route? View is testable in isolation; in-route saves a migration. Defer until Phase 4 starts.
+- The selection rubric's "recency damping" leans on `recent_plan_history_json` — does the server pre-compute a "do not repeat" flag, or does the model decide? Currently the prompt asks the model to soft-damp; revisit if Phase 4 reveals the model over-repeats.
+
+---
+
 ## 2026-04-28 — D21 planning enum lock + migration 004 authored (mobile session)
 
 **Phase + step:** Phase 1 step 1c — unblocks the migration deferred 2026-04-26. Mobile-only session: doc + schema work, zero application code, `supabase db push` deferred to Zach's next laptop session before Phase 4 starts.
