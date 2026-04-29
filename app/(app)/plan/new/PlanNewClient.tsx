@@ -42,6 +42,14 @@ export default function PlanNewClient({ competenceRows }: { competenceRows: numb
             Saved plan {result.planId.slice(0, 8)}… (folded {result.foldedReviews} new review(s)
             into competence before ranking).
           </div>
+          <div className="flex gap-3">
+            <Link
+              href={`/plan/${result.planId}`}
+              className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow hover:opacity-90"
+            >
+              View plan →
+            </Link>
+          </div>
           <ol className="space-y-3">
             {result.picks.map((p, idx) => (
               <li key={p.topic_id} className="flex gap-3">

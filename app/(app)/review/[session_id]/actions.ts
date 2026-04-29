@@ -63,11 +63,35 @@ export async function finishSession(sessionId: string, clusterId: string) {
     .limit(1)
     .maybeSingle()
 
+  let planId: string | null = null
+
   if (planItem) {
     await supabase.from('plan_progress').upsert(
       { plan_item_id: planItem.id, session_id: sessionId },
-      { onConflict: 'plan_item_id', ignoreDuplicates: true }
+      { onConflict: 'plan_item_id', ignoreDuplicates: true },
     )
+
+    planId = (planItem.study_plans as unknown as { id: string }).id
+
+    // Check if all items in this plan are now done.
+    const { data: allItems } = await supabase
+      .from('plan_items')
+      .select('id, plan_progress(plan_item_id)')
+      .eq('plan_id', planId)
+
+    const total = allItems?.length ?? 0
+    const done = allItems?.filter(
+      (i) => (i.plan_progress as unknown as { plan_item_id: string }[]).length > 0,
+    ).length ?? 0
+
+    if (total > 0 && done >= total) {
+      await supabase
+        .from('study_plans')
+        .update({ status: 'complete', completed_at: new Date().toISOString() })
+        .eq('id', planId)
+        .eq('user_id', user.id)
+      redirect(`/plan/${planId}?complete=1`)
+    }
   }
 
   // D22 evaluator branch: fold the calibration session into competence and
@@ -81,5 +105,8 @@ export async function finishSession(sessionId: string, clusterId: string) {
   // into the running EMA so the next plan reflects the just-finished work.
   await refreshCompetenceForUser(supabase, user.id)
 
+  if (planId) {
+    redirect(`/plan/${planId}`)
+  }
   redirect(`/clusters/${clusterId}`)
 }
