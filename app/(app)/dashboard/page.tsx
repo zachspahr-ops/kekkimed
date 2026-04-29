@@ -112,6 +112,13 @@ export default async function DashboardPage() {
           <span className="text-muted-foreground">→</span>
         </Link>
         <Link
+          href="/cards"
+          className="flex items-center justify-between rounded-md border bg-card px-4 py-3 text-sm shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground"
+        >
+          <span className="font-medium">Cards</span>
+          <span className="text-muted-foreground">→</span>
+        </Link>
+        <Link
           href="/intake"
           className="flex items-center justify-between rounded-md border bg-card px-4 py-3 text-sm shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground"
         >
