@@ -15,6 +15,66 @@ Each entry follows this shape:
 
 ---
 
+## 2026-04-29 — D22 pivot: zero-LLM, ontology-math study loop
+
+**Phase + step:** D22 added to DECISIONS.md (supersedes D6, D13, D14). Phase 3 and Phase 4 rewritten in place to deterministic math; Phase 7 (loop closure) trivialized to "regenerate plan." All LLM code deleted from this repo.
+
+**What changed:**
+
+Decision + docs:
+- `DECISIONS.md` — D22 appended (full text of the pivot — three locked specifics: zero LLM, topic-level math on 722 topics with distributed weights, dynamic per-topic clusters, three intake modes — plus effects on D6/D13/D14/D17/D20/D21/D16/D8). D6, D13, D14 each marked "SUPERSEDED 2026-04-29 by D22" with body retained as historical context.
+- `PHASES.md` — Phase 3 (Math intake), Phase 4 (Deterministic planner), Phase 7 (Loop closure) rewritten in place. Strategic-review checkpoint marked historical and points at D22.
+- `CLAUDE.md` — "LLM call sites (exactly three)" section deleted; "What Kekki is" rewritten to describe the new deterministic loop; "Stack" no longer lists Anthropic; "Intake parser — two-layer stem rejection" section deleted; "Must ask" updated.
+- `ARCHITECTURE.md` — §1 system overview redrawn (no Anthropic node); §2 stack-versions row for Anthropic SDK dropped; §3 data model adds `learner_topic_competence`, `topic_importance_v` view, `clusters.kind` + `clusters.source_topic_id`, marks `analytics_uploads`/`structured_analytics`/`usage_events` as historical; §4 routes for `/intake` and `/plan/new` rewritten; §5 LLM Call Sites replaced with "no LLM" note; §7 file layout updated; §8 Anthropic API row + `ANTHROPIC_API_KEY` env var dropped.
+
+Schema (applied via Supabase MCP):
+- `supabase/migrations/005_competence_layer.sql` — creates `topic_importance_v` view (722 rows, importance = parent subsection weight ÷ child topic count), `learner_topic_competence` table with RLS self-only policies, adds `clusters.kind ∈ {manual,ephemeral_topic}` and `clusters.source_topic_id` (FK→`concepts.id`).
+- `supabase/migrations/005a_extend_cluster_kind_evaluator.sql` — extends `clusters.kind` to also accept `'evaluator'` for the calibration intake path.
+
+Pure math (with tests):
+- `lib/competence/score.ts` — `outcomeFromReview`, `emaUpdate`, `distributeSubsectionWeight`, `weakness`, `rankWeakTopics` (top-K with parent-system diversity guard, then subsection fallback, then degenerate fill). Constants exported.
+- `lib/competence/score.test.ts` — 23 unit tests covering outcomes, EMA bounds, idempotence, distribution, weakness, top-K selection in all three diversity-guard branches, tie-break stability.
+
+DB layer:
+- `lib/competence/repo.ts` — `refreshCompetenceForUser` (folds reviews newer than the user's max `last_updated` into competence via EMA), `getTopWeakTopics` (joins `topic_importance_v` × competence × concept_parents → ranks via `rankWeakTopics`), `buildDynamicClusterForTopic` (queries `card_ontology_tags`, sorts by yield/board/danger, inserts ephemeral cluster + memberships), `resetCompetence`.
+- `lib/intake/init-competence.ts` — `initFromSelfReport`, `initFromStandardized`, `initFromEvaluatorSession`, `startEvaluatorSession` (creates a `kind='evaluator'` cluster with one card per system).
+
+Routes (rewritten):
+- `app/(app)/intake/page.tsx` — server wrapper loads systems and existing competence count.
+- `app/(app)/intake/IntakeClient.tsx` — three-tab UI: 18 system sliders / per-system % inputs / "Start calibration" button.
+- `app/(app)/intake/actions.ts` — three deterministic server actions; no LLM, no token usage.
+- `app/(app)/plan/new/page.tsx` — server wrapper; redirects to intake if no competence rows yet.
+- `app/(app)/plan/new/PlanNewClient.tsx` — single "Generate plan" button + result card showing top-3 picks with metrics.
+- `app/(app)/plan/new/actions.ts` — `generateDeterministicPlanAction`: refresh → top-3 → 3 ephemeral clusters → save plan. Pure SQL.
+- `app/(app)/review/[session_id]/actions.ts` — `finishSession` now (a) detects `kind='evaluator'` clusters and runs `initFromEvaluatorSession` + redirects to `/plan/new`, (b) for all other kinds, calls `refreshCompetenceForUser` so the next plan reflects the just-finished session.
+- `app/(app)/settings/page.tsx` (new) + `actions.ts` (new) + `ResetCompetenceForm.tsx` (new) — Settings page showing competence row count + sources histogram + a red "Reset competence profile" button (with browser-confirm) that wipes the user's rows and redirects to `/intake`.
+- `app/(app)/dashboard/page.tsx` — nav: "Upload Analytics" → "Intake / Calibration"; new Settings link.
+
+Deleted:
+- `lib/llm/` (entire directory)
+- `lib/intake/{stem-rejection,candidate-concepts}.{ts,test.ts}`
+- `lib/plan/clusters-summary.{ts,test.ts}`
+- `prompts/{intake,plan,ai_card}.md` (entire directory)
+- `@anthropic-ai/sdk` from `package.json` (and `pnpm-lock.yaml` updated)
+
+Verification:
+- `pnpm typecheck` clean.
+- `pnpm test` — 115/115 pass (the 69-test drop is the deleted LLM-side test files).
+- `pnpm build` clean. All 11 routes compile, including the new `/settings`.
+- DB queried via Supabase MCP after migration: 722 topics × importance values 0.0006–0.017, competence table empty, 3 existing clusters defaulted to `kind='manual'`.
+
+**Blocked / deferred:**
+- Cleanup of `usage_events` table (schema kept; no new writes from this repo). Future migration can drop it.
+- Cleanup of `analytics_uploads` + `structured_analytics` tables (same — not written to anymore but schema retained).
+- The evaluator session's card-sampling uses `Math.random()` — fine for V1 but not deterministic. Worth revisiting once we have telemetry on cold-start quality.
+
+**Open questions for next session:**
+- Should the deterministic planner cap plan size at exactly 3 (current V1) or accept a user override? D8 was narrowed but the table accepts more.
+- Is the EMA α=0.3 the right pace? Worth instrumenting once Zach uses it for two weeks.
+- Should `usage_events` actually be dropped now, or held for analytics-of-the-pivot use later?
+
+---
+
 ## 2026-04-28 — Phase 3 + 4 wired: intake parser + plan generator
 
 **Phase + step:** Phase 3 (Intake + Structuring) complete; Phase 4 (Plan Generator) complete. Strategic Review Checkpoint done inline — all big bets (D4, D9, D6, D20) still valid; ~$0 Anthropic spend to date.

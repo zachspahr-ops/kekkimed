@@ -1,5 +1,5 @@
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
-import { isLlmEnabled } from '@/lib/llm/client'
 import PlanNewClient from './PlanNewClient'
 
 export default async function PlanNewPage() {
@@ -8,46 +8,45 @@ export default async function PlanNewPage() {
     data: { user },
   } = await supabase.auth.getUser()
 
-  // Count gaps from user's most recent upload
-  let gapCount = 0
+  let competenceRows = 0
   if (user) {
-    const { data: latestUpload } = await supabase
-      .from('analytics_uploads')
-      .select('id')
+    const { count } = await supabase
+      .from('learner_topic_competence')
+      .select('user_id', { count: 'exact', head: true })
       .eq('user_id', user.id)
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .single()
-
-    if (latestUpload) {
-      const { count } = await supabase
-        .from('structured_analytics')
-        .select('*', { count: 'exact', head: true })
-        .eq('upload_id', latestUpload.id)
-      gapCount = count ?? 0
-    }
+    competenceRows = count ?? 0
   }
 
-  // Count available clusters
-  const { count: clusterCount } = await supabase
-    .from('clusters')
-    .select('*', { count: 'exact', head: true })
+  if (competenceRows === 0) {
+    return (
+      <main className="mx-auto max-w-2xl space-y-6 p-6">
+        <header>
+          <h1 className="text-2xl font-semibold tracking-tight">Generate study plan</h1>
+        </header>
+        <div className="rounded-md border border-dashed bg-card p-6 text-sm text-muted-foreground space-y-2">
+          <p>You don&apos;t have a competence profile yet.</p>
+          <p>
+            <Link href="/intake" className="text-foreground underline underline-offset-2">
+              Start with intake →
+            </Link>{' '}
+            (self-report, paste a score, or sit a quick calibration).
+          </p>
+        </div>
+      </main>
+    )
+  }
 
   return (
     <main className="mx-auto max-w-2xl space-y-8 p-6">
       <header>
-        <h1 className="text-2xl font-semibold tracking-tight">Generate Study Plan</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">Generate study plan</h1>
         <p className="text-sm text-muted-foreground">
-          Claude will build an ordered cluster plan from your gaps, targeting 5–15 clusters over a
-          7–14 day window.
+          The deterministic planner picks your three weakest topics by importance × (1 −
+          competence) with parent-system diversity, and pulls cards tagged to those topics into
+          three ephemeral clusters.
         </p>
       </header>
-
-      <PlanNewClient
-        llmEnabled={isLlmEnabled()}
-        gapCount={gapCount}
-        clusterCount={clusterCount ?? 0}
-      />
+      <PlanNewClient competenceRows={competenceRows} />
     </main>
   )
 }

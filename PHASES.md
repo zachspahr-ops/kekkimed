@@ -58,45 +58,40 @@ Total target: 10-12 weekends end to end.
 
 ---
 
-## 🛑 STRATEGIC REVIEW CHECKPOINT — between Phase 2 and Phase 3
+## 🛑 STRATEGIC REVIEW CHECKPOINT — between Phase 2 and Phase 3 (historical, 2026-04-27)
 
-**Scheduled 2026-04-27.** When Phase 2's DoD is green, do not start Phase 3 immediately. Open the next session with a structured strategic review pass — see `.claude` memory `project_phase_status.md` for the full format. In short:
-
-1. DECISIONS.md walk-through — each entry, "still right?" / "revisit because X."
-2. PHASES.md realism check — did Phase 2 reveal a missing or wasted phase?
-3. ARCHITECTURE.md vs reality reconciliation.
-4. Big-bet falsification questions for D4 (cluster scheduling), D9 (binary rating), D6 (three LLM call sites), D20 (lattice/cognitive_task vocab) — for each, "what would falsify this?"
-5. Budget + time check vs. the $1,100 / 10–12 weekend targets.
-
-**Why here:** Phase 2 is the first time Zach uses his own product. Reviewing strategy before is improvising; after is informed. Output: probably a D21 (planning enums); possibly amendments to D4 / D9 / D20 if hands-on review surfaces friction; possibly a phase reshape.
+When Phase 2's DoD landed, the planned strategic-review pass surfaced enough friction with the Phase 3 + Phase 4 LLM design that Zach pivoted the architecture before continuing. The pivot is captured in **D22** (zero-LLM, ontology-math study loop). Phase 3 + 4 below have been rewritten in place to match the post-D22 architecture; pre-D22 wording and the LLM-era tasks (intake parser, plan generator, AI card generator) are gone. Original Phases 3 + 4 LLM code shipped 2026-04-28/29 and is being deleted in the D22 implementation pass.
 
 ---
 
-## Phase 3 — Intake + structuring (1-2 weekends)
+## Phase 3 — Math intake (1 weekend) — POST-D22 REWRITE
 
-**Goal:** free-text analytics → structured gaps.
+**Goal:** the user's competence per topic is initialized via one of three deterministic intake modes — no LLM, no free text.
 
 **Steps**
-1. `/intake` page with a textarea (free text) and file upload (CSV/JSON accepted; stored in Supabase Storage).
-2. Server action calls Claude Haiku. Prompt template in `/prompts/intake.md` — constrained-enum forces ontology IDs.
-3. Result rendered in a review UI; user can edit (drop a row, re-tag a row) before saving to `structured_analytics`.
-4. Save the raw input to `analytics_uploads` with a reference to the resulting `structured_analytics` rows.
+1. Apply migration `005_competence_layer.sql`: backfill `concepts.weight` from `abim_blueprint_v1.json` (subsection level — 230 rows), create the `topic_importance_v` view (722 rows, distributing each subsection's `exam_percent` evenly across child topics), create `learner_topic_competence` table with RLS, add `clusters.kind` and `clusters.source_topic_id` columns.
+2. `/intake` page with three tabs:
+   - **Self-report:** 18 system sliders 0–100%. On submit, distribute each system score uniformly across child topics → write 722 rows to `learner_topic_competence` with `source='self_report'`.
+   - **Standardized:** 18 per-system % inputs (paste from a USMLE/NBME score report). Same distribution math; `source='standardized'`.
+   - **Evaluator:** "Start session" → routes to a one-shot review session sampling 18 cards (one per system) from the existing reviewed-card library. On finish, EMA-update `learner_topic_competence` per topic from the actual review outcomes; `source='evaluator'`.
+3. All three modes write through `lib/intake/init-competence.ts` which is the single entry point for seeding competence. Server actions live in `app/(app)/intake/actions.ts` and call into it.
+4. The `analytics_uploads` and `structured_analytics` tables are no longer written by intake; they are unused going forward (kept in schema for Phase 6 import history if needed).
 
-**DoD:** Zach pastes "I missed a bunch of hyponatremia and DKA questions on my last MKSAP"; intake returns two rows tagged `nephro_lyt_hypona` and `endo_dm_dka_hhs`; he confirms and they persist.
+**DoD:** Zach hits `/intake`, picks self-report, drags 18 sliders, submits; `learner_topic_competence` has 722 rows for his user with `source='self_report'`. Each of the three modes can be exercised end-to-end and produces a populated competence table.
 
 ---
 
-## Phase 4 — Plan generator (1 weekend)
+## Phase 4 — Deterministic planner (1 weekend) — POST-D22 REWRITE
 
-**Goal:** structured gaps → ordered plan.
+**Goal:** competence + ABIM importance → a 3-cluster plan, computed in SQL.
 
 **Steps**
-1. Server action at `/plan/new`: given the user's recent `structured_analytics` + their available clusters, call Haiku to propose a plan.
-2. Prompt template at `/prompts/plan.md`. Output is an ordered list of 5-15 cluster IDs with a one-line rationale per item and a target window (7-14 days).
-3. UI to accept, edit, or regenerate.
-4. Accepted plan saved to `study_plans` + `plan_items`. Listed on `/dashboard` as the active plan.
+1. `lib/competence/score.ts` — pure functions, no DB: `outcomeFromReview`, `emaUpdate`, `distributeSubsectionWeight`, `rankWeakTopics` (top-K with parent-system diversity guard).
+2. `lib/competence/repo.ts` — DB layer: `refreshCompetenceForUser` (folds in any new `reviews` since last run via EMA), `getTop3WeakTopics` (joins `topic_importance_v` × `learner_topic_competence`, applies diversity guard), `buildDynamicClusterForTopic` (queries `card_ontology_tags` for cards tagged to a topic, inserts a `clusters` row with `kind='ephemeral_topic'` and `source_topic_id`), `resetCompetence`.
+3. `/plan/new` page with one button "Generate plan." Server action `generateDeterministicPlanAction` calls `refreshCompetenceForUser` → `getTop3WeakTopics` → `buildDynamicClusterForTopic` × 3 → writes `study_plans` + `plan_items`. No LLM, no Anthropic SDK, no token usage. Plan size = exactly 3 in V1 (D8 narrowed by D22).
+4. Accepted plan listed on `/dashboard` as the active plan.
 
-**DoD:** after Phase 3 intake, Zach opens `/plan/new`, gets an ordered plan of 5-15 clusters with rationale, accepts, and sees it on his dashboard.
+**DoD:** after Phase 3, Zach opens `/plan/new`, clicks "Generate," and sees three ephemeral topic clusters drawn from his three weakest topics (with system diversity). Each cluster contains the cards tagged to that topic. Plan rows persisted; visible on the dashboard.
 
 ---
 
@@ -110,7 +105,7 @@ Total target: 10-12 weekends end to end.
 3. On session finish, mark the item `done`.
 4. A plan is `complete` when all items are done OR the 14-day window elapses.
 
-**DoD:** Zach walks a full plan end-to-end over a week, finishes it, sees it marked complete, and the dashboard offers Phase 7's next-step choice.
+**DoD:** Zach walks a full plan end-to-end over a week, finishes it, sees it marked complete, and the dashboard surfaces a "Generate next plan" button that re-runs Phase 4's deterministic planner against the updated competence (Phase 7).
 
 ---
 
@@ -127,15 +122,16 @@ Total target: 10-12 weekends end to end.
 
 ---
 
-## Phase 7 — Loop closure (1 weekend)
+## Phase 7 — Loop closure (½ weekend) — POST-D22 REWRITE
 
-**Goal:** after a plan ends, offer both external re-upload and auto-generation from review history.
+**Goal:** trivial under D22 — the math *is* the loop.
 
 **Steps**
-1. At plan completion, show two options: "Upload new analytics" (→ Phase 3 flow) or "Generate next plan from my review history."
-2. Option 2: query recent `reviews` to compute cluster-level miss rates; feed into the Phase 3 structuring prompt as if it were an uploaded narrative; then run Phase 4 plan generation.
+1. At plan completion (or any time), the user clicks "Generate plan" on `/plan/new`. The server action runs `refreshCompetenceForUser` first, which folds in every `reviews` row written since the last run; `getTop3WeakTopics` then reflects the new state automatically.
+2. Add a hook on `finishSession` (the existing review server action) that calls `refreshCompetenceForUser` after each session, so the competence table is fresh by the time the user returns to `/plan/new`. This is the "q24" cadence in practice — refreshes happen on review completion plus any time the user generates a plan, which is at least daily.
+3. Add a "Reset competence" button to Settings that wipes `learner_topic_competence` for the user (with confirm modal) and redirects them back to `/intake`. Lets users re-baseline if they feel the model has drifted.
 
-**DoD:** Zach completes a plan, clicks "Generate next," sees a new plan that reflects which clusters he actually struggled with.
+**DoD:** Zach completes a 3-cluster plan, hits "Generate plan" again, and sees a new plan whose top-3 weakest topics reflect both his prior intake init *and* his actual review performance from the cluster he just finished. The "Reset" button fully clears competence and routes to `/intake`.
 
 ---
 

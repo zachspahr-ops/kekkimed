@@ -51,7 +51,9 @@ All structured topic labels must map to an `id` in `kekki_ontology_v0.json`. LLM
 
 ---
 
-## D6 — Three LLM call sites only
+## D6 — Three LLM call sites only — SUPERSEDED 2026-04-29 by D22
+
+> **Superseded 2026-04-29 by D22** (zero-LLM pivot). Body retained below as historical context — do not act on it.
 
 Intake parser, plan generator, and private AI card generator. Nothing else.
 
@@ -117,7 +119,9 @@ Originally: "Card generation lives outside this repo." Retired because the in-re
 
 ---
 
-## D13 — Private AI card generation, with guardrails
+## D13 — Private AI card generation, with guardrails — SUPERSEDED 2026-04-29 by D22
+
+> **Superseded 2026-04-29 by D22** (zero-LLM pivot). The private AI card generator is removed from this repo. Bulk external authoring posting to `POST /api/cards/import` survives. Body retained below as historical context — do not act on it.
 
 Added 2026-04-26. The repo includes a private, gap-anchored AI card generator (LLM call site #3 in D6). It is not a substitute for human authorship; it is a scaffolding tool for the user. The following guardrails are non-negotiable and must be implemented as a unit:
 
@@ -135,7 +139,9 @@ Added 2026-04-26. The repo includes a private, gap-anchored AI card generator (L
 
 ---
 
-## D14 — Two-layer parser stem rejection
+## D14 — Two-layer parser stem rejection — SUPERSEDED 2026-04-29 by D22
+
+> **Superseded 2026-04-29 by D22** (zero-LLM pivot). No free-text intake → no qbank-stem ingestion path → no rejection layer needed. Body retained below as historical context — do not act on it.
 
 Added 2026-04-26. The intake parser must refuse proprietary qbank stems via two independent layers, both required:
 
@@ -313,3 +319,41 @@ Added 2026-04-28. Locks the vocabulary the cluster planner consumes when ranking
 **Revisit if:** (a) authoring surfaces a card that genuinely needs a 4th tier in `yield_tier` or `board_likelihood` — add via forward migration, do not repurpose; (b) the planner's first pass reveals `review_priority` is redundant with `yield × danger × board` — drop it via forward migration; (c) the future `sources.source_quality` integer scale needs a deterministic mapping into `source_strength` — add a view, do not change the enum; (d) `primary_system_id` drift from `card_ontology_tags` primary tag becomes a problem — add a validating trigger.
 
 Cross-references: D6 (LLM call sites must emit constrained enums), D13 (private AI generation enforces these on emit), D17 (polyhierarchical concept tagging — `primary_system_id` is a denorm, not a replacement), D19 (`card_ontology_tags` RLS template), D20 (sister entry; card-teaching vocabulary). Implemented in `supabase/migrations/004_planning_layer.sql`.
+
+---
+
+## D22 — Pivot to zero-LLM, ontology-math study loop (supersedes D6, D13, D14)
+
+Added 2026-04-29. Kekki removes all LLM call sites from this repo. Weakness comes from deterministic math on the ABIM blueprint (D18) and per-user review history. The product thesis becomes: **importance × (1 − competence) per topic, top-3 weakest, dynamic per-topic clusters drawn from the existing card library.** No free-text gap parsing, no LLM ranking, no in-repo AI card generation.
+
+**The four locked specifics:**
+
+1. **Zero LLM in this repo.** All three former call sites are removed. The `@anthropic-ai/sdk` dependency is dropped from `package.json`. The directories `lib/llm/` and `prompts/` are deleted. The LLM-specific intake helpers (`lib/intake/stem-rejection.ts`, `lib/intake/candidate-concepts.ts`) and the LLM-specific planner helper (`lib/plan/clusters-summary.ts`) are deleted. Bulk card authoring still happens externally and posts to `POST /api/cards/import` (Phase 6) — that survives unchanged.
+
+2. **Topic-level math on 722 topics.** Each topic's importance = parent subsection's `exam_percent` (D18) divided evenly across the topics that share that parent subsection. Importance is computed in a SQL view `topic_importance_v` (joining `concepts` + `concept_parents`); never denormalized. Per-user competence ∈ [0, 1] is stored in a new `learner_topic_competence` table with `(user_id, concept_id)` PK, updated by EMA over `reviews` rows: `outcome = 1.0` if `rating='good' AND time_ms < 90_000`, `0.5` if `rating='good' AND time_ms >= 90_000`, `0.0` if `rating='again'`. Default α = 0.3.
+
+3. **Three intake modes, all deterministic.**
+   - **Self-report:** 18 system sliders 0–100%. Score distributed evenly across child subsections and topics.
+   - **Standardized:** paste per-system % from a result the user already has (USMLE practice, NBME, etc.). Same distribution math.
+   - **Evaluator:** sit a calibration session of 18 cards (one per system) sampled from the existing review-card library. Mild signal contamination accepted in V1. On finish, EMA-update competence per topic from the actual reviews recorded.
+   All three write rows to `learner_topic_competence` with `source ∈ {self_report, standardized, evaluator, review}`. No free text accepted anywhere.
+
+4. **Dynamic per-topic clusters at plan generation.** The deterministic planner (a) calls `refreshCompetenceForUser()` to fold in any new `reviews` since last run, (b) ranks topics by `importance × (1 − competence)` desc, (c) picks the top-3 with a parent-system diversity guard (falls back to subsection diversity if all weak topics sit in one system), (d) for each chosen topic, queries `card_ontology_tags` for cards tagged to that topic and inserts a new `clusters` row with `kind='ephemeral_topic'` and `source_topic_id` set, and (e) writes `study_plans` + `plan_items` referencing those clusters. Plan size is 3 (one cluster per weak topic). D8's "5–15 cluster window" is narrowed to exactly 3 in V1; revisit when there is real usage data.
+
+**Effect on prior decisions:**
+
+- **D6 superseded.** "Three LLM call sites" → "zero LLM call sites." Body retained for history.
+- **D13 superseded.** Private AI card generator removed. The bulk external pipeline that posts to `/api/cards/import` survives.
+- **D14 superseded.** No free-text intake → no qbank-stem ingestion → no rejection layer needed.
+- **D17 retained, narrowed.** The four-layer card vocabulary (concept / context / qtype / difficulty) still drives queries. The "weakness signal" no longer comes from LLM-parsed gaps; it comes from `reviews` × `card_ontology_tags` rolled up to topic. The polyhierarchy + canonical concept slug rule is the foundation of the math.
+- **D20 retained, re-scoped.** Lattice / cognitive_task / card_format enums remain card metadata. They are no longer LLM-prompt vocabulary; they are sort-within-cluster signals and future analytics inputs.
+- **D21 retained, re-scoped.** Yield / danger / board / source enums remain card metadata. The deterministic planner ranks **topics** by importance × (1 − competence); these card-level enums act as tiebreakers when selecting cards from a topic's tag pool, not as planner inputs.
+- **D16 narrowed.** Token metering is moot because there are no tokens. The `usage_events` schema stays (cheap), but no new writes occur from this repo. A future migration may drop it.
+- **D8 narrowed.** Plan shape becomes exactly 3 cluster reviews (one per weak topic) instead of 5–15. The 7–14 day window concept is retired in V1; users regenerate plans on demand. Revisit once usage data exists.
+- **D5, D18, D19 unaffected.** Controlled vocabulary, ABIM ID scheme, and `card_ontology_tags` are the load-bearing structure of the new math.
+
+**Why:** the original three-LLM-site design (D6) was load-bearing on a hypothesis that free-text → structured-gap → LLM-ranked plan would be the intelligent layer of the product. Hands-on use of Phases 3 + 4 (shipped 2026-04-28 and 2026-04-29) showed the LLM was injecting variance, latency, and cost without producing better plans than what the ABIM blueprint percentages and review-derived competence already imply deterministically. The math model is reproducible, debuggable, free at runtime, and matches the way the user actually thinks about weakness ("Cardiology is heavy on the boards and I'm bad at it"). It also collapses Phase 7 (loop closure) to a one-paragraph "regenerate plan" since the math is the loop.
+
+**Revisit if:** the deterministic loop produces visibly poor plans for users with sparse review history (the cold-start problem is the most likely failure mode, mitigated by the evaluator intake mode), or if user research shows free-text gap input materially beats the three-mode intake on usability, or if a new product surface (e.g., free-text answer evaluation, card deduplication, synonym expansion) emerges that genuinely needs an LLM. Adding any LLM call site back requires a new entry that names the site, the cost cap, and the legal containment posture.
+
+Implementation locked in plan file `C:/Users/Zach/.claude/plans/i-would-like-to-keen-koala.md` and migration `supabase/migrations/005_competence_layer.sql`.

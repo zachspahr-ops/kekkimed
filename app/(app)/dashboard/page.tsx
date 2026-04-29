@@ -43,7 +43,7 @@ export default async function DashboardPage() {
           href="/intake"
           className="flex items-center justify-between rounded-md border bg-card px-4 py-3 text-sm shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground"
         >
-          <span className="font-medium">Upload Analytics</span>
+          <span className="font-medium">Intake / Calibration</span>
           <span className="text-muted-foreground">→</span>
         </Link>
         <Link
@@ -51,6 +51,13 @@ export default async function DashboardPage() {
           className="flex items-center justify-between rounded-md border bg-card px-4 py-3 text-sm shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground"
         >
           <span className="font-medium">Generate Study Plan</span>
+          <span className="text-muted-foreground">→</span>
+        </Link>
+        <Link
+          href="/settings"
+          className="flex items-center justify-between rounded-md border bg-card px-4 py-3 text-sm shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground"
+        >
+          <span className="font-medium">Settings</span>
           <span className="text-muted-foreground">→</span>
         </Link>
       </section>
