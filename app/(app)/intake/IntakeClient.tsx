@@ -3,213 +3,236 @@
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import {
-  parseIntakeAction,
-  saveGapsAction,
-  type ParsedGapItem,
-  type Severity,
+  submitSelfReportAction,
+  submitStandardizedAction,
+  startEvaluatorAction,
 } from './actions'
 
-interface Props {
-  llmEnabled: boolean
+type SystemRow = { id: string; title: string; weight: number | null }
+type Tab = 'self_report' | 'standardized' | 'evaluator'
+
+const TAB_LABELS: Record<Tab, string> = {
+  self_report: 'Self-report',
+  standardized: 'Paste a score',
+  evaluator: 'Take a calibration',
 }
 
-type Step = 'input' | 'review'
-
-export default function IntakeClient({ llmEnabled }: Props) {
+export default function IntakeClient({ systems }: { systems: SystemRow[] }) {
+  const [tab, setTab] = useState<Tab>('self_report')
+  const [done, setDone] = useState<string | null>(null)
   const router = useRouter()
-  const [isParsing, startParse] = useTransition()
-  const [isSaving, startSave] = useTransition()
 
-  const [step, setStep] = useState<Step>('input')
-  const [text, setText] = useState('')
-  const [rejection, setRejection] = useState<string | null>(null)
-  const [parseError, setParseError] = useState<string | null>(null)
-  const [saveError, setSaveError] = useState<string | null>(null)
-  const [items, setItems] = useState<ParsedGapItem[]>([])
-  const [tokenMeta, setTokenMeta] = useState<{
-    inputTokens: number
-    outputTokens: number
-    model: string
-  } | null>(null)
-
-  if (!llmEnabled) {
-    return (
-      <div className="rounded-md border border-yellow-200 bg-yellow-50 p-4 text-sm text-yellow-800">
-        LLM not configured — set <code className="font-mono">ANTHROPIC_API_KEY</code> to enable
-        intake parsing.
-      </div>
-    )
-  }
-
-  function handleParse() {
-    if (!text.trim()) return
-    setRejection(null)
-    setParseError(null)
-    startParse(async () => {
-      try {
-        const result = await parseIntakeAction(text.trim())
-        if (result.rejected) {
-          setRejection(result.reason)
-        } else {
-          setItems(result.items)
-          setTokenMeta({
-            inputTokens: result.inputTokens,
-            outputTokens: result.outputTokens,
-            model: result.model,
-          })
-          setStep('review')
-        }
-      } catch {
-        setParseError('Something went wrong parsing your input. Please try again.')
-      }
-    })
-  }
-
-  function handleRemoveItem(idx: number) {
-    setItems((prev) => prev.filter((_, i) => i !== idx))
-  }
-
-  function handleUpdateSeverity(idx: number, severity: Severity) {
-    setItems((prev) => prev.map((item, i) => (i === idx ? { ...item, severity } : item)))
-  }
-
-  function handleUpdateNote(idx: number, weakness_note: string) {
-    setItems((prev) => prev.map((item, i) => (i === idx ? { ...item, weakness_note } : item)))
-  }
-
-  function handleSave() {
-    if (!tokenMeta) return
-    setSaveError(null)
-    startSave(async () => {
-      try {
-        await saveGapsAction({ items, rawText: text, ...tokenMeta })
-        router.push('/dashboard')
-      } catch {
-        setSaveError('Failed to save. Please try again.')
-      }
-    })
-  }
-
-  // ---- Step: review ----
-  if (step === 'review') {
-    return (
-      <div className="space-y-6">
-        <div>
-          <h2 className="text-lg font-semibold">Review your gaps</h2>
-          <p className="text-sm text-muted-foreground">
-            Edit or remove rows before saving. Severity is adjustable.
-          </p>
-        </div>
-
-        {items.length === 0 ? (
-          <div className="rounded-md border p-4 text-sm text-muted-foreground">
-            No specific gaps found. Try adding more detail — for example, what topics you got wrong
-            and roughly how many questions.
-          </div>
-        ) : (
-          <div className="space-y-2">
-            {items.map((item, idx) => (
-              <div key={idx} className="rounded-md border bg-card p-3 space-y-2">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-sm">{item.concept_title}</p>
-                    <p className="text-xs text-muted-foreground font-mono truncate">
-                      {item.concept_id}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-2 shrink-0">
-                    <span className="text-xs text-muted-foreground">
-                      confidence: {item.confidence}
-                    </span>
-                    <select
-                      value={item.severity}
-                      onChange={(e) => handleUpdateSeverity(idx, e.target.value as Severity)}
-                      className="text-xs rounded border border-input bg-background px-2 py-1"
-                    >
-                      <option value="low">low</option>
-                      <option value="medium">medium</option>
-                      <option value="high">high</option>
-                    </select>
-                    <button
-                      onClick={() => handleRemoveItem(idx)}
-                      className="text-xs text-destructive hover:underline"
-                    >
-                      Remove
-                    </button>
-                  </div>
-                </div>
-                {item.weakness_note && (
-                  <input
-                    type="text"
-                    value={item.weakness_note}
-                    maxLength={240}
-                    onChange={(e) => handleUpdateNote(idx, e.target.value)}
-                    className="w-full text-xs rounded border border-input bg-background px-2 py-1 text-muted-foreground"
-                  />
-                )}
-              </div>
-            ))}
-          </div>
-        )}
-
-        {saveError && (
-          <p className="text-sm text-destructive">{saveError}</p>
-        )}
-
-        <div className="flex gap-3">
-          <button
-            onClick={() => setStep('input')}
-            disabled={isSaving}
-            className="rounded-md border border-input bg-background px-4 py-2 text-sm hover:bg-accent disabled:opacity-50"
-          >
-            Back
-          </button>
-          <button
-            onClick={handleSave}
-            disabled={isSaving}
-            className="rounded-md bg-primary px-4 py-2 text-sm text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
-          >
-            {isSaving
-              ? 'Saving…'
-              : items.length > 0
-                ? `Save ${items.length} gap${items.length !== 1 ? 's' : ''}`
-                : 'Save (no gaps found)'}
-          </button>
-        </div>
-      </div>
-    )
-  }
-
-  // ---- Step: input ----
   return (
-    <div className="space-y-4">
-      <textarea
-        value={text}
-        onChange={(e) => setText(e.target.value)}
-        placeholder={
-          "Paste your analytics, notes, or describe what you got wrong — e.g. 'I bombed hyponatremia and DKA on MKSAP last weekend'"
-        }
-        rows={8}
-        className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring resize-y"
-      />
+    <div className="space-y-6">
+      <nav className="flex gap-2 border-b" role="tablist" aria-label="Intake mode">
+        {(Object.keys(TAB_LABELS) as Tab[]).map((t) => (
+          <button
+            key={t}
+            type="button"
+            role="tab"
+            aria-selected={tab === t}
+            onClick={() => {
+              setTab(t)
+              setDone(null)
+            }}
+            className={`px-4 py-2 text-sm font-medium ${
+              tab === t
+                ? 'border-b-2 border-primary text-foreground'
+                : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            {TAB_LABELS[t]}
+          </button>
+        ))}
+      </nav>
 
-      {rejection && (
-        <div className="rounded-md border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
-          {rejection}
+      {done && (
+        <div className="rounded-md border border-green-300 bg-green-50 px-4 py-3 text-sm text-green-800 dark:border-green-800 dark:bg-green-950 dark:text-green-300">
+          {done}{' '}
+          <button
+            type="button"
+            onClick={() => router.push('/plan/new')}
+            className="ml-2 underline underline-offset-2 hover:no-underline"
+          >
+            Generate plan →
+          </button>
         </div>
       )}
 
-      {parseError && (
-        <p className="text-sm text-destructive">{parseError}</p>
-      )}
-
-      <button
-        onClick={handleParse}
-        disabled={isParsing || !text.trim()}
-        className="rounded-md bg-primary px-4 py-2 text-sm text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
-      >
-        {isParsing ? 'Parsing…' : 'Parse my gaps'}
-      </button>
+      {tab === 'self_report' && <SelfReportTab systems={systems} onDone={setDone} />}
+      {tab === 'standardized' && <StandardizedTab systems={systems} onDone={setDone} />}
+      {tab === 'evaluator' && <EvaluatorTab />}
     </div>
+  )
+}
+
+// ---------- Self-report ----------
+
+function SelfReportTab({
+  systems,
+  onDone,
+}: {
+  systems: SystemRow[]
+  onDone: (msg: string) => void
+}) {
+  const [scores, setScores] = useState<Record<string, number>>(
+    () => Object.fromEntries(systems.map((s) => [s.id, 50])),
+  )
+  const [isPending, startTransition] = useTransition()
+
+  return (
+    <form
+      onSubmit={(e) => {
+        e.preventDefault()
+        startTransition(async () => {
+          const normalized = Object.fromEntries(
+            Object.entries(scores).map(([k, v]) => [k, v / 100]),
+          )
+          const res = await submitSelfReportAction(normalized)
+          onDone(`Saved ${res.rowsWritten} competence rows from self-report.`)
+        })
+      }}
+      className="space-y-4"
+    >
+      <p className="text-sm text-muted-foreground">
+        How comfortable do you feel with each ABIM system right now? 0 = total stranger, 100 =
+        rock-solid mastery. Default is 50 (neutral). The slider value distributes uniformly across
+        every topic in the system.
+      </p>
+      <div className="space-y-3">
+        {systems.map((s) => (
+          <SliderRow
+            key={s.id}
+            label={s.title}
+            sub={s.weight ? `${(s.weight * 100).toFixed(0)}% of exam` : null}
+            value={scores[s.id] ?? 50}
+            onChange={(v) => setScores((prev) => ({ ...prev, [s.id]: v }))}
+          />
+        ))}
+      </div>
+      <button
+        type="submit"
+        disabled={isPending}
+        className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow hover:opacity-90 disabled:opacity-50"
+      >
+        {isPending ? 'Saving…' : 'Save self-report'}
+      </button>
+    </form>
+  )
+}
+
+function SliderRow({
+  label,
+  sub,
+  value,
+  onChange,
+}: {
+  label: string
+  sub: string | null
+  value: number
+  onChange: (v: number) => void
+}) {
+  return (
+    <label className="grid grid-cols-[1fr_auto_4rem] items-center gap-4 text-sm">
+      <div className="min-w-0">
+        <span className="block truncate font-medium">{label}</span>
+        {sub && <span className="text-xs text-muted-foreground">{sub}</span>}
+      </div>
+      <input
+        type="range"
+        min={0}
+        max={100}
+        step={5}
+        value={value}
+        onChange={(e) => onChange(Number(e.target.value))}
+        className="w-48"
+      />
+      <span className="text-right tabular-nums text-muted-foreground">{value}%</span>
+    </label>
+  )
+}
+
+// ---------- Standardized ----------
+
+function StandardizedTab({
+  systems,
+  onDone,
+}: {
+  systems: SystemRow[]
+  onDone: (msg: string) => void
+}) {
+  const [pcts, setPcts] = useState<Record<string, string>>(
+    () => Object.fromEntries(systems.map((s) => [s.id, ''])),
+  )
+  const [isPending, startTransition] = useTransition()
+
+  return (
+    <form
+      onSubmit={(e) => {
+        e.preventDefault()
+        startTransition(async () => {
+          const numeric: Record<string, number> = {}
+          for (const [k, v] of Object.entries(pcts)) {
+            const n = Number(v)
+            if (Number.isFinite(n) && v !== '') numeric[k] = n
+          }
+          const res = await submitStandardizedAction(numeric)
+          onDone(`Saved ${res.rowsWritten} competence rows from standardized scores.`)
+        })
+      }}
+      className="space-y-4"
+    >
+      <p className="text-sm text-muted-foreground">
+        Paste your % correct per system from a recent test (USMLE practice, NBME, MKSAP, etc.).
+        Leave a field blank to default it to 50%.
+      </p>
+      <div className="space-y-3">
+        {systems.map((s) => (
+          <label key={s.id} className="grid grid-cols-[1fr_6rem] items-center gap-4 text-sm">
+            <span className="font-medium">{s.title}</span>
+            <input
+              type="number"
+              inputMode="numeric"
+              min={0}
+              max={100}
+              value={pcts[s.id] ?? ''}
+              onChange={(e) => setPcts((prev) => ({ ...prev, [s.id]: e.target.value }))}
+              placeholder="50"
+              className="w-full rounded-md border border-input bg-background px-2 py-1 text-right tabular-nums"
+            />
+          </label>
+        ))}
+      </div>
+      <button
+        type="submit"
+        disabled={isPending}
+        className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow hover:opacity-90 disabled:opacity-50"
+      >
+        {isPending ? 'Saving…' : 'Save standardized scores'}
+      </button>
+    </form>
+  )
+}
+
+// ---------- Evaluator ----------
+
+function EvaluatorTab() {
+  return (
+    <form action={startEvaluatorAction} className="space-y-4">
+      <p className="text-sm text-muted-foreground">
+        Sit a quick 18-card calibration session — one card per ABIM system. Your ratings on those
+        cards seed your competence profile. Untouched topics default to 0.5 (neutral).
+      </p>
+      <p className="text-xs text-muted-foreground">
+        Note: cards used in the evaluator are real review cards, so you&apos;ll have seen them
+        before they show up in a future plan. Mild signal contamination is accepted in V1.
+      </p>
+      <button
+        type="submit"
+        className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow hover:opacity-90"
+      >
+        Start calibration session
+      </button>
+    </form>
   )
 }

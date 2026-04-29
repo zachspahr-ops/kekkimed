@@ -2,7 +2,7 @@
 
 *Live snapshot of what exists in the codebase right now. The durable answer to "where does this thing live and how does data flow through it." If you've read CLAUDE.md, DECISIONS.md, and PHASES.md, this file fills the gap between "what we decided" and "what is actually built."*
 
-**Last updated:** 2026-04-28 (Phases 3 + 4 complete — intake parser and plan generator wired; migrations 001–004 all applied to kekki-prod).
+**Last updated:** 2026-04-29 (D22 zero-LLM pivot; Phases 3 + 4 rewritten to deterministic math; migration 005 in progress; LLM intake/plan code deleted; `@anthropic-ai/sdk` dropped).
 
 ---
 
@@ -21,7 +21,7 @@ When to update which section:
 | Wired a new prompt or changed an existing one | §5 LLM Call Sites |
 | Touched auth flow or middleware | §6 Auth + RLS |
 | Added a new top-level dir or moved a load-bearing file | §7 File Layout |
-| Changed Supabase, Vercel, or Anthropic config | §8 External Services |
+| Changed Supabase or Vercel config | §8 External Services |
 
 ---
 
@@ -39,21 +39,21 @@ When to update which section:
                   │  /(marketing)   public landing     │
                   │  /(app)         auth-gated UI      │
                   │  /api           server actions     │
-                  └─────┬──────────────┬───────────────┘
-                        │              │
-              @supabase/ssr     @anthropic-ai/sdk
-                        │              │
-        ┌───────────────▼──┐    ┌──────▼─────────────┐
-        │   Supabase       │    │  Anthropic API     │
-        │  (kekki-prod)    │    │  Claude Haiku 4.5  │
-        │                  │    │                    │
-        │ - Postgres + RLS │    │ Three call sites:  │
-        │ - Auth (magic)   │    │  intake / plan /   │
-        │ - Storage        │    │  ai_card           │
-        └──────────────────┘    └────────────────────┘
+                  └─────┬──────────────────────────────┘
+                        │
+                  @supabase/ssr
+                        │
+        ┌───────────────▼────┐
+        │   Supabase         │
+        │  (kekki-prod)      │
+        │                    │
+        │ - Postgres + RLS   │
+        │ - Auth (magic)     │
+        │ - Storage          │
+        └────────────────────┘
 ```
 
-The user's browser talks to Next.js running on Vercel. Server-side code in Next.js talks to Supabase (DB + auth + file storage) and to Anthropic (the only LLM, accessed at exactly three call sites — D6). All user-data tables in Postgres have Row-Level Security; Supabase's auth.uid() drives every policy.
+The user's browser talks to Next.js running on Vercel. Server-side code in Next.js talks to Supabase (DB + auth + file storage). **There is no LLM in this repo (D22).** All user-data tables in Postgres have Row-Level Security; Supabase's `auth.uid()` drives every policy. Weakness ranking, top-3 selection, and dynamic cluster generation are pure SQL on `concepts.weight`, `topic_importance_v`, `learner_topic_competence`, and `card_ontology_tags`.
 
 ---
 
@@ -67,16 +67,15 @@ The user's browser talks to Next.js running on Vercel. Server-side code in Next.
 | TypeScript | strict | `tsc --noEmit` is the typecheck gate |
 | Tailwind CSS | latest | shadcn/ui components |
 | Supabase JS | `@supabase/supabase-js` (server scripts), `@supabase/ssr` ^0.10.2 (auth cookies) | Both installed |
-| Anthropic SDK | `@anthropic-ai/sdk` | imported Phase 3+; call sites at `/app/(app)/intake/actions.ts` and `/app/(app)/plan/new/actions.ts` |
 | Supabase CLI | latest | installed via Scoop; `supabase link --project-ref jquturibslqzkldngzvf` per worktree |
 
 Stack is locked in DECISIONS.md D2. New dependencies require Zach's sign-off in `/plan`.
 
 ---
 
-## 3. Data Model — live (migrations 001–004 applied to kekki-prod)
+## 3. Data Model — live (migrations 001–005 applied to kekki-prod; 005 lands with the D22 pivot)
 
-The schema is **16 tables** in `public` (15 applied; `card_discriminators` lands when m004 is pushed), plus the `auth.users` table managed by Supabase. All listed tables enable RLS; tables without explicit policies are service-role-only by default.
+The schema is **17 tables + 1 view** in `public`, plus the `auth.users` table managed by Supabase. All listed tables enable RLS; tables without explicit policies are service-role-only by default.
 
 ### Tables
 
@@ -85,20 +84,22 @@ The schema is **16 tables** in `public` (15 applied; `card_discriminators` lands
 | `users` | Mirror of `auth.users` + Kekki profile (`timezone` for D13 local-day rate limit) | PK = `auth.users(id)`; trigger-synced on signup | Self read/update |
 | `concepts` | Controlled vocabulary, ABIM blueprint (D5, D17, D18) | `id` is dot-delimited slug; `level ∈ {system,subsection,topic}`; `ontology_source='abim_blueprint'`, `ontology_version='jan_2026'` | Authed read; service-role write |
 | `concept_parents` | Polyhierarchy edges (D17) | Composite PK; partial unique index for one `is_primary=true` per child | Authed read; service-role write |
-| `clusters` | Cluster snapshots — the unit of review (D4) | `visibility ∈ {private,shared}`; `definition jsonb` reserved for future "refresh" feature | Owner CRUD + shared SELECT |
+| `clusters` | Cluster snapshots — the unit of review (D4). M005 adds `kind ∈ {manual,ephemeral_topic}` (D22) and `source_topic_id` (FK→`concepts.id`, nullable) for planner-generated clusters. | `visibility ∈ {private,shared}`; `kind`, `source_topic_id` (D22); `definition jsonb` reserved for future "refresh" feature | Owner CRUD + shared SELECT |
 | `cards` | Flashcards | `citation NOT NULL` (D7); `source ∈ {human,external_pipeline,ai_private}` (D13); `status ∈ {draft,reviewed,retired}`; `difficulty NOT NULL ∈ {core,advanced,trap}` (D17); `primary_lattice NOT NULL ∈ {t_to_m,p_to_e,e_to_o,s_to_r}` and `secondary_lattices text[]` subset of 7 values (D20, m003); `card_format` 9-value enum (D20, m003); planning enums `yield_tier`/`board_likelihood`/`review_priority ∈ {high,medium,low}`, `danger_level ∈ {low,moderate,high,lethal}`, `source_strength ∈ {society_guideline,primary_trial,systematic_review,narrative_review,expert_opinion}` — all NOT NULL with defaults (D21, m004); `primary_system_id text NULL` FK→concepts, `secondary_system_ids text[]`, `bridge_reason text NULL` (D21, m004) | `reviewed` visible to all authed; `draft` author-only |
 | `card_ontology_tags` | Cards ↔ concepts m:m (D19, replaces `cards.concept_ids[]`) | `tag_role ∈ {primary,secondary,bridge,planning_only}` with partial unique on primary; `confidence` 0–1; `tag_source` provenance | Derived from `cards` visibility |
 | `card_retrieval_metadata` | 1:1 with `cards`; how the card should be studied (D20, m003) | `cognitive_task NOT NULL` 11-value enum; `retrieval_direction` 5-value; `requires_cloze_one_by_one bool`; `format_review_status` 4-value enum (D20 amendment); `format_confidence` 0–1 | Derived from `cards` visibility |
 | `card_discriminators` | Directed-graph edges between cards that share a discriminator key (D21, m004) | Composite PK `(source_card_id, target_card_id, discriminator_key)`; CHECK `source_card_id ≠ target_card_id`; cascade on card delete; `created_by` set-null on user delete | Both endpoints visible to caller; INSERT requires authoring either endpoint |
 | `cluster_memberships` | Cards ↔ clusters m:m | Composite PK + `position int` for ordering | Derived from `clusters` ownership |
 | `reviews` | Append-only rating log (D9) | `rating ∈ {again,good}`; `time_ms` for D17 derived `slow` | Self read/insert; no update/delete |
-| `analytics_uploads` | Raw intake (text or file ref) | `kind ∈ {text,file}` with payload check | Self CRUD |
-| `structured_analytics` | Parsed gaps (intake parser output) | FK to `concepts(id)`; `severity` + `confidence` enums | Self CRUD |
-| `study_plans` | Plan envelope | `status ∈ {active,complete,abandoned}`; `target_window_days` 7–14 | Self CRUD |
-| `plan_items` | Ordered cluster references inside a plan | `position` 1–15; unique per `(plan_id, position)` | Derived from `study_plans` |
+| `analytics_uploads` | (Pre-D22 intake raw text — unused after D22, schema retained) | `kind ∈ {text,file}` with payload check | Self CRUD |
+| `structured_analytics` | (Pre-D22 LLM-parsed gaps — unused after D22, schema retained) | FK to `concepts(id)`; `severity` + `confidence` enums | Self CRUD |
+| `learner_topic_competence` | **D22** Per-user, per-topic competence ∈ [0,1]; updated by EMA over `reviews` | PK `(user_id, concept_id)`; `score` 0–1; `samples int`; `source ∈ {self_report,standardized,evaluator,review}` | Self read/insert/update |
+| `topic_importance_v` *(view)* | **D22** Per-topic importance = parent subsection `exam_percent` distributed evenly across child topics. 722 rows. | Joins `concepts` + `concept_parents` where `parent.level='subsection'`; never denormalized | Inherits caller permissions on `concepts` |
+| `study_plans` | Plan envelope | `status ∈ {active,complete,abandoned}`; `target_window_days` historical (V1 plans are exactly 3 clusters per D22) | Self CRUD |
+| `plan_items` | Ordered cluster references inside a plan | `position` 1–3 in V1 (D22 narrowed D8); unique per `(plan_id, position)` | Derived from `study_plans` |
 | `plan_progress` | Completion record per `plan_item` | Unique on `plan_item_id` (one completion per item) | Derived via `plan_items → study_plans` |
 | `waitlist` | Landing-page email capture (D1) | Unique email | Service-role only (no public policies) |
-| `usage_events` | Token metering at LLM call sites (D16) | `call_site ∈ {intake,plan,ai_card}`; `input_tokens`/`output_tokens` ≥ 0 | Self read; service-role write |
+| `usage_events` | (Pre-D22 token metering — no new writes after D22, schema retained for history) | `call_site ∈ {intake,plan,ai_card}`; `input_tokens`/`output_tokens` ≥ 0 | Self read; service-role write |
 
 ### Triggers
 
@@ -120,8 +121,9 @@ Per-card concept tags are enforced relationally via `card_ontology_tags.concept_
 | `002_abim_ontology.sql` | Applied 2026-04-26 | `concepts.level/ontology_source/ontology_version`; `card_ontology_tags`; drops `cards.concept_ids[]` |
 | `003_retrieval_metadata.sql` | Applied 2026-04-27 (via Supabase MCP `apply_migration`; version stamp `20260427040324_retrieval_metadata`) | `cards.primary_lattice` (4-value), `cards.secondary_lattices text[]` (subset CHECK over 7 values), expand `cards.card_format` 4 → 9 (drops the prior `'basic'` default — every authoring path supplies a format), new 1:1 `card_retrieval_metadata` (cognitive_task, prompt_frame, answer_form, retrieval_direction, discriminator, confusable_with, requires_cloze_one_by_one, cloze_grouping, format_confidence, format_review_status, format_review_note). Enum values locked by D20 + the 2026-04-26 D20 amendment (`format_review_status`). |
 | `004_planning_layer.sql` | Applied 2026-04-28. Enum values locked by D21 (added same day). | Adds planning enums on `cards` (`yield_tier`, `danger_level`, `board_likelihood`, `source_strength`, `review_priority` — all NOT NULL with defaults so existing seed cards take defaults without backfill); adds `cards.primary_system_id text NULL` FK→concepts, `cards.secondary_system_ids text[] NOT NULL DEFAULT '{}'`, `cards.bridge_reason text NULL`; creates `card_discriminators` directed-graph table joining cards by shared `discriminator_key` (the `discriminator` column lives on `card_retrieval_metadata` from m003), with RLS mirroring `card_ontology_tags` (D19). |
+| `005_competence_layer.sql` | In progress (D22 pivot). | Backfills `concepts.weight` from `abim_blueprint_v1.json` for 230 subsection rows; creates `topic_importance_v` view (722 topic rows × distributed importance); creates `learner_topic_competence` table with RLS (self-only); adds `clusters.kind ∈ {manual,ephemeral_topic}` and `clusters.source_topic_id text NULL FK→concepts`. |
 
-Apply with `supabase db push` (after `supabase link --project-ref jquturibslqzkldngzvf`).
+Apply with Supabase MCP `apply_migration` (preferred per `feedback_worktree_env.md`) or `supabase db push` (after `supabase link --project-ref jquturibslqzkldngzvf`).
 
 ---
 
@@ -141,8 +143,8 @@ App-router conventions: folder name = URL segment; `page.tsx` = the page; `route
 | `/clusters` | page | Cluster list — shows all user-accessible clusters with card counts |
 | `/clusters/[id]` | page + server action | Cluster detail + "Start review session" button |
 | `/review/[session_id]` | page + client component + server action | Card viewer (prompt → reveal → Again/Good buttons). Writes to `reviews`; "Finish" writes to `plan_progress`. |
-| `/intake` | page + client component + server action | Two-step: textarea → `parseIntakeAction` (D14 Layer 1 + Haiku 4.5 + validate) → editable gap table → `saveGapsAction` (writes `analytics_uploads` + `structured_analytics` + `usage_events`) |
-| `/plan/new` | page + client component + server action | Two-step: gap/cluster context card → `generatePlanAction` (6 DB queries + `buildClustersWithPlanningSummary` + Haiku 4.5 + validate) → ordered cluster plan review → `savePlanAction` (writes `study_plans` + `plan_items` + `usage_events`) |
+| `/intake` | page + client component + server actions | **D22** Three-tab UI: self-report (18 system sliders) / standardized (per-system %) / evaluator (18-card calibration session). Each calls a deterministic server action in `init-competence.ts` that writes 722 rows to `learner_topic_competence` with the appropriate `source`. No LLM. |
+| `/plan/new` | page + client component + server action | **D22** One button "Generate plan." Server action `generateDeterministicPlanAction` calls `refreshCompetenceForUser` → `getTop3WeakTopics` (importance × (1−competence) with parent-system diversity) → `buildDynamicClusterForTopic` × 3 (inserts ephemeral `clusters` rows with `kind='ephemeral_topic'`) → writes `study_plans` + `plan_items`. Pure SQL, no LLM. |
 
 **Planned by phase** (lightweight pointer; full intent in PHASES.md):
 
@@ -155,23 +157,22 @@ Update this section when a route lands.
 
 ---
 
-## 5. LLM Call Sites — exactly three (D6)
+## 5. LLM Call Sites — none (D22 supersedes D6/D13/D14)
 
-The Anthropic SDK (`@anthropic-ai/sdk`) is imported via `lib/llm/client.ts`. Sites #1 and #2 are wired; site #3 is authored but consumer not yet built.
+There is **no LLM in this repo** as of 2026-04-29 (D22). The `@anthropic-ai/sdk` dependency was removed; `lib/llm/`, `prompts/`, `lib/intake/stem-rejection.ts`, `lib/intake/candidate-concepts.ts`, and `lib/plan/clusters-summary.ts` were deleted.
 
-| # | Site | Phase | Inputs | Outputs | Prompt location | Status |
-|---|---|---|---|---|---|---|
-| 1 | Intake parser | 3 | Free-text from `/intake` textarea | Structured gaps mapped to `concepts.id` (or `{rejected:true,reason}` per D14) | `/prompts/intake.md`; Layer 1 heuristic at `lib/intake/stem-rejection.ts` | **Wired** — `app/(app)/intake/actions.ts` |
-| 2 | Plan generator | 4 | Recent `structured_analytics` + cluster library | Ordered 5–15 cluster plan + rationale + 7–14d window | `/prompts/plan.md` | **Wired** — `app/(app)/plan/new/actions.ts` |
-| 3 | Private AI card generator | post-Phase-6 (D13) | Gap row + target cluster | Card with `source='ai_private'`, `status='draft'`, citation, ontology tags | `/prompts/ai_card.md` | Prompt authored; consumer not yet built |
+**Where the "intelligent" parts of the product live now:**
 
-**Hard rules across all sites:**
-- Token usage logged to `usage_events` (D16) per request, with `request_ref` pointing to the originating row (`upload_id`, `plan_id`, or `card_id`).
-- Concept tags are constrained-enum: model returns `concepts.id` strings or `null`; never invents slugs (D5, D17).
-- Site #1 has the two-layer stem rejection (heuristic precheck + LLM constraint) per D14.
-- Site #3 has the full guardrail bundle per D13: rate-limited 10 cards/user/local-day, attach-to-cluster required, citation enforced via `cards.citation NOT NULL`, draft → 24h cool → human review.
+| Concern | Where it's computed |
+|---|---|
+| Gap detection | `topic_importance_v` × `learner_topic_competence` (SQL view + table) |
+| Top-3 weak topics | `lib/competence/score.ts` `rankWeakTopics(rows, k=3)` with parent-system diversity guard |
+| Cluster generation | `lib/competence/repo.ts` `buildDynamicClusterForTopic` queries `card_ontology_tags` and inserts an ephemeral `clusters` row |
+| Plan envelope | `app/(app)/plan/new/actions.ts` `generateDeterministicPlanAction` orchestrates the above into `study_plans` + `plan_items` |
 
-**Not allowed anywhere else:** LLM in the review loop, LLM scoring of free-text answers, LLM-as-substitute-for-human-review, bulk card generation in this repo (lives in the external pipeline that posts to `/api/cards/import`).
+**Bulk card authoring** happens outside this repo and posts to `POST /api/cards/import` (Phase 6) — that path is unchanged by D22.
+
+**Adding any LLM call site back** requires a new DECISIONS.md entry that names the site, the cost cap, and the legal containment posture (D22, "Revisit if").
 
 ---
 
@@ -225,13 +226,18 @@ The Anthropic SDK (`@anthropic-ai/sdk`) is imported via `lib/llm/client.ts`. Sit
       ReviewClient.tsx     client component: prompt → reveal → Again/Good (Phase 2)
       actions.ts           server actions: rate card, finish session (Phase 2)
     /intake
-      page.tsx             server wrapper: checks isLlmEnabled, passes gap/cluster counts (Phase 3)
-      IntakeClient.tsx     client component: two-step textarea → gap review table (Phase 3)
-      actions.ts           parseIntakeAction (D14 + LLM call site #1) + saveGapsAction (Phase 3)
+      page.tsx             server wrapper: pre-loads competence rows + system list (Phase 3, post-D22)
+      IntakeClient.tsx     client component: 3-tab UI (self-report / standardized / evaluator) (Phase 3, post-D22)
+      actions.ts           initFromSelfReportAction / initFromStandardizedAction / startEvaluatorAction (Phase 3, post-D22)
+      /evaluator/[session_id]
+        page.tsx           18-card calibration session — reuses review UI; on finish, EMA-init competence (Phase 3, post-D22)
     /plan/new
-      page.tsx             server wrapper: pre-loads gap/cluster counts (Phase 4)
-      PlanNewClient.tsx    client component: two-step generate → plan review (Phase 4)
-      actions.ts           generatePlanAction (LLM call site #2) + savePlanAction (Phase 4)
+      page.tsx             server wrapper: pre-loads top-3 preview (Phase 4, post-D22)
+      PlanNewClient.tsx    client component: single "Generate plan" button + read-only preview (Phase 4, post-D22)
+      actions.ts           generateDeterministicPlanAction — pure SQL, no LLM (Phase 4, post-D22)
+    /settings
+      page.tsx             "Reset competence" button (Phase 7, post-D22)
+      actions.ts           resetCompetenceAction
 proxy.ts                   Next.js 16 proxy (formerly middleware.ts) — refreshes session cookie via @supabase/ssr
 /components
   /ui                      shadcn/ui primitives
@@ -244,22 +250,21 @@ proxy.ts                   Next.js 16 proxy (formerly middleware.ts) — refresh
     import-schema.test.ts      validator test suite
     import-mapper.ts           maps NormalizedImportPayload → flat insert rows for clusters, cards, card_retrieval_metadata, card_ontology_tags, cluster_memberships
     import-mapper.test.ts      mapper test suite
+  /competence                  D22 — deterministic math layer
+    score.ts                   pure functions: outcomeFromReview, emaUpdate, distributeSubsectionWeight, rankWeakTopics
+    score.test.ts              unit tests (EMA bounds, distribution math, top-K diversity guard)
+    repo.ts                    DB layer: refreshCompetenceForUser, getTop3WeakTopics, buildDynamicClusterForTopic, resetCompetence
+    repo.test.ts               integration tests against seeded DB
   /intake
-    stem-rejection.ts          D14 Layer 1 — heuristic regex precheck for proprietary qbank stems
-    stem-rejection.test.ts     unit tests (run via `pnpm test`)
-    candidate-concepts.ts      filters the 970-row concepts table → ~30–80 candidates for the intake LLM (`{{candidate_concepts_json}}`)
-    candidate-concepts.test.ts unit + integration tests (uses real abim_blueprint_v1.json)
-  /llm
-    client.ts              getAnthropicClient() factory + isLlmEnabled() feature flag
-  /plan
-    clusters-summary.ts        builds `{{clusters_json}}` (per-cluster planning_summary histograms) for the plan-generator LLM
-    clusters-summary.test.ts   unit tests
+    init-competence.ts         D22 — initFromSelfReport / initFromStandardized / initFromEvaluatorSession
+    init-competence.test.ts    unit tests
   /supabase
     server.ts              createServerClient factory (Server Components, Actions, Route Handlers)
     client.ts              createBrowserClient factory (Client Components)
     middleware.ts          updateSession helper used by proxy.ts
 /scripts
   seed_ontology.mjs        seeds concepts + concept_parents from abim_blueprint_v1.json (D18)
+  seed_concept_weights.ts  D22 — backfills concepts.weight from abim_blueprint_v1.json (subsection-level, 230 rows)
   seed_cards.mjs           Phase 1 step 6: seeds 3 clusters + 20 reviewed cards (HF GDMT, Hyponatremia, DKA/HHS) (applied to kekki-prod 2026-04-27)
 /supabase
   /migrations
@@ -267,10 +272,7 @@ proxy.ts                   Next.js 16 proxy (formerly middleware.ts) — refresh
     002_abim_ontology.sql        ABIM hierarchy + card_ontology_tags
     003_retrieval_metadata.sql   retrieval-metadata layer (D20)
     004_planning_layer.sql       planning layer + card_discriminators (D21)
-/prompts                       LLM prompt templates (D6 source of truth)
-  intake.md                    LLM call site #1 — intake parser (Phase 3); Layer 2 of D14 stem rejection
-  plan.md                      LLM call site #2 — plan generator (Phase 4)
-  ai_card.md                   LLM call site #3 — private AI card generator (post-Phase-6, D13 guardrails)
+    005_competence_layer.sql     competence + topic_importance_v + clusters.kind (D22)
 /public                        static assets (Next.js default svgs for now)
 /archive                       superseded files retained for traceability
   kekki_ontology_v0.json
@@ -312,7 +314,6 @@ Planned additions:
 | Supabase project | `kekki-prod` (ref `jquturibslqzkldngzvf`) | DB, auth, storage | Linked per worktree via `supabase link`. Project URL + anon key in `.env.local`. |
 | Vercel project | (linked to GitHub repo) | Hosting; main = production | Auto-deploys main; preview deploys per branch. |
 | Cloudflare Registrar | kekkimed.com | Domain registration | DNS pointed at Vercel. |
-| Anthropic API | `api.anthropic.com` | Claude Haiku 4.5 inference | `ANTHROPIC_API_KEY` server-only env var (lands in Phase 3). |
 | GitHub | `zachspahr-ops/kekkimed` (private) | Source of truth | Vercel is connected here. |
 
 **Env vars** (kept in `.env.local` at parent project dir, not the worktree):
@@ -322,7 +323,6 @@ Planned additions:
 | `NEXT_PUBLIC_SUPABASE_URL` | Phase 1 step 3+ | Exposed to browser |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Phase 1 step 3+ | Exposed to browser |
 | `SUPABASE_SERVICE_ROLE_KEY` | Seed script + system writes | Server-only — never exposed to browser |
-| `ANTHROPIC_API_KEY` | Phase 3+ | Server-only |
 
 Worktrees: `.env.local` is at `C:/Users/Zach/Documents/Claude/Projects/Kekki/.env.local`, not in the worktree. Use `--env-file="C:/Users/Zach/Documents/Claude/Projects/Kekki/.env.local"` for Node scripts.
 
