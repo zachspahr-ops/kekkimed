@@ -234,13 +234,6 @@ function isNonEmptyString(v: unknown): v is string {
   return typeof v === 'string' && v.trim().length > 0;
 }
 
-/** A field validator returns either a value or pushes errors and returns undefined. */
-type Validator<T> = (
-  value: unknown,
-  path: ReadonlyArray<string | number>,
-  errors: ImportError[],
-) => T | undefined;
-
 function requireString(
   obj: Record<string, unknown>,
   field: string,

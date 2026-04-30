@@ -2,7 +2,7 @@
 
 *Live snapshot of what exists in the codebase right now. The durable answer to "where does this thing live and how does data flow through it." If you've read CLAUDE.md, DECISIONS.md, and PHASES.md, this file fills the gap between "what we decided" and "what is actually built."*
 
-**Last updated:** 2026-04-29 (D22 zero-LLM pivot; Phases 3 + 4 rewritten to deterministic math; migration 005 in progress; LLM intake/plan code deleted; `@anthropic-ai/sdk` dropped).
+**Last updated:** 2026-04-30 (Phase 5 + 6 shipped; migrations 005 + 005a applied to kekki-prod; lint/typecheck/test/build all green on `claude/plan-optimization-review-ViYWL`).
 
 ---
 
@@ -73,7 +73,7 @@ Stack is locked in DECISIONS.md D2. New dependencies require Zach's sign-off in 
 
 ---
 
-## 3. Data Model — live (migrations 001–005 applied to kekki-prod; 005 lands with the D22 pivot)
+## 3. Data Model — live (migrations 001–005a all applied to kekki-prod)
 
 The schema is **17 tables + 1 view** in `public`, plus the `auth.users` table managed by Supabase. All listed tables enable RLS; tables without explicit policies are service-role-only by default.
 
@@ -121,7 +121,8 @@ Per-card concept tags are enforced relationally via `card_ontology_tags.concept_
 | `002_abim_ontology.sql` | Applied 2026-04-26 | `concepts.level/ontology_source/ontology_version`; `card_ontology_tags`; drops `cards.concept_ids[]` |
 | `003_retrieval_metadata.sql` | Applied 2026-04-27 (via Supabase MCP `apply_migration`; version stamp `20260427040324_retrieval_metadata`) | `cards.primary_lattice` (4-value), `cards.secondary_lattices text[]` (subset CHECK over 7 values), expand `cards.card_format` 4 → 9 (drops the prior `'basic'` default — every authoring path supplies a format), new 1:1 `card_retrieval_metadata` (cognitive_task, prompt_frame, answer_form, retrieval_direction, discriminator, confusable_with, requires_cloze_one_by_one, cloze_grouping, format_confidence, format_review_status, format_review_note). Enum values locked by D20 + the 2026-04-26 D20 amendment (`format_review_status`). |
 | `004_planning_layer.sql` | Applied 2026-04-28. Enum values locked by D21 (added same day). | Adds planning enums on `cards` (`yield_tier`, `danger_level`, `board_likelihood`, `source_strength`, `review_priority` — all NOT NULL with defaults so existing seed cards take defaults without backfill); adds `cards.primary_system_id text NULL` FK→concepts, `cards.secondary_system_ids text[] NOT NULL DEFAULT '{}'`, `cards.bridge_reason text NULL`; creates `card_discriminators` directed-graph table joining cards by shared `discriminator_key` (the `discriminator` column lives on `card_retrieval_metadata` from m003), with RLS mirroring `card_ontology_tags` (D19). |
-| `005_competence_layer.sql` | In progress (D22 pivot). | Backfills `concepts.weight` from `abim_blueprint_v1.json` for 230 subsection rows; creates `topic_importance_v` view (722 topic rows × distributed importance); creates `learner_topic_competence` table with RLS (self-only); adds `clusters.kind ∈ {manual,ephemeral_topic}` and `clusters.source_topic_id text NULL FK→concepts`. |
+| `005_competence_layer.sql` | Applied 2026-04-29 (D22 pivot). | Creates `topic_importance_v` view (722 topic rows × distributed importance); creates `learner_topic_competence` table with RLS (self-only); adds `clusters.kind ∈ {manual,ephemeral_topic}` and `clusters.source_topic_id text NULL FK→concepts`. (Subsection weights were already populated by m002 seed; no backfill needed.) |
+| `005a_extend_cluster_kind_evaluator.sql` | Applied 2026-04-29. | Extends `clusters.kind` CHECK to also accept `'evaluator'` — used by the intake mode-3 calibration session before `finishSession` folds it into competence. |
 
 Apply with Supabase MCP `apply_migration` (preferred per `feedback_worktree_env.md`) or `supabase db push` (after `supabase link --project-ref jquturibslqzkldngzvf`).
 
@@ -144,14 +145,19 @@ App-router conventions: folder name = URL segment; `page.tsx` = the page; `route
 | `/clusters/[id]` | page + server action | Cluster detail + "Start review session" button |
 | `/review/[session_id]` | page + client component + server action | Card viewer (prompt → reveal → Again/Good buttons). Writes to `reviews`; "Finish" writes to `plan_progress`. |
 | `/intake` | page + client component + server actions | **D22** Three-tab UI: self-report (18 system sliders) / standardized (per-system %) / evaluator (18-card calibration session). Each calls a deterministic server action in `init-competence.ts` that writes 722 rows to `learner_topic_competence` with the appropriate `source`. No LLM. |
-| `/plan/new` | page + client component + server action | **D22** One button "Generate plan." Server action `generateDeterministicPlanAction` calls `refreshCompetenceForUser` → `getTop3WeakTopics` (importance × (1−competence) with parent-system diversity) → `buildDynamicClusterForTopic` × 3 (inserts ephemeral `clusters` rows with `kind='ephemeral_topic'`) → writes `study_plans` + `plan_items`. Pure SQL, no LLM. |
+| `/plan/new` | page + client component + server action | **D22** One button "Generate plan." Server action `generateDeterministicPlanAction` calls `refreshCompetenceForUser` → `getTopWeakTopics` (importance × (1−competence) with parent-system diversity) → `buildDynamicClusterForTopic` × 3 (inserts ephemeral `clusters` rows with `kind='ephemeral_topic'`) → writes `study_plans` + `plan_items`. Pure SQL, no LLM. |
+| `/plan/[id]` | page + server action | Plan detail: progress bar, ordered items with cluster-name/card-count, "Start →" / "Review again" per item, expiry banner once `target_window_days` elapsed. Reuses `startReview` from `clusters/[id]/actions.ts`. |
+| `/cards` | page + client row + server actions | Author's own card list with status filter tabs (all/draft/reviewed/retired). Server actions `promoteCardAction` (24h cooldown enforced by DB trigger) and `retireCardAction`. |
+| `/settings` | page + client form + server action | Competence summary + "Reset competence" danger zone. Server action `resetCompetenceAction` wipes `learner_topic_competence` for the user and redirects to `/intake?reset=1`. |
+| `POST /api/cards/import` | route handler | Bulk import endpoint for the external pipeline. Bearer-token auth via `IMPORT_API_KEY`; uses service-role client (bypasses RLS). Cards land as `status='draft'`, `source='external_pipeline'`. Inline validator covers D17/D19/D20/D21 enums; tag rows + retrieval metadata inserted per-card. |
 
 **Planned by phase** (lightweight pointer; full intent in PHASES.md):
 
 | Route | Phase | Purpose |
 |---|---|---|
-| `/plan/[id]` | 5 | Plan detail + walk clusters in order + completion tracking |
-| `POST /api/cards/import` | 6 | Bulk import endpoint for the external pipeline |
+| `/(marketing)` route group + landing page | 8 | Public landing + waitlist capture |
+| Invite-code gate on signup | 8 | `invite_codes` table + signup check |
+| `/tos`, `/privacy` | 8 | Termly templates |
 
 Update this section when a route lands.
 
@@ -228,9 +234,7 @@ There is **no LLM in this repo** as of 2026-04-29 (D22). The `@anthropic-ai/sdk`
     /intake
       page.tsx             server wrapper: pre-loads competence rows + system list (Phase 3, post-D22)
       IntakeClient.tsx     client component: 3-tab UI (self-report / standardized / evaluator) (Phase 3, post-D22)
-      actions.ts           initFromSelfReportAction / initFromStandardizedAction / startEvaluatorAction (Phase 3, post-D22)
-      /evaluator/[session_id]
-        page.tsx           18-card calibration session — reuses review UI; on finish, EMA-init competence (Phase 3, post-D22)
+      actions.ts           submitSelfReportAction / submitStandardizedAction / startEvaluatorAction (Phase 3, post-D22). Evaluator path redirects into /review/[session_id]?cluster=… (the review UI does double duty — finishSession detects kind='evaluator' and EMA-initializes competence).
     /plan/new
       page.tsx             server wrapper: pre-loads top-3 preview (Phase 4, post-D22)
       PlanNewClient.tsx    client component: single "Generate plan" button + read-only preview (Phase 4, post-D22)
@@ -253,18 +257,15 @@ proxy.ts                   Next.js 16 proxy (formerly middleware.ts) — refresh
   /competence                  D22 — deterministic math layer
     score.ts                   pure functions: outcomeFromReview, emaUpdate, distributeSubsectionWeight, rankWeakTopics
     score.test.ts              unit tests (EMA bounds, distribution math, top-K diversity guard)
-    repo.ts                    DB layer: refreshCompetenceForUser, getTop3WeakTopics, buildDynamicClusterForTopic, resetCompetence
-    repo.test.ts               integration tests against seeded DB
+    repo.ts                    DB layer: refreshCompetenceForUser, getTopWeakTopics, buildDynamicClusterForTopic, resetCompetence (no test file yet — integration tests TBD)
   /intake
-    init-competence.ts         D22 — initFromSelfReport / initFromStandardized / initFromEvaluatorSession
-    init-competence.test.ts    unit tests
+    init-competence.ts         D22 — initFromSelfReport / initFromStandardized / initFromEvaluatorSession / startEvaluatorSession (no test file yet — integration tests TBD)
   /supabase
     server.ts              createServerClient factory (Server Components, Actions, Route Handlers)
     client.ts              createBrowserClient factory (Client Components)
     middleware.ts          updateSession helper used by proxy.ts
 /scripts
-  seed_ontology.mjs        seeds concepts + concept_parents from abim_blueprint_v1.json (D18)
-  seed_concept_weights.ts  D22 — backfills concepts.weight from abim_blueprint_v1.json (subsection-level, 230 rows)
+  seed_ontology.mjs        seeds concepts + concept_parents from abim_blueprint_v1.json including subsection weights (D18 + D22)
   seed_cards.mjs           Phase 1 step 6: seeds 3 clusters + 20 reviewed cards (HF GDMT, Hyponatremia, DKA/HHS) (applied to kekki-prod 2026-04-27)
 /supabase
   /migrations
@@ -273,6 +274,7 @@ proxy.ts                   Next.js 16 proxy (formerly middleware.ts) — refresh
     003_retrieval_metadata.sql   retrieval-metadata layer (D20)
     004_planning_layer.sql       planning layer + card_discriminators (D21)
     005_competence_layer.sql     competence + topic_importance_v + clusters.kind (D22)
+    005a_extend_cluster_kind_evaluator.sql   adds 'evaluator' to clusters.kind (D22 intake mode 3)
 /public                        static assets (Next.js default svgs for now)
 /archive                       superseded files retained for traceability
   kekki_ontology_v0.json
@@ -287,7 +289,7 @@ Flash Card Generation PRACTICE_PATTERNS.md   reference: card-writing norms used 
 ARCHITECTURE.md            this file
 CLAUDE.md                  agent operating instructions (+ AGENTS.md included via @ at top)
 AGENTS.md                  one-liner on Next.js conventions
-DECISIONS.md               D1–D19, locked
+DECISIONS.md               D1–D22, locked (D6/D13/D14 superseded by D22)
 PHASES.md                  phased build plan with DoD per phase
 PROJECT_SUMMARY.md         pitch + phase status
 PRACTICE_PATTERNS.md       workflow norms shared between Zach and the agent
