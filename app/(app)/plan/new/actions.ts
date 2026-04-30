@@ -67,13 +67,18 @@ export async function generateDeterministicPlanAction(): Promise<DeterministicPl
     (titleRows ?? []).map((r) => [r.id as string, r.title as string]),
   )
 
-  // 4. Build ephemeral clusters in order.
-  const clusters: Array<{ topic: WeakTopic; cluster: EphemeralCluster }> = []
-  for (const topic of top) {
-    const title = titleById.get(topic.topic_id) ?? topic.topic_id
-    const cluster = await buildDynamicClusterForTopic(supabase, user.id, topic.topic_id, title)
-    clusters.push({ topic, cluster })
-  }
+  // 4. Build ephemeral clusters in parallel; Promise.all preserves input order
+  // so plan_items still match the topic ranking.
+  const builtClusters = await Promise.all(
+    top.map((topic) => {
+      const title = titleById.get(topic.topic_id) ?? topic.topic_id
+      return buildDynamicClusterForTopic(supabase, user.id, topic.topic_id, title)
+    }),
+  )
+  const clusters: Array<{ topic: WeakTopic; cluster: EphemeralCluster }> = top.map((topic, i) => ({
+    topic,
+    cluster: builtClusters[i],
+  }))
 
   // 5. Save plan.
   const totalCards = clusters.reduce((acc, c) => acc + c.cluster.card_ids.length, 0)

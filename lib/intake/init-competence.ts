@@ -294,22 +294,31 @@ export async function startEvaluatorSession(
   if (sysError) throw new Error(`startEvaluatorSession: systems: ${sysError.message}`)
   const systemIds = (systemRows ?? []).map((r) => r.id as string)
 
-  // 2. For each system, pull cards whose primary_system_id matches; sample N.
-  // RLS narrows to reviewed-or-author cards.
+  // 2. One batched query for all candidate cards across all systems. RLS
+  // narrows to reviewed-or-author cards. Group + sample in JS.
   const sampledCardIds: string[] = []
-  for (const sysId of systemIds) {
+  if (systemIds.length > 0) {
     const { data: cardRows, error: cardError } = await supabase
       .from('cards')
-      .select('id')
-      .eq('primary_system_id', sysId)
-      .limit(perSystem * 5) // grab more than needed to allow random pick
+      .select('id, primary_system_id')
+      .in('primary_system_id', systemIds)
 
-    if (cardError) throw new Error(`startEvaluatorSession: cards (${sysId}): ${cardError.message}`)
-    const ids = (cardRows ?? []).map((r) => r.id as string)
-    if (ids.length === 0) continue
-    // Pseudo-random pick: shuffle then take perSystem.
-    const shuffled = [...ids].sort(() => Math.random() - 0.5).slice(0, perSystem)
-    sampledCardIds.push(...shuffled)
+    if (cardError) throw new Error(`startEvaluatorSession: cards: ${cardError.message}`)
+
+    const idsBySystem = new Map<string, string[]>()
+    for (const row of cardRows ?? []) {
+      const sys = row.primary_system_id as string
+      const arr = idsBySystem.get(sys) ?? []
+      arr.push(row.id as string)
+      idsBySystem.set(sys, arr)
+    }
+
+    for (const sysId of systemIds) {
+      const ids = idsBySystem.get(sysId) ?? []
+      if (ids.length === 0) continue
+      const shuffled = [...ids].sort(() => Math.random() - 0.5).slice(0, perSystem)
+      sampledCardIds.push(...shuffled)
+    }
   }
 
   // 3. Create the evaluator cluster.

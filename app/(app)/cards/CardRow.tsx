@@ -8,11 +8,10 @@ interface CardRowProps {
   prompt: string
   citation: string
   status: 'draft' | 'reviewed' | 'retired'
-  createdAt: string
   ageHours: number
 }
 
-export default function CardRow({ id, prompt, citation, status, createdAt, ageHours }: CardRowProps) {
+export default function CardRow({ id, prompt, citation, status, ageHours }: CardRowProps) {
   const [error, setError] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
 

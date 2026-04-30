@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
+import { relationCount } from '@/lib/supabase/relations'
 import { createClusterAction } from './actions'
 
 export default async function ClustersPage() {
@@ -73,9 +74,7 @@ export default async function ClustersPage() {
               )}
               <ul className="space-y-2">
                 {manualClusters.map((cluster) => {
-                  const cardCount =
-                    (cluster.cluster_memberships as unknown as { count: number }[])[0]
-                      ?.count ?? 0
+                  const cardCount = relationCount(cluster.cluster_memberships)
                   return (
                     <li key={cluster.id}>
                       <Link
@@ -106,9 +105,7 @@ export default async function ClustersPage() {
               </h2>
               <ul className="space-y-2">
                 {ephemeralClusters.map((cluster) => {
-                  const cardCount =
-                    (cluster.cluster_memberships as unknown as { count: number }[])[0]
-                      ?.count ?? 0
+                  const cardCount = relationCount(cluster.cluster_memberships)
                   return (
                     <li key={cluster.id}>
                       <Link
