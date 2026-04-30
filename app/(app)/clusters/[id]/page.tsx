@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { relationCount } from '@/lib/supabase/relations'
 import { startReview } from './actions'
 
 interface Props {
@@ -26,9 +27,7 @@ export default async function ClusterDetailPage({ params }: Props) {
 
   if (error || !cluster) notFound()
 
-  const cardCount =
-    (cluster.cluster_memberships as unknown as { count: number }[])[0]?.count ??
-    0
+  const cardCount = relationCount(cluster.cluster_memberships)
 
   const startReviewForCluster = startReview.bind(null, id)
 

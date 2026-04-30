@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { relationCount } from '@/lib/supabase/relations'
 import { startReview } from '@/app/(app)/clusters/[id]/actions'
 
 interface Props {
@@ -116,8 +117,7 @@ export default async function PlanDetailPage({ params, searchParams }: Props) {
       <ol className="space-y-3">
         {items.map((item) => {
           const cluster = item.clusters
-          const cardCount =
-            (cluster?.cluster_memberships as unknown as { count: number }[])?.[0]?.count ?? 0
+          const cardCount = relationCount(cluster?.cluster_memberships)
           const done = doneSet.has(item.id)
           const startReviewBound = startReview.bind(null, item.cluster_id)
 
