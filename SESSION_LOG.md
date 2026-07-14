@@ -15,6 +15,25 @@ Each entry follows this shape:
 
 ---
 
+## 2026-07-14 — Public portfolio analytics
+
+**Phase + step:** Phase 8 presentation slice — anonymous traffic measurement for the public fellowship portfolio.
+
+**What changed:**
+- Added Vercel Web Analytics to the public homepage and to the self-contained reviewer, network 4.9, network 5.0, network 5.1, and legacy explorer pages.
+- Scoped tracking to those public portfolio routes. Authenticated application pages and private route identifiers remain outside analytics.
+- Updated `ARCHITECTURE.md` §8 to document the service and route boundary.
+
+**Verification:**
+- Focused lint, typecheck, and production build passed.
+- Public-route HTML and Vercel's analytics collection script were checked after deployment.
+
+**Blocked / deferred:**
+- Visitor identity is intentionally unavailable: Vercel Web Analytics reports anonymous aggregate traffic, not names or IP addresses.
+
+**Open questions for next session:**
+- None. Review traffic under the Vercel project's Analytics tab after real visitors arrive.
+
 ## 2026-07-14 — Dark tools index + versioned analysis releases
 
 **Phase + step:** Phase 8 presentation slice — redesign of the fellowship-facing public site and publication of selected analysis tools. Private application behavior remains unchanged.

@@ -2,7 +2,7 @@
 
 *Live snapshot of what exists in the codebase right now. The durable answer to "where does this thing live and how does data flow through it." If you've read CLAUDE.md, DECISIONS.md, and PHASES.md, this file fills the gap between "what we decided" and "what is actually built."*
 
-**Last updated:** 2026-04-29 (D22 zero-LLM pivot; Phases 3 + 4 rewritten to deterministic math; migration 005 in progress; LLM intake/plan code deleted; `@anthropic-ai/sdk` dropped).
+**Last updated:** 2026-07-14 (public fellowship tools index and public-only Vercel Web Analytics).
 
 ---
 
@@ -319,7 +319,7 @@ Planned additions:
 | Service | Identifier / location | What it holds | Notes |
 |---|---|---|---|
 | Supabase project | `kekki-prod` (ref `jquturibslqzkldngzvf`) | DB, auth, storage | Linked per worktree via `supabase link`. Project URL + anon key in `.env.local`. |
-| Vercel project | (linked to GitHub repo) | Hosting; main = production | Auto-deploys main; preview deploys per branch. |
+| Vercel project | (linked to GitHub repo) | Hosting; main = production; Web Analytics | Auto-deploys main and creates branch previews. Anonymous Web Analytics is loaded only on `/`, `/reviewer`, `/network/4.9`, `/network/5.0`, `/network/5.1`, and the legacy `/explore` exhibit; private application routes are excluded. |
 | Cloudflare Registrar | kekkimed.com | Domain registration | DNS pointed at Vercel. |
 | GitHub | `zachspahr-ops/kekkimed` (private) | Source of truth | Vercel is connected here. |
 

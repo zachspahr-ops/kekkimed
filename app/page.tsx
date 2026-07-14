@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Analytics } from "@vercel/analytics/next";
 import styles from "./work-index.module.css";
 
 const work = [
@@ -88,6 +89,7 @@ export default function Home() {
         <span>Educational research portfolio</span>
         <Link href="/login">Private application</Link>
       </footer>
+      <Analytics />
     </main>
   );
 }
