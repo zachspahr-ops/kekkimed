@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Interactive clinical knowledge engineering exhibit: network analysis, parser validation, and educational study modules.">
+    <title>Interactive Analysis | Kekki</title>
+    <link rel="stylesheet" href="assets/styles.css">
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar" aria-label="Project summary">
+        <a class="back-link" href="/" aria-label="Return to the Kekki project overview">&larr; Project overview</a>
+        <div class="brand-block">
+          <div class="eyebrow">Interactive exhibit</div>
+          <h1>Clinical Knowledge Network</h1>
+          <p id="project-thesis">Selected network-analysis and parser-validation snapshots.</p>
+        </div>
+
+        <div class="project-switch" role="tablist" aria-label="Project">
+          <button class="project-tab is-active" type="button" data-project="good_v3">Prior network</button>
+          <button class="project-tab" type="button" data-project="v43">Parser validation</button>
+        </div>
+
+        <section class="summary-panel" aria-labelledby="metric-title">
+          <h2 id="metric-title">Signal</h2>
+          <div id="metrics" class="metric-grid"></div>
+        </section>
+
+        <section class="summary-panel" aria-labelledby="pipeline-title">
+          <h2 id="pipeline-title">Pipeline</h2>
+          <ol id="pipeline" class="pipeline-list"></ol>
+        </section>
+      </aside>
+
+      <main class="main-content">
+        <section class="network-stage" aria-labelledby="network-title">
+          <div class="section-heading">
+            <div>
+              <div id="active-badge" class="badge">Reference example</div>
+              <h2 id="network-title">GOOD Prior Network Analysis</h2>
+            </div>
+            <div class="network-controls">
+              <label for="layer-filter">Layer</label>
+              <select id="layer-filter"></select>
+              <label for="node-search">Search</label>
+              <input id="node-search" type="search" placeholder="Concept or clue">
+            </div>
+          </div>
+
+          <div class="network-layout">
+            <div class="network-frame">
+              <svg id="network-svg" role="img" aria-label="Network visualization"></svg>
+            </div>
+            <aside class="node-panel" aria-live="polite">
+              <h3 id="node-title">Network Focus</h3>
+              <dl id="node-details"></dl>
+              <div id="edge-list" class="edge-list"></div>
+            </aside>
+          </div>
+        </section>
+
+        <section class="dashboard-grid" aria-label="Project detail panels">
+          <article class="panel" id="status-panel">
+            <div class="panel-heading">
+              <h2>Corpus Acceptance</h2>
+              <span>v4.3</span>
+            </div>
+            <div id="status-chart" class="bar-stack"></div>
+          </article>
+
+          <article class="panel" id="precision-panel">
+            <div class="panel-heading">
+              <h2>Precision By Target</h2>
+              <span>reviewed high precision</span>
+            </div>
+            <div id="precision-chart" class="bar-list"></div>
+          </article>
+
+          <article class="panel span-2" id="coverage-panel">
+            <div class="panel-heading">
+              <h2>Source-Family Coverage</h2>
+              <span>lowest coverage first</span>
+            </div>
+            <div id="coverage-chart" class="coverage-grid"></div>
+          </article>
+
+          <article class="panel span-2" id="modules-panel">
+            <div class="panel-heading">
+              <h2>GOOD Study Modules</h2>
+              <span>from v3 communities</span>
+            </div>
+            <div id="study-modules" class="module-grid"></div>
+          </article>
+
+          <article class="panel" id="top-nodes-panel">
+            <div class="panel-heading">
+              <h2>Top Nodes</h2>
+              <span id="top-node-subtitle">weighted degree</span>
+            </div>
+            <div id="top-nodes" class="table-wrap"></div>
+          </article>
+
+          <article class="panel" id="communities-panel">
+            <div class="panel-heading">
+              <h2>Communities</h2>
+              <span id="community-subtitle">largest signals</span>
+            </div>
+            <div id="communities" class="community-list"></div>
+          </article>
+        </section>
+
+        <section class="portfolio-strip" aria-labelledby="portfolio-title">
+          <div class="section-heading compact">
+            <div>
+                <div class="badge muted">Development record</div>
+                <h2 id="portfolio-title">Selected Analysis Milestones</h2>
+            </div>
+          </div>
+          <div id="portfolio" class="portfolio-grid"></div>
+        </section>
+      </main>
+    </div>
+
+    <script src="assets/showcase-data.js"></script>
+    <script src="assets/app.js"></script>
+  </body>
+</html>

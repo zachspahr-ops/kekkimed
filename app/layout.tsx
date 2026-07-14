@@ -13,8 +13,33 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Kekki",
-  description: "Adaptive internal medicine study. Launching soon.",
+  metadataBase: new URL("https://www.kekkimed.com"),
+  title: "Kekki | Clinical Knowledge Engineering",
+  description:
+    "A physician-built clinical knowledge engineering project: precision-first parsing, validated concept networks, and adaptive medical education.",
+  openGraph: {
+    title: "Kekki | Clinical Knowledge Engineering",
+    description:
+      "From a 22,132-record educational corpus to structured, auditable clinical knowledge and adaptive learning tools.",
+    type: "website",
+    url: "/",
+    siteName: "Kekki",
+    images: [
+      {
+        url: "/og.png",
+        width: 1200,
+        height: 630,
+        alt: "Kekki Clinical Knowledge Engineering project overview",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Kekki | Clinical Knowledge Engineering",
+    description:
+      "A physician-built, precision-first clinical knowledge system.",
+    images: ["/og.png"],
+  },
 };
 
 export default function RootLayout({

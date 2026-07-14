@@ -15,6 +15,32 @@ Each entry follows this shape:
 
 ---
 
+## 2026-07-14 — Fellowship-facing public project showcase
+
+**Phase + step:** Phase 8, step 1 presentation slice — public homepage and project exhibit. This does not change the closed-beta gate, pricing, authentication, or private application behavior.
+
+**What changed:**
+- Replaced the public placeholder homepage with a general fellowship portfolio narrative covering the clinical problem, precision-first method, validation evidence, project boundaries, Zach's role, and translation into the Kekki learning platform.
+- Added a responsive, accessible visual system in `app/page.module.css` without new dependencies.
+- Added the existing offline analysis dashboard as a public interactive exhibit under `/explore`, with fellowship-facing labels and a clear route back to the project overview.
+- Updated root metadata and added a dedicated social-preview card for link sharing.
+- Preserved `/login` and every authenticated application route unchanged.
+- Public copy reports only aggregate evidence and explicitly excludes source question stems, answer choices, rationales, patient information, and clinical guidance.
+
+**Verification:**
+- `pnpm typecheck` passed.
+- `pnpm build` passed; `/` remains statically rendered and all existing authenticated routes compiled successfully.
+
+**Blocked / deferred:**
+- Fellowship-specialty tailoring remains optional; this approved version is specialty-neutral.
+- Waitlist collection, invite-code gating, legal pages, and the full Phase 8 beta launch remain deferred to the planned product phase.
+
+**Open questions for next session:**
+- Add a named author biography, CV, contact link, or fellowship-specific framing only when Zach is ready to publish those personal details.
+- Decide whether the interactive exhibit should continue to show multiple historical snapshots or eventually feature only the newest validated network.
+
+---
+
 ## 2026-04-29 — D22 pivot: zero-LLM, ontology-math study loop
 
 **Phase + step:** D22 added to DECISIONS.md (supersedes D6, D13, D14). Phase 3 and Phase 4 rewritten in place to deterministic math; Phase 7 (loop closure) trivialized to "regenerate plan." All LLM code deleted from this repo.

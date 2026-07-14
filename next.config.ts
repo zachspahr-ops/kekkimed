@@ -15,6 +15,14 @@ const nextConfig: NextConfig = {
   outputFileTracingIncludes: {
     '/**': ['./prompts/**'],
   },
+  async rewrites() {
+    return [
+      {
+        source: "/explore",
+        destination: "/explorer/index.html",
+      },
+    ];
+  },
 };
 
 export default nextConfig;
