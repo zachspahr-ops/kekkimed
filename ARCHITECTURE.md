@@ -135,7 +135,11 @@ App-router conventions: folder name = URL segment; `page.tsx` = the page; `route
 
 | Route | Type | Purpose |
 |---|---|---|
-| `/` | page | Placeholder home page (will be replaced by marketing landing in Phase 8) |
+| `/` | page | Public dark tools index linking to the question parse reviewer and network releases 4.9, 5.0, and 5.1. |
+| `/reviewer` | static HTML via rewrite | Public MedQA-only question parse reviewer. Entity highlights, metadata inspection, accept/flag notes, and JSON export run entirely in the browser; review state stays in local storage. |
+| `/network/4.9` | static HTML via rewrite | Entity-level answer-choice topology with clinical-domain and answer-role views. |
+| `/network/5.0` | static HTML via rewrite | Entity-level association network with cross-source replication and community structure. |
+| `/network/5.1` | static HTML via rewrite | Canonical-concept answer-choice network; current public network release. |
 | `/login` | page + server action | Magic-link sign-in form. Server action `signInWithEmail` calls `supabase.auth.signInWithOtp`; redirects to `/login?status=sent` on success or `/login?error=...` on failure |
 | `/auth/callback` | route handler | GET handler that receives `?code=...` from the Supabase magic link, calls `exchangeCodeForSession`, redirects to `/dashboard` (or `?next=`) |
 | `(app)` route group | layout | Auth gate. The layout calls `supabase.auth.getUser()` and `redirect('/login')` when no session — every page under this group is guaranteed authenticated |
@@ -273,7 +277,10 @@ proxy.ts                   Next.js 16 proxy (formerly middleware.ts) — refresh
     003_retrieval_metadata.sql   retrieval-metadata layer (D20)
     004_planning_layer.sql       planning layer + card_discriminators (D21)
     005_competence_layer.sql     competence + topic_importance_v + clusters.kind (D22)
-/public                        static assets (Next.js default svgs for now)
+/public                        static public tools, social preview, and other browser-served assets
+  /reviewer                    MedQA-only self-contained question parse reviewer
+  /networks/{4.9,5.0,5.1}     self-contained versioned network analysis releases
+  /explorer                    legacy fellowship exhibit
 /archive                       superseded files retained for traceability
   kekki_ontology_v0.json
   kekki_concepts_v1.json

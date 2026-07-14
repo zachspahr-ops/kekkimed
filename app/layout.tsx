@@ -14,31 +14,31 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://www.kekkimed.com"),
-  title: "Kekki | Clinical Knowledge Engineering",
+  title: "Kekki | Clinical Data Tools",
   description:
-    "A physician-built clinical knowledge engineering project: precision-first parsing, validated concept networks, and adaptive medical education.",
+    "A physician-built collection of question parsing and clinical concept-network tools.",
   openGraph: {
-    title: "Kekki | Clinical Knowledge Engineering",
+    title: "Kekki | Clinical Data Tools",
     description:
-      "From a 22,132-record educational corpus to structured, auditable clinical knowledge and adaptive learning tools.",
+      "Question parsing, human review, and versioned clinical concept networks.",
     type: "website",
     url: "/",
     siteName: "Kekki",
     images: [
       {
-        url: "/og.png",
+        url: "/og-dark.png",
         width: 1200,
         height: 630,
-        alt: "Kekki Clinical Knowledge Engineering project overview",
+        alt: "Kekki clinical data tools index",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Kekki | Clinical Knowledge Engineering",
+    title: "Kekki | Clinical Data Tools",
     description:
-      "A physician-built, precision-first clinical knowledge system.",
-    images: ["/og.png"],
+      "Question parsing, human review, and versioned clinical concept networks.",
+    images: ["/og-dark.png"],
   },
 };
 

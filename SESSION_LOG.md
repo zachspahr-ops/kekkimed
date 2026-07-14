@@ -15,6 +15,33 @@ Each entry follows this shape:
 
 ---
 
+## 2026-07-14 — Dark tools index + versioned analysis releases
+
+**Phase + step:** Phase 8 presentation slice — redesign of the fellowship-facing public site and publication of selected analysis tools. Private application behavior remains unchanged.
+
+**What changed:**
+- Replaced the long marketing-style homepage with a stripped-down dark index built around four direct destinations: the question parse reviewer and network releases 4.9, 5.0, and 5.1.
+- Added clean public routes at `/reviewer`, `/network/4.9`, `/network/5.0`, and `/network/5.1` using self-contained static analysis artifacts.
+- Restyled the reviewer and all three network interfaces as dark-only tools, with simple links back to the index.
+- Published a ten-question MedQA-only reviewer. The MKSAP half of the local review file was intentionally excluded to preserve the repository's public-content boundary.
+- Updated page metadata and added a matching dark social-preview image.
+
+**Verification:**
+- Focused lint on the changed TypeScript files passed.
+- `pnpm typecheck` passed.
+- `pnpm build` passed.
+- The production server returned HTTP 200 with the expected interface marker for `/`, `/reviewer`, `/network/4.9`, `/network/5.0`, and `/network/5.1`.
+- Reviewer audit confirmed 10 MedQA questions, no MKSAP source records, dark theme, and local review-state storage. Network audit confirmed dark-only styling, index links, and no embedded question/stem/choice-text fields.
+
+**Blocked / deferred:**
+- Full-repository lint still contains one pre-existing `prefer-const` error in `app/(app)/cards/page.tsx` plus two unrelated unused-variable warnings. The files changed in this presentation slice lint cleanly.
+
+**Open questions for next session:**
+- Decide whether `/explore` should remain as a legacy exhibit or redirect to the new tools index.
+- Decide whether future public reviewer releases should remain MedQA-only or use project-authored synthetic examples.
+
+---
+
 ## 2026-07-14 — Fellowship-facing public project showcase
 
 **Phase + step:** Phase 8, step 1 presentation slice — public homepage and project exhibit. This does not change the closed-beta gate, pricing, authentication, or private application behavior.
