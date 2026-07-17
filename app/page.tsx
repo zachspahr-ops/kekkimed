@@ -38,6 +38,15 @@ const work = [
     title: "5.1",
     description:
       "Canonical-concept network with exact answer choices preserved for audit.",
+    meta: "concept level · historical release",
+  },
+  {
+    index: "05",
+    href: "/network/5.4",
+    label: "Network release",
+    title: "5.4",
+    description:
+      "All-entity analysis with focused evidence networks and reviewed community labels.",
     meta: "concept level · current release",
   },
 ];

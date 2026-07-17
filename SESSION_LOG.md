@@ -15,6 +15,25 @@ Each entry follows this shape:
 
 ---
 
+## 2026-07-17 — Network analysis 5.4 publication
+
+**Phase + step:** Phase 8 presentation slice — publication of the current all-entity network analysis.
+
+**What changed:**
+- Added `/network/5.4` using the validated support-2 all-entity analysis artifact.
+- Added 5.4 to the public tools index as the current release and retained 4.9, 5.0, and 5.1 as historical releases.
+- Matched the public site’s dark-only presentation, index navigation, and anonymous Vercel Web Analytics coverage.
+- Updated `ARCHITECTURE.md` routes and external-service scope.
+
+**Verification:**
+- Focused lint, typecheck, production build, source-artifact identity, and live-route checks passed.
+
+**Blocked / deferred:**
+- None.
+
+**Open questions for next session:**
+- None.
+
 ## 2026-07-14 — Public portfolio analytics
 
 **Phase + step:** Phase 8 presentation slice — anonymous traffic measurement for the public fellowship portfolio.

@@ -34,6 +34,10 @@ const nextConfig: NextConfig = {
         destination: "/networks/5.1/index.html",
       },
       {
+        source: "/network/5\\.4",
+        destination: "/networks/5.4/index.html",
+      },
+      {
         source: "/explore",
         destination: "/explorer/index.html",
       },

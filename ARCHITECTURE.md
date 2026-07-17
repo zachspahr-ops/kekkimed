@@ -2,7 +2,7 @@
 
 *Live snapshot of what exists in the codebase right now. The durable answer to "where does this thing live and how does data flow through it." If you've read CLAUDE.md, DECISIONS.md, and PHASES.md, this file fills the gap between "what we decided" and "what is actually built."*
 
-**Last updated:** 2026-07-14 (public fellowship tools index and public-only Vercel Web Analytics).
+**Last updated:** 2026-07-17 (public network release 5.4).
 
 ---
 
@@ -139,7 +139,8 @@ App-router conventions: folder name = URL segment; `page.tsx` = the page; `route
 | `/reviewer` | static HTML via rewrite | Public MedQA-only question parse reviewer. Entity highlights, metadata inspection, accept/flag notes, and JSON export run entirely in the browser; review state stays in local storage. |
 | `/network/4.9` | static HTML via rewrite | Entity-level answer-choice topology with clinical-domain and answer-role views. |
 | `/network/5.0` | static HTML via rewrite | Entity-level association network with cross-source replication and community structure. |
-| `/network/5.1` | static HTML via rewrite | Canonical-concept answer-choice network; current public network release. |
+| `/network/5.1` | static HTML via rewrite | Historical canonical-concept answer-choice network with exact answer choices retained for audit. |
+| `/network/5.4` | static HTML via rewrite | Current all-entity analysis release with a weighted component landscape, reviewed community labels, and focused evidence-network drill-downs. |
 | `/login` | page + server action | Magic-link sign-in form. Server action `signInWithEmail` calls `supabase.auth.signInWithOtp`; redirects to `/login?status=sent` on success or `/login?error=...` on failure |
 | `/auth/callback` | route handler | GET handler that receives `?code=...` from the Supabase magic link, calls `exchangeCodeForSession`, redirects to `/dashboard` (or `?next=`) |
 | `(app)` route group | layout | Auth gate. The layout calls `supabase.auth.getUser()` and `redirect('/login')` when no session — every page under this group is guaranteed authenticated |
@@ -319,7 +320,7 @@ Planned additions:
 | Service | Identifier / location | What it holds | Notes |
 |---|---|---|---|
 | Supabase project | `kekki-prod` (ref `jquturibslqzkldngzvf`) | DB, auth, storage | Linked per worktree via `supabase link`. Project URL + anon key in `.env.local`. |
-| Vercel project | (linked to GitHub repo) | Hosting; main = production; Web Analytics | Auto-deploys main and creates branch previews. Anonymous Web Analytics is loaded only on `/`, `/reviewer`, `/network/4.9`, `/network/5.0`, `/network/5.1`, and the legacy `/explore` exhibit; private application routes are excluded. |
+| Vercel project | (linked to GitHub repo) | Hosting; main = production; Web Analytics | Auto-deploys main and creates branch previews. Anonymous Web Analytics is loaded only on `/`, `/reviewer`, `/network/4.9`, `/network/5.0`, `/network/5.1`, `/network/5.4`, and the legacy `/explore` exhibit; private application routes are excluded. |
 | Cloudflare Registrar | kekkimed.com | Domain registration | DNS pointed at Vercel. |
 | GitHub | `zachspahr-ops/kekkimed` (private) | Source of truth | Vercel is connected here. |
 
