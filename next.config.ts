@@ -18,6 +18,10 @@ const nextConfig: NextConfig = {
   async rewrites() {
     return [
       {
+        source: "/reviewer/compare",
+        destination: "/reviewer/compare/index.html",
+      },
+      {
         source: "/reviewer",
         destination: "/reviewer/index.html",
       },
@@ -36,6 +40,10 @@ const nextConfig: NextConfig = {
       {
         source: "/network/5\\.4",
         destination: "/networks/5.4/index.html",
+      },
+      {
+        source: "/network/7\\.4",
+        destination: "/networks/7.4/index.html",
       },
       {
         source: "/explore",

@@ -1,0 +1,55 @@
+{
+  "assets": [
+    {
+      "bytes": 8857766,
+      "path": "public/networks/7.4/index.html",
+      "sha256": "253ebf642fe63db59c81bf919fe28c26af2d8a1a45cb34dd583cf63c94b35987"
+    },
+    {
+      "bytes": 437753,
+      "path": "public/reviewer/compare/index.html",
+      "sha256": "3bc485ee364929dad77838e8d9526e95bb023cb8228d70f9ed09e42db0f9ea3a"
+    },
+    {
+      "bytes": 378653,
+      "path": "public/reviewer/index.html",
+      "preserved": true,
+      "sha256": "e5f3b2a55e5cdb9da54e5c8977231c05aa3c4928d896a15e3900ea3521318d77"
+    }
+  ],
+  "limitation": "Laboratory/LOINC lane pending until 2026-07-26 17:07 America/New_York; this is not the final all-lane corpus.",
+  "network": {
+    "answer_keys_included": false,
+    "default_edge_count": 2930,
+    "default_node_count": 832,
+    "default_support": 3,
+    "raw_question_text_included": false,
+    "source_labels_included": false,
+    "source_selector_enabled": false,
+    "support_1_edge_count": 24639,
+    "support_1_node_count": 2354
+  },
+  "parent": {
+    "canonical_graph_sha256": "213f59e74d49e3de47c1e8fa49d3f5a666fadedc2348cb82269f224d25598677",
+    "database": {
+      "path": "outputs/im_boards_clinical_corpus_v74_nonlab.sqlite",
+      "sha256": "4c5acfd4f86e9af1b4702cbeb403ac680d8830e7c86e34c06c370436dcbac521"
+    },
+    "private_network_database_sha256": "7faccbd5231015194b9835041fce4fbe211a3bfd2324cfe092c415468ee4b7d0",
+    "private_network_gzip_sha256": "dcb9f6a211434028a3c2d25c835367b86a93fc48a00f087b2a0a08b98ced96fe",
+    "private_network_release": "clinical_network_v74_nonlab_preview_r1"
+  },
+  "release": "clinical_network_v74_nonlab_public_r1",
+  "release_date": "2026-07-21",
+  "reviewer": {
+    "additional_corpus_questions_included": false,
+    "legacy_mention_count": 616,
+    "question_allowlist_sha256": "af86a6d50d5770c22227833efb5c3655fce66dacb4a0882e2eaf42a3ec34cfc0",
+    "question_count": 10,
+    "question_source": "MedQA",
+    "raw_text_scope": "the exact ten previously public MedQA examples only",
+    "v74_accepted_fact_count": 81,
+    "v74_distinct_question_concept_incidence_count": 70
+  },
+  "schema_version": 1
+}

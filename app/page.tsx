@@ -5,34 +5,53 @@ import styles from "./work-index.module.css";
 const work = [
   {
     index: "01",
-    href: "/reviewer",
+    href: "/reviewer/compare",
     label: "Primary tool",
-    title: "Question parse reviewer",
+    title: "Parse comparison",
     description:
-      "Inspect extracted entities in context, open their parser metadata, and record accept or flag decisions.",
-    meta: "10 public MedQA examples · review state saved locally",
+      "Compare legacy entity mentions with promoted v7.4 facts over the same ten public MedQA examples.",
+    meta: "10 MedQA examples · side by side · review state saved locally",
     featured: true,
   },
   {
     index: "02",
+    href: "/network/7.4",
+    label: "Current network",
+    title: "7.4",
+    description:
+      "Explore the analysis-pure clinical concept network with aggregate association evidence and specialty filters.",
+    meta: "non-laboratory preview · public aggregate build",
+    featured: true,
+  },
+  {
+    index: "03",
+    href: "/reviewer",
+    label: "Preserved tool",
+    title: "v4.3",
+    description:
+      "Open the original legacy-only entity reviewer for the same ten MedQA examples.",
+    meta: "legacy parser · unchanged",
+  },
+  {
+    index: "04",
     href: "/network/4.9",
     label: "Network release",
     title: "4.9",
     description:
       "Answer-choice entity topology with clinical-domain and role views.",
-    meta: "entity level · curated analytical subset",
+    meta: "entity level · historical release",
   },
   {
-    index: "03",
+    index: "05",
     href: "/network/5.0",
     label: "Network release",
     title: "5.0",
     description:
       "Association statistics, cross-source replication, and community structure.",
-    meta: "entity level · enriched associations",
+    meta: "entity level · historical release",
   },
   {
-    index: "04",
+    index: "06",
     href: "/network/5.1",
     label: "Network release",
     title: "5.1",
@@ -41,13 +60,13 @@ const work = [
     meta: "concept level · historical release",
   },
   {
-    index: "05",
+    index: "07",
     href: "/network/5.4",
     label: "Network release",
     title: "5.4",
     description:
       "All-entity analysis with focused evidence networks and reviewed community labels.",
-    meta: "concept level · current release",
+    meta: "concept level · historical release",
   },
 ];
 

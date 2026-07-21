@@ -28,7 +28,7 @@ export default async function CardsPage({ searchParams }: Props) {
     created_at: string
   }> = []
 
-  let counts: Record<string, number> = { all: 0, draft: 0, reviewed: 0, retired: 0 }
+  const counts: Record<string, number> = { all: 0, draft: 0, reviewed: 0, retired: 0 }
 
   if (user) {
     // Count all statuses for the tab badges.

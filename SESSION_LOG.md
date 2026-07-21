@@ -15,6 +15,36 @@ Each entry follows this shape:
 
 ---
 
+## 2026-07-21 — Public-safe v7.4 network + MedQA parser comparison
+
+**Phase + step:** Phase 8 presentation slice — validated additive public release `clinical_network_v74_nonlab_public_r1`. The private Clinical Network Lab release remains unchanged.
+
+**What changed:**
+- Added `/network/7.4` as the public-safe derivative of private release `clinical_network_v74_nonlab_preview_r1`. The public graph retains aggregate concept associations, analytical filters, and anonymized robustness totals while removing raw questions, answer keys, source names/distributions, evidence/provenance payloads, and the source dropdown.
+- Preserved `/network/4.9`, `/network/5.0`, `/network/5.1`, and `/network/5.4` as historical releases and kept `/reviewer` as the original parser experience.
+- Added `/reviewer/compare` over exactly the same ten MedQA samples already published at `/reviewer`. This reviewer-only exception deliberately retains those ten raw MedQA questions to make the parsing visible side by side; it publishes no additional question text. The comparison contains 616 legacy mentions and 81 accepted v7.4 facts, collapsed to 70 distinct question-concept incidences; 9 of 10 questions have at least one accepted v7.4 fact.
+- Pinned the sole clinical parent `outputs/im_boards_clinical_corpus_v74_nonlab.sqlite` at SHA-256 `4c5acfd4f86e9af1b4702cbeb403ac680d8830e7c86e34c06c370436dcbac521`. The unchanged private network database SHA-256 is `7faccbd5231015194b9835041fce4fbe211a3bfd2324cfe092c415468ee4b7d0`; its canonical graph SHA-256 is `213f59e74d49e3de47c1e8fa49d3f5a666fadedc2348cb82269f224d25598677`.
+- Added a deterministic build path at `scripts/build_v74_public_showcase.py`, an independent validation path at `scripts/validate_v74_public_showcase.py`, and the versioned manifest at `public/releases/v7.4-public.json`.
+- Kept anonymous Vercel Web Analytics on the public portfolio surfaces. GitHub `main` remains the Vercel production auto-deploy branch.
+- Corrected the existing `prefer-const` lint blocker in the authenticated cards page without changing runtime behavior.
+
+**Verification:**
+- Public network HTML: SHA-256 `253ebf642fe63db59c81bf919fe28c26af2d8a1a45cb34dd583cf63c94b35987` (8,857,766 bytes).
+- Public comparison HTML: SHA-256 `3bc485ee364929dad77838e8d9526e95bb023cb8228d70f9ed09e42db0f9ea3a` (437,753 bytes).
+- Release manifest: SHA-256 `b88d4a8ea93e415d56573c54c3a9334da5243908f2f1091deba47312439caadf`.
+- Independent privacy/count/topology/manifest validation: 113 passed, 0 failed.
+- Application checks: typecheck passed; 115 tests passed; lint passed with two pre-existing warnings; production build passed.
+- Rendered-route QA: 43 desktop/mobile browser assertions passed across the homepage, new routes, preserved reviewer, and historical networks, with no console or page errors.
+- Production commit and live-route verification are recorded after GitHub `main` promotion.
+
+**Blocked / deferred:**
+- Laboratory/LOINC normalization is intentionally pending until **July 26, 2026 at 5:07 PM America/New_York**. This release is labeled a non-laboratory preview and must not be represented as the final all-lane corpus.
+
+**Open questions for next session:**
+- After the LOINC allowance opens and the lab-complete parent is sealed, substitute that immutable database, rerun the deterministic builder and independent validator, assign a new additive release name, and repeat production browser/deployment verification.
+
+---
+
 ## 2026-07-17 — Network analysis 5.4 publication
 
 **Phase + step:** Phase 8 presentation slice — publication of the current all-entity network analysis.

@@ -2,7 +2,7 @@
 
 *Live snapshot of what exists in the codebase right now. The durable answer to "where does this thing live and how does data flow through it." If you've read CLAUDE.md, DECISIONS.md, and PHASES.md, this file fills the gap between "what we decided" and "what is actually built."*
 
-**Last updated:** 2026-07-17 (public network release 5.4).
+**Last updated:** 2026-07-21 (v7.4 non-laboratory public release candidate).
 
 ---
 
@@ -135,12 +135,14 @@ App-router conventions: folder name = URL segment; `page.tsx` = the page; `route
 
 | Route | Type | Purpose |
 |---|---|---|
-| `/` | page | Public dark tools index linking to the question parse reviewer and network releases 4.9, 5.0, and 5.1. |
-| `/reviewer` | static HTML via rewrite | Public MedQA-only question parse reviewer. Entity highlights, metadata inspection, accept/flag notes, and JSON export run entirely in the browser; review state stays in local storage. |
+| `/` | page | Public dark tools index linking to the preserved reviewer, side-by-side v7.4 parse comparison, current v7.4 network, and historical network releases. |
+| `/reviewer` | static HTML via rewrite | Preserved original MedQA-only question parse reviewer. Entity highlights, metadata inspection, accept/flag notes, and JSON export run entirely in the browser; review state stays in local storage. |
+| `/reviewer/compare` | static HTML via rewrite | Side-by-side legacy-versus-v7.4 parse review over exactly the same ten MedQA questions shown by `/reviewer`. The reviewer-only exception permits those ten raw MedQA samples: 616 legacy mentions versus 81 accepted v7.4 facts, 70 distinct question-concept incidences, and accepted v7.4 facts for 9 of 10 questions. |
 | `/network/4.9` | static HTML via rewrite | Entity-level answer-choice topology with clinical-domain and answer-role views. |
 | `/network/5.0` | static HTML via rewrite | Entity-level association network with cross-source replication and community structure. |
 | `/network/5.1` | static HTML via rewrite | Historical canonical-concept answer-choice network with exact answer choices retained for audit. |
-| `/network/5.4` | static HTML via rewrite | Current all-entity analysis release with a weighted component landscape, reviewed community labels, and focused evidence-network drill-downs. |
+| `/network/5.4` | static HTML via rewrite | Preserved historical all-entity analysis release with a weighted component landscape, reviewed community labels, and focused evidence-network drill-downs. |
+| `/network/7.4` | static HTML via rewrite | Current public-safe `clinical_network_v74_nonlab_public_r1` preview. Aggregate concept associations and filters are retained, but raw questions, answer keys, source labels, evidence/provenance, and the source selector are excluded. Laboratory/LOINC normalization remains pending. |
 | `/login` | page + server action | Magic-link sign-in form. Server action `signInWithEmail` calls `supabase.auth.signInWithOtp`; redirects to `/login?status=sent` on success or `/login?error=...` on failure |
 | `/auth/callback` | route handler | GET handler that receives `?code=...` from the Supabase magic link, calls `exchangeCodeForSession`, redirects to `/dashboard` (or `?next=`) |
 | `(app)` route group | layout | Auth gate. The layout calls `supabase.auth.getUser()` and `redirect('/login')` when no session — every page under this group is guaranteed authenticated |
@@ -271,6 +273,8 @@ proxy.ts                   Next.js 16 proxy (formerly middleware.ts) — refresh
   seed_ontology.mjs        seeds concepts + concept_parents from abim_blueprint_v1.json (D18)
   seed_concept_weights.ts  D22 — backfills concepts.weight from abim_blueprint_v1.json (subsection-level, 230 rows)
   seed_cards.mjs           Phase 1 step 6: seeds 3 clusters + 20 reviewed cards (HF GDMT, Hyponatremia, DKA/HHS) (applied to kekki-prod 2026-04-27)
+  build_v74_public_showcase.py      deterministic public-network and MedQA comparison builder
+  validate_v74_public_showcase.py   independent privacy, provenance, count, and manifest validator
 /supabase
   /migrations
     001_init.sql                 base schema
@@ -279,8 +283,10 @@ proxy.ts                   Next.js 16 proxy (formerly middleware.ts) — refresh
     004_planning_layer.sql       planning layer + card_discriminators (D21)
     005_competence_layer.sql     competence + topic_importance_v + clusters.kind (D22)
 /public                        static public tools, social preview, and other browser-served assets
-  /reviewer                    MedQA-only self-contained question parse reviewer
-  /networks/{4.9,5.0,5.1}     self-contained versioned network analysis releases
+  /reviewer                    preserved MedQA reviewer plus additive side-by-side v7.4 comparison
+  /networks/{4.9,5.0,5.1,5.4} preserved self-contained historical network releases
+  /networks/7.4               public-safe v7.4 non-laboratory aggregate network
+  /releases/v7.4-public.json  public release manifest (final asset hashes pending validation)
   /explorer                    legacy fellowship exhibit
 /archive                       superseded files retained for traceability
   kekki_ontology_v0.json
@@ -315,12 +321,24 @@ Planned additions:
 
 ---
 
+### v7.4 public clinical-analysis boundary
+
+`clinical_network_v74_nonlab_public_r1` is generated only from the immutable v7.4 parent database `outputs/im_boards_clinical_corpus_v74_nonlab.sqlite` (SHA-256 `4c5acfd4f86e9af1b4702cbeb403ac680d8830e7c86e34c06c370436dcbac521`) and the validated private release `clinical_network_v74_nonlab_preview_r1`. The unchanged private network database SHA-256 is `7faccbd5231015194b9835041fce4fbe211a3bfd2324cfe092c415468ee4b7d0`, and its canonical graph SHA-256 is `213f59e74d49e3de47c1e8fa49d3f5a666fadedc2348cb82269f224d25598677`.
+
+The public network contains aggregate concepts and question-level association counts only. It excludes raw question text, answer keys, source labels and distributions, source filters, fact/span evidence, incidence records, and all provenance drill-downs. It retains only anonymized aggregate robustness totals (`sourceCount`, maximum share, leave-one-set-out support, and cross-set status), never source names. `/reviewer/compare` is the narrow, explicit exception: it reuses only the same ten MedQA examples already available at `/reviewer`, retaining their raw text solely to demonstrate the legacy and v7.4 parsers side by side. It publishes no additional questions.
+
+The deterministic builder is `scripts/build_v74_public_showcase.py`; the independent validator is `scripts/validate_v74_public_showcase.py`; the release manifest is `public/releases/v7.4-public.json`. The network HTML SHA-256 is `253ebf642fe63db59c81bf919fe28c26af2d8a1a45cb34dd583cf63c94b35987`; the comparison HTML SHA-256 is `3bc485ee364929dad77838e8d9526e95bb023cb8228d70f9ed09e42db0f9ea3a`; the manifest SHA-256 is `b88d4a8ea93e415d56573c54c3a9334da5243908f2f1091deba47312439caadf`. Independent validation passes 113 checks, and rendered desktop/mobile route QA passes 43 assertions without console or page errors.
+
+This release is a non-laboratory preview, not the final all-lane corpus. Laboratory/LOINC normalization is deferred until **July 26, 2026 at 5:07 PM America/New_York**. The later lab-complete release must rerun the deterministic builder and validator from the substituted parent database rather than modifying this preview in place.
+
+---
+
 ## 8. External Services
 
 | Service | Identifier / location | What it holds | Notes |
 |---|---|---|---|
 | Supabase project | `kekki-prod` (ref `jquturibslqzkldngzvf`) | DB, auth, storage | Linked per worktree via `supabase link`. Project URL + anon key in `.env.local`. |
-| Vercel project | (linked to GitHub repo) | Hosting; main = production; Web Analytics | Auto-deploys main and creates branch previews. Anonymous Web Analytics is loaded only on `/`, `/reviewer`, `/network/4.9`, `/network/5.0`, `/network/5.1`, `/network/5.4`, and the legacy `/explore` exhibit; private application routes are excluded. |
+| Vercel project | (linked to GitHub repo) | Hosting; main = production; Web Analytics | Auto-deploys GitHub `main` and creates branch previews. Anonymous Web Analytics is loaded only on `/`, `/reviewer`, `/reviewer/compare`, `/network/4.9`, `/network/5.0`, `/network/5.1`, `/network/5.4`, `/network/7.4`, and the legacy `/explore` exhibit; private application routes are excluded. |
 | Cloudflare Registrar | kekkimed.com | Domain registration | DNS pointed at Vercel. |
 | GitHub | `zachspahr-ops/kekkimed` (private) | Source of truth | Vercel is connected here. |
 
