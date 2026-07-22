@@ -15,9 +15,9 @@ Each entry follows this shape:
 
 ---
 
-## 2026-07-22 — Combined public v7.5.1 network + MedQA reviewer candidate
+## 2026-07-22 — Published public v7.5.1 network + MedQA reviewer
 
-**Phase + step:** Phase 8 presentation slice — deterministic combined public release candidate `clinical_network_v751_nonloinc_public_r1` with stable reviewer release `kekki_medqa_parse_comparison_v751_r1`. Deployment promotion remains pending.
+**Phase + step:** Phase 8 presentation slice — deployed deterministic public release `clinical_network_v751_nonloinc_public_r1` with stable reviewer release `kekki_medqa_parse_comparison_v751_r1`.
 
 **What changed:**
 - Made `/network/7.5.1` the canonical public network route. `/network/7.4` is now a temporary non-permanent compatibility redirect; the original v7.4 network remains preserved in Git at SHA-256 `253ebf642fe63db59c81bf919fe28c26af2d8a1a45cb34dd583cf63c94b35987` for rollback and audit. Historical `/network/4.9`, `/network/5.0`, `/network/5.1`, `/network/5.4`, and the original `/reviewer` remain preserved.
@@ -38,17 +38,16 @@ Each entry follows this shape:
 - Application checks: `pnpm typecheck` passed; all 115 `pnpm test` tests passed; `pnpm lint` passed with only the two pre-existing unused-symbol warnings in `CardRow.tsx` and `lib/cards/import-schema.ts`.
 - Deterministic rebuilds reproduced the network, reviewer, and combined-manifest hashes exactly. Rendered-route QA passed 31 desktop/mobile assertions with no application page errors or non-analytics console errors, including the corrected mobile toolbar/filter layout and initially closed detail sheet.
 
-**Deployment fields pending final promotion:**
-- Source/production commit: **PENDING**
-- Vercel preview URL and deployment ID: **PENDING**
-- Vercel production deployment ID: **PENDING**
-- Production route/asset verification: **PENDING**
+**Deployment:**
+- Release content commit: `ab876812461c5bb6955870e89fc536e15be40fac`.
+- Preview deployment: Vercel `4XGKzf7goZdritvBsyFebXZxt8qs`, GitHub deployment `5556641284`, `https://kekkimed-qy0j8jpwc-zachspahr-ops-projects.vercel.app`.
+- Production deployment: Vercel `HVu1s7oDP6S3xf9W7TERUcsgm2vi`, GitHub deployment `5556725693`, `https://kekkimed-h5yr66shq-zachspahr-ops-projects.vercel.app`.
+- Live verification: `https://www.kekkimed.com/network/7.5.1`, `/reviewer/compare`, `/reviewer`, `/network/7.4` (redirecting to 7.5.1), `/network/4.9`, `/network/5.0`, `/network/5.1`, `/network/5.4`, and `/releases/v7.5.1-public.json` all returned 200. Production network, comparison, and manifest downloads were byte-identical to the sealed local artifacts. Live browser checks confirmed the network counts/privacy notice, no source selector, and the recovered Q03 reviewer state with no console errors.
 
 **Blocked / deferred:**
 - Laboratory/LOINC normalization is intentionally pending until **July 26, 2026 at 5:07 PM America/New_York**. v7.5.1 is a non-LOINC preview and must not be described as the final all-lane corpus.
 
 **Open questions for next session:**
-- After final local/browser checks, promote the candidate, fill the pending commit/preview/production identifiers above, and verify the live network, reviewer, redirect, manifest, historical routes, and asset hashes.
 - After the LOINC allowance opens and the lab-complete parents are sealed, substitute those immutable artifacts, rerun both deterministic builders and independent validators, and publish an additive lab-complete successor rather than modifying v7.5.1 in place.
 
 ---

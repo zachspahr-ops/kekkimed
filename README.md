@@ -37,12 +37,12 @@ This is explicitly a v7.5.1 non-LOINC preview. Laboratory/LOINC normalization re
 
 The independent network validator passes 85 checks and the independent reviewer validator passes 16,111 checks, both with zero failures. The rebuilt network, reviewer, and combined manifest are deterministic. `pnpm typecheck` passes; `pnpm test` passes all 115 tests; and `pnpm lint` passes with the two pre-existing unused-symbol warnings in `CardRow.tsx` and `lib/cards/import-schema.ts`. A 31-assertion rendered desktop/mobile route suite passes with no application page errors or non-analytics console errors; it covers the stable and historical routes, the v7.4 redirect, reviewer inspection, Q03 recovery, privacy controls, responsive drawers, and horizontal-overflow checks. The network renderer collision-culls overview labels, always prioritizes the searched concept, and keeps the mobile detail sheet closed until a concept or association is selected.
 
-Deployment fields are intentionally finalized only after promotion:
+Deployment record:
 
-- Source/production commit: **PENDING**
-- Vercel preview URL and deployment ID: **PENDING**
-- Vercel production deployment ID: **PENDING**
-- Production route verification: **PENDING**
+- Release content commit: `ab876812461c5bb6955870e89fc536e15be40fac`
+- Vercel preview: `4XGKzf7goZdritvBsyFebXZxt8qs` / GitHub deployment `5556641284` at `https://kekkimed-qy0j8jpwc-zachspahr-ops-projects.vercel.app`
+- Vercel production: `HVu1s7oDP6S3xf9W7TERUcsgm2vi` / GitHub deployment `5556725693` at `https://kekkimed-h5yr66shq-zachspahr-ops-projects.vercel.app`
+- Production verification: `https://www.kekkimed.com/network/7.5.1`, `/reviewer/compare`, `/reviewer`, the v7.4 compatibility redirect, all four historical network routes, and the release manifest returned 200 on July 22, 2026. Downloaded production network, reviewer, and manifest bytes exactly matched their declared SHA-256 hashes.
 
 ## Local development
 

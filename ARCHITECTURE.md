@@ -2,7 +2,7 @@
 
 *Live snapshot of what exists in the codebase right now. The durable answer to "where does this thing live and how does data flow through it." If you've read CLAUDE.md, DECISIONS.md, and PHASES.md, this file fills the gap between "what we decided" and "what is actually built."*
 
-**Last updated:** 2026-07-22 (combined v7.5.1 non-LOINC public release candidate; deployment identifiers pending).
+**Last updated:** 2026-07-22 (combined v7.5.1 non-LOINC public release deployed and verified).
 
 ---
 
@@ -348,7 +348,7 @@ The network/manifest builder is `scripts/build_v751_public_showcase.py`, with in
 
 `/network/7.5.1` is canonical. `/network/7.4` is a temporary non-permanent redirect to it; the old static asset is retained in Git rather than overwritten. `/reviewer/compare` remains the stable reviewer route, and `/reviewer` plus `/network/4.9`, `/network/5.0`, `/network/5.1`, and `/network/5.4` remain preserved historical interfaces.
 
-Application verification passes: `pnpm typecheck`; all 115 `pnpm test` tests; and `pnpm lint` with only the two pre-existing unused-symbol warnings in `CardRow.tsx` and `lib/cards/import-schema.ts`. Rendered browser verification passes 31 desktop/mobile assertions with no application page errors or non-analytics console errors. The renderer collision-culls overview labels, promotes search matches ahead of rank-based labels, prevents mobile toolbar overflow, and opens the mobile detail sheet only after selection. Deployment commit, Vercel preview/deployment identifiers, and production verification are **PENDING** until the parent session promotes this candidate.
+Application verification passes: `pnpm typecheck`; all 115 `pnpm test` tests; and `pnpm lint` with only the two pre-existing unused-symbol warnings in `CardRow.tsx` and `lib/cards/import-schema.ts`. Rendered browser verification passes 31 desktop/mobile assertions with no application page errors or non-analytics console errors. The renderer collision-culls overview labels, promotes search matches ahead of rank-based labels, prevents mobile toolbar overflow, and opens the mobile detail sheet only after selection. Release content commit `ab876812461c5bb6955870e89fc536e15be40fac` was previewed in Vercel deployment `4XGKzf7goZdritvBsyFebXZxt8qs` (GitHub deployment `5556641284`) and promoted in production deployment `HVu1s7oDP6S3xf9W7TERUcsgm2vi` (GitHub deployment `5556725693`). The live routes and downloaded network/reviewer/manifest bytes were verified against the locally sealed artifacts on July 22, 2026.
 
 This release is a non-LOINC preview, not the final all-lane corpus. Laboratory/LOINC normalization is deferred until **July 26, 2026 at 5:07 PM America/New_York**. The later lab-complete release must substitute the newly sealed parent artifacts and rerun both deterministic builders and independent validators rather than modify this preview in place.
 
