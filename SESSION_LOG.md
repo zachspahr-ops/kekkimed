@@ -15,6 +15,44 @@ Each entry follows this shape:
 
 ---
 
+## 2026-07-22 — Combined public v7.5.1 network + MedQA reviewer candidate
+
+**Phase + step:** Phase 8 presentation slice — deterministic combined public release candidate `clinical_network_v751_nonloinc_public_r1` with stable reviewer release `kekki_medqa_parse_comparison_v751_r1`. Deployment promotion remains pending.
+
+**What changed:**
+- Made `/network/7.5.1` the canonical public network route. `/network/7.4` is now a temporary non-permanent compatibility redirect; the original v7.4 network remains preserved in Git at SHA-256 `253ebf642fe63db59c81bf919fe28c26af2d8a1a45cb34dd583cf63c94b35987` for rollback and audit. Historical `/network/4.9`, `/network/5.0`, `/network/5.1`, `/network/5.4`, and the original `/reviewer` remain preserved.
+- Rebuilt the public graph from sealed corpus `clinical_corpus_v751_nonloinc_r1`, SHA-256 `d55134e21799b8f0e692f10e902d17e89822f468cefdcb493194fa1dc79ce4ec`, and network `clinical_network_v751_nonloinc_r1`, SHA-256 `37bad394d95299c920dd2c255220afbc64a23ab5da5c43fdecb8e10e7132dee9`. The private full-network export SHA-256 is `78178e470dba672a8bfbeefe96ef3736a99478376be15090f99a9d13cc2ec295`. The read-only v7.4 metadata database remains pinned at SHA-256 `7faccbd5231015194b9835041fce4fbe211a3bfd2324cfe092c415468ee4b7d0` and contributes metadata only, never clinical facts.
+- Sealed graph counts are 17,166 active questions, 16,347 questions with facts, 6,117 concepts, 139,223 deduplicated question-concept incidences, and 340,960 support-one associations. The public payload contains 1,892 concepts and 14,676 associations at support eight or greater; the default support-16 view contains 892 concepts and 4,959 associations.
+- Corrected the v7.4 ambiguous-label bug. v7.5.1 uses sealed preferred clinical labels and adds a human-readable namespace qualifier only for collisions. All 1,892 display labels are unique; 532 nodes are qualified across 265 duplicate-label groups; zero opaque `Local atomic concept` placeholders remain. Label rank is deterministic by question support, PageRank, display label, and identity. The renderer collision-culls overview labels and gives the searched concept visual and label priority.
+- Kept `/reviewer/compare` as the stable route and preserved all 616 legacy mentions over exactly the same ten MedQA questions. The v7.5.1 panel loads 614 accepted `analysis_network_facts_v751` facts, collapses 103 duplicate answer/choice representations to 511 visible annotations, and reports 269 distinct question-concept incidences. All ten questions now have facts, including the former v7.4 zero-fact sample. The 355 excluded candidates comprise 282 LOINC-pending and 73 unresolved non-LOINC spans.
+- Preserved the public privacy boundary. The network includes aggregate identities, metrics, filters, specialties, evidence tiers, and anonymized robustness totals; it excludes raw questions, answer keys, named sources, source selectors/distributions, incidences, spans, fact IDs, and provenance drill-downs. Raw text remains limited to the ten previously public MedQA examples in the reviewer. Reviewer annotations expose provenance-category counts but not underlying fact/source-record IDs.
+- Added deterministic network/manifest tooling at `scripts/build_v751_public_showcase.py` and `scripts/validate_v751_public_showcase.py`, plus deterministic reviewer tooling at `scripts/build_v751_parse_comparison.py` and `scripts/validate_v751_parse_comparison.py`. The combined release manifest is `public/releases/v7.5.1-public.json`.
+
+**Verification:**
+- Public network HTML: SHA-256 `a6d27f7822dd9fa664b700eccf7efc2e1bd0fbccfae3321ac8806ed08ef5cb81` (6,081,981 bytes).
+- Public comparison HTML: SHA-256 `20e8b1ccea61c509ddcf6571bfeaca8e705134e70ff7055ecec2cf86740097f8` (814,822 bytes).
+- Combined manifest: SHA-256 `cee882382a54db0ceae78e20884dab4e7708e6ce6e9a7fd00d9383f4f06b9ed7` (3,634 bytes).
+- Preserved legacy reviewer: SHA-256 `e5f3b2a55e5cdb9da54e5c8977231c05aa3c4928d896a15e3900ea3521318d77`.
+- Independent network validation: 85 checks passed, 0 failed.
+- Independent reviewer validation: 16,111 checks passed, 0 failed.
+- Application checks: `pnpm typecheck` passed; all 115 `pnpm test` tests passed; `pnpm lint` passed with only the two pre-existing unused-symbol warnings in `CardRow.tsx` and `lib/cards/import-schema.ts`.
+- Deterministic rebuilds reproduced the network, reviewer, and combined-manifest hashes exactly. Rendered-route QA passed 31 desktop/mobile assertions with no application page errors or non-analytics console errors, including the corrected mobile toolbar/filter layout and initially closed detail sheet.
+
+**Deployment fields pending final promotion:**
+- Source/production commit: **PENDING**
+- Vercel preview URL and deployment ID: **PENDING**
+- Vercel production deployment ID: **PENDING**
+- Production route/asset verification: **PENDING**
+
+**Blocked / deferred:**
+- Laboratory/LOINC normalization is intentionally pending until **July 26, 2026 at 5:07 PM America/New_York**. v7.5.1 is a non-LOINC preview and must not be described as the final all-lane corpus.
+
+**Open questions for next session:**
+- After final local/browser checks, promote the candidate, fill the pending commit/preview/production identifiers above, and verify the live network, reviewer, redirect, manifest, historical routes, and asset hashes.
+- After the LOINC allowance opens and the lab-complete parents are sealed, substitute those immutable artifacts, rerun both deterministic builders and independent validators, and publish an additive lab-complete successor rather than modifying v7.5.1 in place.
+
+---
+
 ## 2026-07-21 — Public-safe v7.4 network + MedQA parser comparison
 
 **Phase + step:** Phase 8 presentation slice — validated additive public release `clinical_network_v74_nonlab_public_r1`. The private Clinical Network Lab release remains unchanged.

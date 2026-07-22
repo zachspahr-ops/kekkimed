@@ -1,0 +1,91 @@
+{
+  "assets": [
+    {
+      "bytes": 6081981,
+      "path": "public/networks/7.5.1/index.html",
+      "sha256": "a6d27f7822dd9fa664b700eccf7efc2e1bd0fbccfae3321ac8806ed08ef5cb81"
+    },
+    {
+      "bytes": 814822,
+      "path": "public/reviewer/compare/index.html",
+      "sha256": "20e8b1ccea61c509ddcf6571bfeaca8e705134e70ff7055ecec2cf86740097f8"
+    },
+    {
+      "bytes": 378653,
+      "path": "public/reviewer/index.html",
+      "preserved": true,
+      "sha256": "e5f3b2a55e5cdb9da54e5c8977231c05aa3c4928d896a15e3900ea3521318d77"
+    }
+  ],
+  "historical_rollback": {
+    "git_commit": "5afd6cf24280db7d875b7a62cd3f8c95e3ffba00",
+    "network_path": "public/networks/7.4/index.html",
+    "network_sha256": "253ebf642fe63db59c81bf919fe28c26af2d8a1a45cb34dd583cf63c94b35987",
+    "release": "clinical_network_v74_nonlab_public_r1"
+  },
+  "label_quality": {
+    "canonical_duplicate_groups": 265,
+    "namespace_qualified_nodes": 532,
+    "opaque_placeholder_labels": 0,
+    "ranked_label_nodes": 1892,
+    "unique_display_labels": 1892
+  },
+  "limitation": "Laboratory/LOINC normalization remains pending until July 26, 2026 at 5:07 PM America/New_York. This is not the final all-lane corpus.",
+  "network": {
+    "cohort_id": "full",
+    "default_edge_count": 4959,
+    "default_node_count": 892,
+    "default_support": 16,
+    "definition": "all active canonical questions; public payload retains associations at support ≥ 8",
+    "graph_total_concept_count": 6117,
+    "graph_total_edge_count_support1": 340960,
+    "graph_total_incidence_count": 139223,
+    "label": "Full clinical network · v7.5.1 exact-API non-lab",
+    "payload_edge_count": 14676,
+    "payload_min_support": 8,
+    "payload_node_count": 1892,
+    "question_count": 17166,
+    "question_with_fact_count": 16347
+  },
+  "parents": {
+    "corpus_release": "clinical_corpus_v751_nonloinc_r1",
+    "corpus_sha256": "d55134e21799b8f0e692f10e902d17e89822f468cefdcb493194fa1dc79ce4ec",
+    "metadata_database_sha256": "7faccbd5231015194b9835041fce4fbe211a3bfd2324cfe092c415468ee4b7d0",
+    "network_database_sha256": "37bad394d95299c920dd2c255220afbc64a23ab5da5c43fdecb8e10e7132dee9",
+    "network_release": "clinical_network_v751_nonloinc_r1",
+    "private_network_gzip_sha256": "78178e470dba672a8bfbeefe96ef3736a99478376be15090f99a9d13cc2ec295"
+  },
+  "privacy": {
+    "answer_keys_included": false,
+    "question_or_fact_provenance_included": false,
+    "raw_question_text_included": false,
+    "robustness_is_anonymized_full_support": true,
+    "source_labels_included": false,
+    "source_selector_enabled": false
+  },
+  "release": "clinical_network_v751_nonloinc_public_r1",
+  "release_date": "2026-07-22",
+  "replacement": {
+    "canonical_network_route": "/network/7.5.1",
+    "comparison_route": "/reviewer/compare",
+    "legacy_network_route_redirect": "/network/7.4 -> /network/7.5.1 (temporary)",
+    "supersedes_public_release": "clinical_network_v74_nonlab_public_r1"
+  },
+  "reviewer": {
+    "additional_corpus_questions_included": false,
+    "excluded_candidate_count": 355,
+    "facts_on_question_count": 10,
+    "legacy_mention_count": 616,
+    "pending_loinc_candidate_count": 282,
+    "question_count": 10,
+    "question_source": "MedQA",
+    "raw_text_scope": "exactly the ten previously public MedQA examples",
+    "release": "kekki_medqa_parse_comparison_v751_r1",
+    "unresolved_nonloinc_candidate_count": 73,
+    "v751_accepted_fact_count": 614,
+    "v751_collapsed_duplicate_representation_count": 103,
+    "v751_distinct_question_concept_incidence_count": 269,
+    "v751_visible_annotation_count": 511
+  },
+  "schema_version": 2
+}

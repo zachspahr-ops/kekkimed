@@ -9,18 +9,18 @@ const work = [
     label: "Primary tool",
     title: "Parse comparison",
     description:
-      "Compare legacy entity mentions with promoted v7.4 facts over the same ten public MedQA examples.",
+      "Compare legacy entity mentions with validated v7.5.1 annotations over the same ten public MedQA examples.",
     meta: "10 MedQA examples · side by side · review state saved locally",
     featured: true,
   },
   {
     index: "02",
-    href: "/network/7.4",
+    href: "/network/7.5.1",
     label: "Current network",
-    title: "7.4",
+    title: "7.5.1",
     description:
-      "Explore the analysis-pure clinical concept network with aggregate association evidence and specialty filters.",
-    meta: "non-laboratory preview · public aggregate build",
+      "Explore the corrected, exact-identity clinical concept network with aggregate association evidence and specialty filters.",
+    meta: "exact-API non-LOINC release · public aggregate build",
     featured: true,
   },
   {

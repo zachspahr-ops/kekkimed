@@ -15,6 +15,15 @@ const nextConfig: NextConfig = {
   outputFileTracingIncludes: {
     '/**': ['./prompts/**'],
   },
+  async redirects() {
+    return [
+      {
+        source: "/network/7\\.4",
+        destination: "/network/7.5.1",
+        permanent: false,
+      },
+    ];
+  },
   async rewrites() {
     return [
       {
@@ -42,8 +51,8 @@ const nextConfig: NextConfig = {
         destination: "/networks/5.4/index.html",
       },
       {
-        source: "/network/7\\.4",
-        destination: "/networks/7.4/index.html",
+        source: "/network/7\\.5\\.1",
+        destination: "/networks/7.5.1/index.html",
       },
       {
         source: "/explore",

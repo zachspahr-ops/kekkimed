@@ -2,7 +2,7 @@
 
 *Live snapshot of what exists in the codebase right now. The durable answer to "where does this thing live and how does data flow through it." If you've read CLAUDE.md, DECISIONS.md, and PHASES.md, this file fills the gap between "what we decided" and "what is actually built."*
 
-**Last updated:** 2026-07-21 (v7.4 non-laboratory public release candidate).
+**Last updated:** 2026-07-22 (combined v7.5.1 non-LOINC public release candidate; deployment identifiers pending).
 
 ---
 
@@ -135,14 +135,15 @@ App-router conventions: folder name = URL segment; `page.tsx` = the page; `route
 
 | Route | Type | Purpose |
 |---|---|---|
-| `/` | page | Public dark tools index linking to the preserved reviewer, side-by-side v7.4 parse comparison, current v7.4 network, and historical network releases. |
+| `/` | page | Public dark tools index linking to the preserved reviewer, stable side-by-side v7.5.1 parse comparison, canonical v7.5.1 network, and historical network releases. |
 | `/reviewer` | static HTML via rewrite | Preserved original MedQA-only question parse reviewer. Entity highlights, metadata inspection, accept/flag notes, and JSON export run entirely in the browser; review state stays in local storage. |
-| `/reviewer/compare` | static HTML via rewrite | Side-by-side legacy-versus-v7.4 parse review over exactly the same ten MedQA questions shown by `/reviewer`. The reviewer-only exception permits those ten raw MedQA samples: 616 legacy mentions versus 81 accepted v7.4 facts, 70 distinct question-concept incidences, and accepted v7.4 facts for 9 of 10 questions. |
+| `/reviewer/compare` | static HTML via rewrite | Stable side-by-side legacy-versus-v7.5.1 parse review over exactly the same ten MedQA questions shown by `/reviewer`. The reviewer-only exception permits those ten raw MedQA samples: 616 unchanged legacy mentions versus 614 accepted v7.5.1 facts, deterministically collapsed to 511 visible annotations and 269 distinct question-concept incidences. All ten questions have accepted facts; 355 unresolved candidate spans remain excluded. |
 | `/network/4.9` | static HTML via rewrite | Entity-level answer-choice topology with clinical-domain and answer-role views. |
 | `/network/5.0` | static HTML via rewrite | Entity-level association network with cross-source replication and community structure. |
 | `/network/5.1` | static HTML via rewrite | Historical canonical-concept answer-choice network with exact answer choices retained for audit. |
 | `/network/5.4` | static HTML via rewrite | Preserved historical all-entity analysis release with a weighted component landscape, reviewed community labels, and focused evidence-network drill-downs. |
-| `/network/7.4` | static HTML via rewrite | Current public-safe `clinical_network_v74_nonlab_public_r1` preview. Aggregate concept associations and filters are retained, but raw questions, answer keys, source labels, evidence/provenance, and the source selector are excluded. Laboratory/LOINC normalization remains pending. |
+| `/network/7.5.1` | static HTML via rewrite | Canonical public-safe `clinical_network_v751_nonloinc_public_r1` preview. It exposes 1,892 concepts and 14,676 support-eight-or-greater associations, with a default support-16 view of 892 concepts and 4,959 associations. Raw questions, answer keys, source labels, evidence/provenance, and the source selector are excluded. |
+| `/network/7.4` | temporary redirect | Non-permanent compatibility redirect to `/network/7.5.1`. The original v7.4 static asset remains preserved in Git as a rollback/audit artifact and is not overwritten. |
 | `/login` | page + server action | Magic-link sign-in form. Server action `signInWithEmail` calls `supabase.auth.signInWithOtp`; redirects to `/login?status=sent` on success or `/login?error=...` on failure |
 | `/auth/callback` | route handler | GET handler that receives `?code=...` from the Supabase magic link, calls `exchangeCodeForSession`, redirects to `/dashboard` (or `?next=`) |
 | `(app)` route group | layout | Auth gate. The layout calls `supabase.auth.getUser()` and `redirect('/login')` when no session — every page under this group is guaranteed authenticated |
@@ -273,8 +274,10 @@ proxy.ts                   Next.js 16 proxy (formerly middleware.ts) — refresh
   seed_ontology.mjs        seeds concepts + concept_parents from abim_blueprint_v1.json (D18)
   seed_concept_weights.ts  D22 — backfills concepts.weight from abim_blueprint_v1.json (subsection-level, 230 rows)
   seed_cards.mjs           Phase 1 step 6: seeds 3 clusters + 20 reviewed cards (HF GDMT, Hyponatremia, DKA/HHS) (applied to kekki-prod 2026-04-27)
-  build_v74_public_showcase.py      deterministic public-network and MedQA comparison builder
-  validate_v74_public_showcase.py   independent privacy, provenance, count, and manifest validator
+  build_v751_public_showcase.py      deterministic v7.5.1 public-network and combined-manifest builder
+  validate_v751_public_showcase.py   independent network privacy, label, topology, and manifest validator
+  build_v751_parse_comparison.py     deterministic ten-question legacy/v7.5.1 reviewer builder
+  validate_v751_parse_comparison.py  independent reviewer cohort, span, identity, and count validator
 /supabase
   /migrations
     001_init.sql                 base schema
@@ -283,10 +286,12 @@ proxy.ts                   Next.js 16 proxy (formerly middleware.ts) — refresh
     004_planning_layer.sql       planning layer + card_discriminators (D21)
     005_competence_layer.sql     competence + topic_importance_v + clusters.kind (D22)
 /public                        static public tools, social preview, and other browser-served assets
-  /reviewer                    preserved MedQA reviewer plus additive side-by-side v7.4 comparison
+  /reviewer                    preserved MedQA reviewer plus stable side-by-side v7.5.1 comparison
   /networks/{4.9,5.0,5.1,5.4} preserved self-contained historical network releases
-  /networks/7.4               public-safe v7.4 non-laboratory aggregate network
-  /releases/v7.4-public.json  public release manifest (final asset hashes pending validation)
+  /networks/7.4               preserved v7.4 rollback asset; public route temporarily redirects
+  /networks/7.5.1             canonical public-safe v7.5.1 non-LOINC aggregate network
+  /releases/v7.4-public.json  preserved v7.4 release manifest
+  /releases/v7.5.1-public.json combined v7.5.1 network/reviewer release manifest
   /explorer                    legacy fellowship exhibit
 /archive                       superseded files retained for traceability
   kekki_ontology_v0.json
@@ -321,15 +326,31 @@ Planned additions:
 
 ---
 
-### v7.4 public clinical-analysis boundary
+### v7.5.1 public clinical-analysis boundary
 
-`clinical_network_v74_nonlab_public_r1` is generated only from the immutable v7.4 parent database `outputs/im_boards_clinical_corpus_v74_nonlab.sqlite` (SHA-256 `4c5acfd4f86e9af1b4702cbeb403ac680d8830e7c86e34c06c370436dcbac521`) and the validated private release `clinical_network_v74_nonlab_preview_r1`. The unchanged private network database SHA-256 is `7faccbd5231015194b9835041fce4fbe211a3bfd2324cfe092c415468ee4b7d0`, and its canonical graph SHA-256 is `213f59e74d49e3de47c1e8fa49d3f5a666fadedc2348cb82269f224d25598677`.
+`clinical_network_v751_nonloinc_public_r1` is generated from the immutable corpus `outputs/im_boards_clinical_corpus_v751_nonloinc.sqlite` (SHA-256 `d55134e21799b8f0e692f10e902d17e89822f468cefdcb493194fa1dc79ce4ec`) and network `outputs/im_boards_clinical_network_v751_nonloinc.sqlite` (SHA-256 `37bad394d95299c920dd2c255220afbc64a23ab5da5c43fdecb8e10e7132dee9`). The private full-network export SHA-256 is `78178e470dba672a8bfbeefe96ef3736a99478376be15090f99a9d13cc2ec295`. The read-only v7.4 metadata database, SHA-256 `7faccbd5231015194b9835041fce4fbe211a3bfd2324cfe092c415468ee4b7d0`, supplies specialty/source metadata only; it is not a clinical fact source.
 
-The public network contains aggregate concepts and question-level association counts only. It excludes raw question text, answer keys, source labels and distributions, source filters, fact/span evidence, incidence records, and all provenance drill-downs. It retains only anonymized aggregate robustness totals (`sourceCount`, maximum share, leave-one-set-out support, and cross-set status), never source names. `/reviewer/compare` is the narrow, explicit exception: it reuses only the same ten MedQA examples already available at `/reviewer`, retaining their raw text solely to demonstrate the legacy and v7.4 parsers side by side. It publishes no additional questions.
+The sealed graph contains 17,166 active questions, 16,347 questions with facts, 6,117 concepts, 139,223 deduplicated question-concept incidences, and 340,960 support-one associations. The public payload retains 1,892 concepts and 14,676 associations at support eight or greater; its default support-16 view contains 892 concepts and 4,959 associations.
 
-The deterministic builder is `scripts/build_v74_public_showcase.py`; the independent validator is `scripts/validate_v74_public_showcase.py`; the release manifest is `public/releases/v7.4-public.json`. The network HTML SHA-256 is `253ebf642fe63db59c81bf919fe28c26af2d8a1a45cb34dd583cf63c94b35987`; the comparison HTML SHA-256 is `3bc485ee364929dad77838e8d9526e95bb023cb8228d70f9ed09e42db0f9ea3a`; the manifest SHA-256 is `b88d4a8ea93e415d56573c54c3a9334da5243908f2f1091deba47312439caadf`. Independent validation passes 113 checks, and rendered desktop/mobile route QA passes 43 assertions without console or page errors.
+The v7.4 public graph's ambiguous-label failure is explicitly corrected. Public node identity remains `(external_namespace, external_code)`, while `preferred_label` supplies the human-readable base label. A namespace qualifier is added only when canonical labels collide. This yields 1,892 unique display labels, including 532 qualified nodes across 265 duplicate-label groups, with zero opaque placeholders. Label rank is deterministic: descending question support, descending PageRank, display label, then concept identity. Neither `LOCAL_ATOMIC_V60` nor a synthetic `Local atomic concept` placeholder is exposed as display text.
 
-This release is a non-laboratory preview, not the final all-lane corpus. Laboratory/LOINC normalization is deferred until **July 26, 2026 at 5:07 PM America/New_York**. The later lab-complete release must rerun the deterministic builder and validator from the substituted parent database rather than modifying this preview in place.
+The public network contains aggregate concepts and question-level association counts only. It excludes raw question text, answer keys, named source labels and distributions, source selectors, fact/span evidence, incidence records, question/fact IDs, and provenance drill-downs. It retains analytical filters, evidence-tier categories, specialty aggregates, and anonymized robustness totals (`sourceCount`, maximum share, leave-one-set-out support, and cross-set status), never source names.
+
+`/reviewer/compare` is the narrow raw-text exception. It reuses exactly the ten MedQA examples already available at `/reviewer` and preserves their 616 legacy mentions. The v7.5.1 panel is derived from `analysis_network_facts_v751`: 614 accepted facts are collapsed by visible location, span, and terminology identity to 511 annotations and 269 question-concept incidences. All ten questions have accepted facts. Candidate spans remain excluded: 282 are pending LOINC and 73 remain unresolved non-LOINC candidates. Only provenance-category counts are attached to annotations; raw fact and source-record IDs are not published.
+
+The network/manifest builder is `scripts/build_v751_public_showcase.py`, with independent validator `scripts/validate_v751_public_showcase.py` (85 checks). The reviewer builder is `scripts/build_v751_parse_comparison.py`, with independent validator `scripts/validate_v751_parse_comparison.py` (16,111 checks). Asset identity is pinned as follows:
+
+- Network HTML: SHA-256 `a6d27f7822dd9fa664b700eccf7efc2e1bd0fbccfae3321ac8806ed08ef5cb81` (6,081,981 bytes).
+- Comparison HTML: SHA-256 `20e8b1ccea61c509ddcf6571bfeaca8e705134e70ff7055ecec2cf86740097f8` (814,822 bytes).
+- Combined release manifest: SHA-256 `cee882382a54db0ceae78e20884dab4e7708e6ce6e9a7fd00d9383f4f06b9ed7` (3,634 bytes).
+- Preserved legacy reviewer: SHA-256 `e5f3b2a55e5cdb9da54e5c8977231c05aa3c4928d896a15e3900ea3521318d77`.
+- Preserved v7.4 network rollback asset: SHA-256 `253ebf642fe63db59c81bf919fe28c26af2d8a1a45cb34dd583cf63c94b35987`.
+
+`/network/7.5.1` is canonical. `/network/7.4` is a temporary non-permanent redirect to it; the old static asset is retained in Git rather than overwritten. `/reviewer/compare` remains the stable reviewer route, and `/reviewer` plus `/network/4.9`, `/network/5.0`, `/network/5.1`, and `/network/5.4` remain preserved historical interfaces.
+
+Application verification passes: `pnpm typecheck`; all 115 `pnpm test` tests; and `pnpm lint` with only the two pre-existing unused-symbol warnings in `CardRow.tsx` and `lib/cards/import-schema.ts`. Rendered browser verification passes 31 desktop/mobile assertions with no application page errors or non-analytics console errors. The renderer collision-culls overview labels, promotes search matches ahead of rank-based labels, prevents mobile toolbar overflow, and opens the mobile detail sheet only after selection. Deployment commit, Vercel preview/deployment identifiers, and production verification are **PENDING** until the parent session promotes this candidate.
+
+This release is a non-LOINC preview, not the final all-lane corpus. Laboratory/LOINC normalization is deferred until **July 26, 2026 at 5:07 PM America/New_York**. The later lab-complete release must substitute the newly sealed parent artifacts and rerun both deterministic builders and independent validators rather than modify this preview in place.
 
 ---
 
@@ -338,7 +359,7 @@ This release is a non-laboratory preview, not the final all-lane corpus. Laborat
 | Service | Identifier / location | What it holds | Notes |
 |---|---|---|---|
 | Supabase project | `kekki-prod` (ref `jquturibslqzkldngzvf`) | DB, auth, storage | Linked per worktree via `supabase link`. Project URL + anon key in `.env.local`. |
-| Vercel project | (linked to GitHub repo) | Hosting; main = production; Web Analytics | Auto-deploys GitHub `main` and creates branch previews. Anonymous Web Analytics is loaded only on `/`, `/reviewer`, `/reviewer/compare`, `/network/4.9`, `/network/5.0`, `/network/5.1`, `/network/5.4`, `/network/7.4`, and the legacy `/explore` exhibit; private application routes are excluded. |
+| Vercel project | (linked to GitHub repo) | Hosting; main = production; Web Analytics | Auto-deploys GitHub `main` and creates branch previews. Anonymous Web Analytics is loaded only on `/`, `/reviewer`, `/reviewer/compare`, `/network/4.9`, `/network/5.0`, `/network/5.1`, `/network/5.4`, canonical `/network/7.5.1`, the temporary `/network/7.4` redirect destination, and the legacy `/explore` exhibit; private application routes are excluded. The v7.5.1 preview/deployment IDs are pending promotion. |
 | Cloudflare Registrar | kekkimed.com | Domain registration | DNS pointed at Vercel. |
 | GitHub | `zachspahr-ops/kekkimed` (private) | Source of truth | Vercel is connected here. |
 
